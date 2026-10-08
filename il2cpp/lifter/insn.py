@@ -214,6 +214,9 @@ class _InsnMixin:
                             call = '%s.%s(%s)' % (_recv_fold(args[0]), nm2, ', '.join(args[1:]))
                         else:
                             call = '%s(%s)' % (self._info_name(info), ', '.join(args))
+                        _sg137 = self._tail_accessor(info[1], args)  # fix 137
+                        if _sg137 is not None:
+                            call = _sg137
                         rti = m2.return_type
                         void = 0 <= rti < len(self.il.types) and \
                             ((self.il.types[rti][1] >> 16) & 0xFF) == 0x01

@@ -229,6 +229,89 @@ def _recv_shaped(t: str) -> bool:
         and not _RECV_UNSHAPED_RX.match(t)
 
 
+# fix 137b: accessor sugar travels the pipeline call-shaped. Every text
+# purity test (dataflow._impure, CSE's _IMPURE, kill-on-write) keys on
+# `ident(`; a bare `R.X` / `R[i]` getter reads as a pure load and was
+# DCE'd when unused or re-evaluated into a loop head (AppendFormatHelper's
+# `format.get_Chars(i)` -- a call that can throw -- vanished). The lifter
+# emits `__accget(R.X)` / `__accset(R.X)(v)` and lift_method unwraps them
+# last, after every pass that judges purity.
+_ACC_GET = '__accget('
+_ACC_SET = '__accset('
+
+
+def acc_get(text: str) -> str:
+    return _ACC_GET + text + ')'
+
+
+def acc_set(lhs: str, value: str) -> str:
+    return '%s%s)(%s)' % (_ACC_SET, lhs, value)
+
+
+def acc_lhs(text: str) -> str:
+    """The member lvalue of an `__accset(LHS)(v)` marker (kill target)."""
+    if text.startswith(_ACC_SET):
+        e = _acc_close(text, len(_ACC_SET))
+        if e > 0:
+            return text[len(_ACC_SET):e]
+    return text.split(' = ', 1)[0]
+
+
+def _acc_close(s: str, i: int) -> int:
+    """Index of the bracket closing the one opened just before s[i]
+    (string/char literals skipped); -1 when unbalanced."""
+    depth, q, j, n = 1, None, i, len(s)
+    while j < n:
+        c = s[j]
+        if q:
+            if c == '\\':
+                j += 2
+                continue
+            if c == q:
+                q = None
+        elif c == '"' or c == "'":
+            q = c
+        elif c in '([{':
+            depth += 1
+        elif c in ')]}':
+            depth -= 1
+            if depth == 0:
+                return j
+        j += 1
+    return -1
+
+
+def unwrap_accessor_markers(ln: str) -> str:
+    """`__accget(X)` -> `X`, `__accset(L)(v)` -> `L = v`, innermost (right-
+    most) first; a `(__accget(X)).M` grouping left by _recv_fold drops its
+    redundant parens. An unbalanced marker is left as is (never guessed)."""
+    if '__acc' not in ln:
+        return ln
+    while True:
+        k = max(ln.rfind(_ACC_GET), ln.rfind(_ACC_SET))
+        if k < 0:
+            return ln
+        a = k + len(_ACC_GET)
+        e = _acc_close(ln, a)
+        if e < 0:
+            return ln
+        inner = ln[a:e]
+        if ln.startswith(_ACC_SET, k):
+            if e + 1 >= len(ln) or ln[e + 1] != '(':
+                return ln
+            e2 = _acc_close(ln, e + 2)
+            if e2 < 0:
+                return ln
+            rep, end = '%s = %s' % (inner, ln[e + 2:e2]), e2 + 1
+        else:
+            rep, end = inner, e + 1
+            if k >= 1 and ln[k - 1] == '(' and ln[end:end + 1] == ')' \
+                    and ln[end + 1:end + 2] in ('.', '[') and ln[end + 1:end + 2] \
+                    and not (k >= 2 and (ln[k - 2].isalnum() or ln[k - 2] in '_)]>')):
+                k, end = k - 1, end + 1
+        ln = ln[:k] + rep + ln[end:]
+
+
 # fix 54: an lvalue a C# `ref` may legally name -- a bare local/slot, a
 # dotted member chain, or one of those indexed once. `data_NNN` (a static
 # data address) is excluded: it has its own render path (_DATA_ADDR_RX).

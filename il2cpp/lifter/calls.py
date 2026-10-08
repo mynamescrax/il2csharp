@@ -1,5 +1,6 @@
 from il2cpp.prelude import *  # noqa: F401,F403
 from il2cpp.common import csharp_type_name
+from il2cpp.expr import acc_get, acc_lhs, acc_set
 from il2cpp.expr import Expr, _BARE_TOKEN_RX, _R4_TY, _R8_TY, _REFARG_RX, _USE_BIND_MIN, _byref_arg_render, _is_unresolved_gp, _recv_fold, _recv_shaped
 from il2cpp.runtime.meta import IMM_OPS
 from il2cpp.text import _int_lit, _deref_spans_all, _norm_twin, _paren_spans_all, _term_up, disp_add, reg_name, rty_has_value, strip_outer
@@ -362,6 +363,121 @@ class _CallsMixin:
         except Exception:
             return False
         return enum == 0x01
+
+    def _accessor_prop(self, mi):
+        """fix 137: the property row a MethodDef accessor belongs to.
+
+        Returns ``(kind, name, n_index)`` -- kind 'get'/'set', the
+        property's emitted member name and its index-parameter count --
+        when MethodDef ``mi`` is the getter or setter of a property row
+        on its own declaring type, else None. The emitter declares exactly
+        these rows as properties (index parameters -> ``this[...]``), so
+        a call naming one can use the member syntax the declaration
+        provides: ``s.get_Chars(i)`` -> ``s[i]`` (String's indexer row is
+        named Chars), ``Gizmos.set_color(c)`` -> ``Gizmos.color = c``.
+        Explicit (dotted) rows, a row whose accessor name disagrees, and
+        unreadable metadata decline. Per instance: MethodDef indices are
+        binary-local.
+        """
+        cache = self.__dict__.setdefault('_acc_prop_cache', {})
+        if mi in cache:
+            return cache[mi]
+        res = None
+        try:
+            m = self.meta.methods[mi]
+            if m.declaring >= 0:
+                td = self.meta.typedefs[m.declaring]
+                rel = mi - td.method_start
+                for k in range(td.property_count):
+                    pr = self.meta.properties[td.property_start + k]
+                    if rel == pr[1]:
+                        kind, nidx = 'get', m.param_count
+                    elif rel == pr[2]:
+                        kind, nidx = 'set', m.param_count - 1
+                    else:
+                        continue
+                    raw = self.meta.getstr(pr[0])
+                    if raw and '.' not in raw and nidx >= 0 \
+                            and m.name == kind + '_' + raw:
+                        from il2cpp.names import safe_ident, sanitize
+                        res = (kind, safe_ident(sanitize(csharp_type_name(raw))), nidx)
+                    break
+        except Exception:
+            res = None
+        cache[mi] = res
+        return res
+
+    def _accessor_sugar(self, mi, recv, rest):
+        """fix 137: member spelling of a proved accessor call.
+
+        ``recv`` is the receiver text of an instance accessor (a leading
+        ``&`` already stripped by the caller) or the owner type text of a
+        static one; ``rest`` is the declared argument list without the
+        receiver. Returns ``('expr', text)`` for a getter, ``('stmt',
+        text)`` (no ``;``) for a setter, or None: not an accessor row,
+        arity disagreeing with the row, a placeholder argument, a static
+        indexer, or a receiver text that is not receiver-shaped.
+        """
+        ap = self._accessor_prop(mi) if mi is not None else None
+        if ap is None or not recv:
+            return None
+        kind, pname, nidx = ap
+        if self.meta.methods[mi].is_static:
+            if nidx:
+                return None
+            head = recv
+        else:
+            if not _recv_shaped(recv):
+                return None
+            head = _recv_fold(recv)
+        if any(a in ('?', '', '_') for a in rest):
+            return None
+        if kind == 'get':
+            if len(rest) != nidx:
+                return None
+            if nidx == 0:
+                return ('expr', acc_get('%s.%s' % (head, pname)))
+            return ('expr', acc_get('%s[%s]' % (head, ', '.join(rest))))
+        if len(rest) != nidx + 1:
+            return None
+        if nidx == 0:
+            return ('stmt', acc_set('%s.%s' % (head, pname), rest[-1]))
+        return ('stmt', acc_set('%s[%s]' % (head, ', '.join(rest[:-1])), rest[-1]))
+
+    def _static_owner(self, name, mi):
+        """fix 137: the owner text of a resolved static call `Owner.method`."""
+        try:
+            suf = '.' + self.meta.methods[mi].name
+        except Exception:
+            return None
+        if name and name.endswith(suf) and len(name) > len(suf):
+            return name[:-len(suf)]
+        return None
+
+    def _tail_accessor(self, mi, args):
+        """fix 137: accessor spelling of a resolved tail call's printed
+        argument list (receiver first for instance accessors). A getter
+        tail in a void caller declines: `R.X; return;` is not a statement.
+        """
+        try:
+            m = self.meta.methods[mi]
+        except Exception:
+            return None
+        if '.' in m.name:
+            return None
+        if m.is_static:
+            own = self._static_owner(self._info_name(('method', mi)), mi)
+            sg = self._accessor_sugar(mi, own, list(args)) if own else None
+        elif args:
+            r = args[0]
+            if r.startswith('&') and _REFARG_RX.match(r[1:]):
+                r = r[1:]
+            sg = self._accessor_sugar(mi, r, list(args[1:]))
+        else:
+            sg = None
+        if sg is None or (sg[0] == 'expr' and self._caller_is_void()):
+            return None
+        return sg[1]
 
     def _emit_tail(self, ip, call, asm, void=False, marker=True):
         """Emit a tail call, honoring a void caller. -- fix 95
@@ -2989,6 +3105,19 @@ class _CallsMixin:
                         elif not mbase2.startswith(('set_', 'get_')) \
                                 and mbase2 != '.ctor':
                             short2 = '%s.%s(%s)' % (_recv_fold(rt2), mbase2, ', '.join(rest[1:]))
+                # fix 137: static getters, indexer rows and parameter /
+                # local receivers (`hits[0]`, `Random.onUnitSphere`)
+                if (short2 is None or short2.endswith(')')) and '.' not in m2.name:
+                    _sg2 = None
+                    if m2.is_static:
+                        _own2 = self._static_owner(name, mi)
+                        _sg2 = self._accessor_sugar(mi, _own2, list(rest)) if _own2 else None
+                    elif rest and rest[0] not in ('?', ''):
+                        _r2 = rest[0][1:] if rest[0].startswith('&') \
+                            and _REFARG_RX.match(rest[0][1:]) else rest[0]
+                        _sg2 = self._accessor_sugar(mi, _r2, list(rest[1:]))
+                    if _sg2 is not None and _sg2[0] == 'expr':
+                        short2 = _sg2[1]
             self._kill_stale(buf)
             if short2 is not None:
                 self.emit(ins.ip, '%s = %s;' % (buf, short2), asm)
@@ -3066,6 +3195,12 @@ class _CallsMixin:
             # explicit interface implementations carry dotted accessor names
             # (IFace.get_X); the accessor checks read the last segment
             mbase = mname.rpartition('.')[2] if '.' in mname else mname
+            # fix 137: a parameterized property is declared `this[...]`
+            # whatever its metadata name (String.Chars), so its accessors
+            # fold through the indexer branches below exactly like Item.
+            _ap137 = self._accessor_prop(mi) if '.' not in mname else None
+            if _ap137 is not None and _ap137[2] >= 1:
+                mbase = 'get_Item' if _ap137[0] == 'get' else 'set_Item'
             # a proved generic identity (exact hidden-slot match) prints its
             # closed token; the metadata open name feeds only the guards
             if info is not None and info[0] == 'generic':
@@ -3230,6 +3365,17 @@ class _CallsMixin:
             m2 = self.meta.methods[mi]
             if m2.is_static and m2.name.startswith('get_') and m2.param_count == 0:
                 short = '%s.%s' % (name.rsplit('.', 1)[0], m2.name[4:])
+            # fix 137: a static property setter is an assignment
+            # (`Gizmos.set_color(c)` -> `Gizmos.color = c;`)
+            if short is None and m2.is_static:
+                _own = self._static_owner(name, mi)
+                _sg = self._accessor_sugar(mi, _own, list(args)) if _own else None
+                if _sg is not None and _sg[0] == 'stmt':
+                    self._kill_stale(acc_lhs(_sg[1]))
+                    self.emit(ins.ip, _sg[1] + ';', asm)
+                    for rr in VOLATILE:
+                        self.regs.pop(rr, None)
+                    return
         # receiver-tracked but not folded, or receiver untracked (byref
         # receivers loaded through usage slots, or plain obj receivers the
         # register tracking missed): for non-static calls arg0 IS the
@@ -3247,6 +3393,17 @@ class _CallsMixin:
                     or re.match(r'^s_[0-9a-fA-F]+$', a0):
                 args[0] = a0
                 cand = '%s.%s(%s)' % (_recv_fold(args[0]), mdot, ', '.join(args[1:]))
+                # fix 137: proved accessor rows use member syntax
+                _sg = self._accessor_sugar(mi, a0, list(args[1:])) \
+                    if '.' not in m2.name else None
+                if _sg is not None and _sg[0] == 'stmt':
+                    self._kill_stale(acc_lhs(_sg[1]))
+                    self.emit(ins.ip, _sg[1] + ';', asm)
+                    for rr in VOLATILE:
+                        self.regs.pop(rr, None)
+                    return
+                if _sg is not None:
+                    cand = _sg[1]
                 if len(cand) < 150:
                     short = cand
             elif _recv_shaped(a0) and not m2.name.startswith('.'):
@@ -3258,6 +3415,17 @@ class _CallsMixin:
                 # `obj22[num2].SetActive(0)`). ctor names keep their
                 # dedicated paths; unshaped texts stay static-style.
                 cand = '%s.%s(%s)' % (_recv_fold(a0), mdot, ', '.join(args[1:]))
+                # fix 137: proved accessor rows use member syntax
+                _sg = self._accessor_sugar(mi, a0, list(args[1:])) \
+                    if '.' not in m2.name else None
+                if _sg is not None and _sg[0] == 'stmt':
+                    self._kill_stale(acc_lhs(_sg[1]))
+                    self.emit(ins.ip, _sg[1] + ';', asm)
+                    for rr in VOLATILE:
+                        self.regs.pop(rr, None)
+                    return
+                if _sg is not None:
+                    cand = _sg[1]
                 if len(cand) < 150:
                     short = cand
         # --- runtime-helper arity: `name` from rt_names knows the true

@@ -2,6 +2,51 @@
 
 ## Current work: fixes 126-134 compile-gate slices (2026-10-06, on `main`)
 
+**Fix 137 (IN FLIGHT, accessor sugar): proved property-row accessors use
+the member syntax the emitter declares (`lifter/calls.py` `_accessor_prop`
+/ `_accessor_sugar`: `s.get_Chars(i)` -> `s[i]`, static getters ->
+`Owner.Prop`, setters -> assignments incl. indexer sets; tails in
+`dec/analyze.py` + `lifter/insn.py`, short2 + normal call paths).
+Fix 137b: the sugar travels the pipeline as call-shaped markers
+(`__accget(R.X)` / `__accset(R.X)(v)`, `il2cpp/expr.py`) so every text
+purity test keeps treating the accessor as the call it is; `lift_method`
+(`dec/build.py`) unwraps them last, after all DCE/CSE. The hole it
+closes: a bare `R.X` getter reads as a pure load and was DCE'd when
+unused / re-evaluated into a loop head (mi 5694 AppendFormatHelper's
+`format.get_Chars(i)` -- a call that can throw -- vanished; post-fix it
+reads `format[i]` and the loops resugar to `for`). Portable 1,309
+passed (7 new marker/unwrap tests). mdiff (7 methods, post-marker):
+six one/two-line improvements (mi 26747 Rpc_CMD_Heal `set_health` ->
+`health =`, 24208 tail setter, 23902 static getter, 23554 2x static
+setter, 12710 Chars indexer, 59905 `List<T>.get_Item(hits, i)` ->
+`hits[i]`) + the mi 5694 reshape. Game suite: 263 passed / 4 failed =
+the mi-26747 golden (intended) + 3 mi-5694 temp-renumber pins (intents
+hold: `this.Append(character1)`, `Format(obj155, obj74, provider)`,
+`if (obj84 == 0)`); all 4 need a user-approved re-pin. Gate b11 was
+built from PRE-marker code: 492,867 -> 486,624 (-6,243; CS1061 -4,069,
+CS0571 -2,433) but parse codes rose (CS1525 +36, CS1002/CS1003/CS1513
++18 each) -- the bare sugar let `_ternary` fold `if (c) X = a; return;
+else X = b; return;` into `X = c ? a; return : b; return;`
+(SlowmoToggler/KeybindsManager/CheckMSAA/TMP_InputField); post-marker
+lifts of all three shapes are clean if/else. Gate b12 (post-marker
+code, 10/10 groups exit 0, 11,262 files, brace audit 0, zero `__acc`
+leaks tree-wide) vs cg7: 513,959 -> 486,559 (-27,400). Fix-137-only
+delta b10 -> b12: 492,867 -> 486,559 (-6,308; CS1061 -4,048, CS0571
+-2,433, CS0019 -455; relabel rises CS1503 +364, CS0103 +107, CS0266
++95, CS0021 +88, CS0029 +37, CS0120 +13) with ZERO parse codes in the
+delta. Sampled rises are relabels of already-broken lines (same
+precedent as fix 135/136): CaseInsensitiveAscii.cs:37
+`obj7.get_Chars(0)` (CS1061) -> `obj7[0]` (CS0021); Guid.cs
+`string.IndexOf(...)` same statement, shifted line; XsdDateTime.cs file
+total 2,434 -> 1,445 (-989) with its CS1503 +205 unveiled on
+object-typed receivers. OPEN (landing blocker, under investigation):
+mscorlib RegistryKey.cs +14 CS0103 `num10` -- the newly-pure
+`stringBuilder1[num10]` loop resugared while->for and the minted
+for-header reads `num10` with no declaration in the body (rename /
+decl-drop interaction exposed by the sugar, repro mi 516 FixupPath).
+Full game suite with final code not yet re-run (game138 ran pre-marker
+code). NOT landed, NOT pushed, NOT re-pinned (all need user call).**
+
 **Fix 135 (CS0019 slice, 2026-10-06): `_numeric_obj_retype` in
 `il2cpp/dec/highlevel.py` (end of `_rename_locals`) retypes an untracked
 `object objN` temp to `int`/`long` (renamed into the num family) when

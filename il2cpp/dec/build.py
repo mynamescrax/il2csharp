@@ -5,6 +5,7 @@ from il2cpp.metadata import MethodDef, TypeDef
 from il2cpp.stmt_text import _cond_dewrap
 from il2cpp.text import imm_of, reg_name
 from il2cpp.names import safe_ident
+from il2cpp.expr import unwrap_accessor_markers
 import collections
 
 class _BuildMixin:
@@ -334,7 +335,8 @@ class _BuildMixin:
             params = set()
         params.update(('this', 'value'))
         lines, _ = hoist_escaping_locals(lines, params)
-        return self._sret_local_decl(lines, m)
+        # fix 137b: accessor markers unwrap after every purity-judging pass
+        return [unwrap_accessor_markers(ln) for ln in self._sret_local_decl(lines, m)]
 
     _SRET_TOK_RX = re.compile(r'(?<![\w.])__ret\b')
 
