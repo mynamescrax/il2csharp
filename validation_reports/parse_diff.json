@@ -1,0 +1,22 @@
+{
+  "before": {
+    "files": 11107,
+    "bad_files": 2,
+    "errors": 0,
+    "missing": 0,
+    "recovery_nodes": 8
+  },
+  "after": {
+    "files": 11107,
+    "bad_files": 0,
+    "errors": 0,
+    "missing": 0,
+    "recovery_nodes": 0
+  },
+  "newly_bad": [],
+  "cleared": [
+    "Obi/Obi/BurstDensityConstraintsBatch.cs",
+    "Unity.InputSystem/UnityEngine/InputSystem/Touchscreen.cs"
+  ],
+  "changed_bad_files": []
+}

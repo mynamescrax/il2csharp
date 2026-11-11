@@ -1,0 +1,2 @@
+# Optional: ARM64 decoding/CFG scaffold, not full ARM64 semantics.
+capstone>=5,<6

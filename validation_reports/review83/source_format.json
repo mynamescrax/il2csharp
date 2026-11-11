@@ -1,0 +1,22 @@
+{
+  "kind": "Review 83 core source format audit",
+  "files": {
+    "il2csharp.py": {
+      "bytes": 451266,
+      "sha256": "2499e0a4cee29670d289164ed1e250b7d0b91c7b04e9256b36ea8cf40a4decac",
+      "utf8_bom": true,
+      "lf_count": 9746,
+      "crlf_count": 9746,
+      "crlf_only": true
+    },
+    "decompiler.py": {
+      "bytes": 383844,
+      "sha256": "b0a9c0660e9708d18da611d7b725d9962c33b4315e89d5e1c218f386ebe88814",
+      "utf8_bom": false,
+      "lf_count": 8141,
+      "crlf_count": 8141,
+      "crlf_only": true
+    }
+  },
+  "success": true
+}

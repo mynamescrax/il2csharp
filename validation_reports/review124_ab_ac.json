@@ -1,0 +1,16 @@
+{
+  "kind": "fix124 main-vs-branch emitted-tree diff",
+  "main_source": "git archive HEAD (3ffe392) -> work/fix124_ab/main",
+  "branch_source": "working tree (HEAD + fix 124)",
+  "build_scope": "--only Assembly-CSharp --strict",
+  "files_main": 490,
+  "files_branch": 490,
+  "only_in_main": [],
+  "only_in_branch": [],
+  "changed_file_count": 155,
+  "changed_files_pure_fix124": 155,
+  "changed_lines_pure_fix124": 1701,
+  "files_with_unexpected_delta": 0,
+  "unexpected_line_count": 0,
+  "line_count_deltas": []
+}

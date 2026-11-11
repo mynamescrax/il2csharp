@@ -1,0 +1,11 @@
+{
+  "kind": "tree-sitter C# syntax gate",
+  "tree": "/data/il2csharp_work/review84_smoke_out",
+  "files": 2134,
+  "bad_files": 0,
+  "errors": 0,
+  "missing": 0,
+  "recovery_nodes": 0,
+  "details": {},
+  "elapsed_seconds": 5.93
+}

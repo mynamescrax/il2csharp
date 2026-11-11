@@ -1,0 +1,19 @@
+{
+  "production_helper_discovery": "unique structural match; no address/name hardcoded",
+  "distinct_native_instruction_sites": {
+    "CVTPS2PD": 975,
+    "SQRTPD": 211,
+    "CVTPD2PS": 634
+  },
+  "proved_packed_pattern_sites": {
+    "SQRTPD_roots": 211,
+    "conversions": 155,
+    "normal_arm_narrowings": 15
+  },
+  "distinct_native_helper_transfers": {
+    "total": 248,
+    "paired_packed_diamond_calls": 211,
+    "direct_scalar_calls": 29,
+    "direct_tail_jumps": 8
+  }
+}

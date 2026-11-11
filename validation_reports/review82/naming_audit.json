@@ -1,0 +1,307 @@
+{
+  "kind": "Review 82 object-local readability audit",
+  "scope": "all 11,107 generated C# files",
+  "concrete_typed_obj_declarations": {
+    "before": 115093,
+    "after": 802,
+    "reduced_by": 114291,
+    "reduction_percent": 99.303
+  },
+  "obj_identifier_occurrences": {
+    "before": 1425443,
+    "after": 1101280,
+    "reduced_by": 324163,
+    "reduction_percent": 22.741
+  },
+  "syntax_provable_object_declarations": {
+    "before": 414,
+    "after": 21,
+    "refined": 393,
+    "refined_percent": 94.928,
+    "retained_by_guard": [
+      {
+        "path": "System/Mono/Net/Security/MobileAuthenticatedStream.cs",
+        "line": 791,
+        "text": "object obj55 = new byte[internalBuffer.Size + internalBuffer.Offset + num2];"
+      },
+      {
+        "path": "System/Mono/Net/Security/MobileAuthenticatedStream.cs",
+        "line": 798,
+        "text": "object obj55 = new byte[internalBuffer.Size + internalBuffer.Offset + num2];"
+      },
+      {
+        "path": "System/Mono/Net/Security/MobileAuthenticatedStream.cs",
+        "line": 826,
+        "text": "object obj104 = new byte[internalBuffer.Size + internalBuffer.Offset + num2];"
+      },
+      {
+        "path": "System/Mono/Net/Security/MobileAuthenticatedStream.cs",
+        "line": 833,
+        "text": "object obj104 = new byte[internalBuffer.Size + internalBuffer.Offset + num2];"
+      },
+      {
+        "path": "Unity.InputSystem/UnityEngine/InputSystem/InputActionMap.cs",
+        "line": 968,
+        "text": "object obj94 = new InputControl[num9 >> 32];"
+      },
+      {
+        "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+        "line": 452,
+        "text": "object obj4 = new object[0];"
+      },
+      {
+        "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+        "line": 458,
+        "text": "object obj4 = new object[0];"
+      },
+      {
+        "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+        "line": 464,
+        "text": "object obj4 = new object[0];"
+      },
+      {
+        "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+        "line": 475,
+        "text": "object obj4 = new object[0];"
+      },
+      {
+        "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+        "line": 481,
+        "text": "object obj4 = new object[0];"
+      },
+      {
+        "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+        "line": 487,
+        "text": "object obj4 = new object[0];"
+      },
+      {
+        "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+        "line": 493,
+        "text": "object obj4 = new object[0];"
+      },
+      {
+        "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+        "line": 499,
+        "text": "object obj4 = new object[0];"
+      },
+      {
+        "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+        "line": 505,
+        "text": "object obj4 = new object[0];"
+      },
+      {
+        "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+        "line": 511,
+        "text": "object obj4 = new object[0];"
+      },
+      {
+        "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+        "line": 517,
+        "text": "object obj4 = new object[0];"
+      },
+      {
+        "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+        "line": 523,
+        "text": "object obj4 = new object[0];"
+      },
+      {
+        "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+        "line": 529,
+        "text": "object obj4 = new object[0];"
+      },
+      {
+        "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+        "line": 535,
+        "text": "object obj4 = new object[0];"
+      },
+      {
+        "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+        "line": 541,
+        "text": "object obj4 = new object[0];"
+      },
+      {
+        "path": "mscorlib/Mono/Math/BigInteger.cs",
+        "line": 609,
+        "text": "object obj17 = new byte[(obj15 == 0) ? obj14 : (this.BitCount() >> 5 + 0x1) * 4];"
+      }
+    ]
+  },
+  "typed_foreach_obj_declarations": {
+    "before": 781,
+    "after": 496,
+    "reduced_by": 285
+  },
+  "semantic_declarations_after": 113921,
+  "top_semantic_prefixes_after": [
+    [
+      "type",
+      35484
+    ],
+    [
+      "text",
+      7672
+    ],
+    [
+      "list",
+      2596
+    ],
+    [
+      "vector",
+      2111
+    ],
+    [
+      "dictionary",
+      1626
+    ],
+    [
+      "character",
+      1581
+    ],
+    [
+      "func",
+      1227
+    ],
+    [
+      "action",
+      1097
+    ],
+    [
+      "byteArray",
+      1050
+    ],
+    [
+      "enumerator",
+      975
+    ],
+    [
+      "textArray",
+      803
+    ],
+    [
+      "gameObject",
+      763
+    ],
+    [
+      "value",
+      747
+    ],
+    [
+      "exception",
+      736
+    ],
+    [
+      "stringBuilder",
+      719
+    ],
+    [
+      "array",
+      670
+    ],
+    [
+      "bytePtr",
+      659
+    ],
+    [
+      "transform",
+      655
+    ],
+    [
+      "visualElement",
+      579
+    ],
+    [
+      "instruction",
+      554
+    ],
+    [
+      "inputControl",
+      543
+    ],
+    [
+      "commandBuffer",
+      537
+    ],
+    [
+      "simulation",
+      532
+    ],
+    [
+      "simulationMessagePtr",
+      516
+    ],
+    [
+      "controlBuilder",
+      453
+    ],
+    [
+      "task",
+      447
+    ],
+    [
+      "typeConverter",
+      435
+    ],
+    [
+      "quaternion",
+      426
+    ],
+    [
+      "delegate",
+      423
+    ],
+    [
+      "xmlQualifiedName",
+      402
+    ],
+    [
+      "bigInteger",
+      393
+    ],
+    [
+      "float",
+      388
+    ],
+    [
+      "intArray",
+      387
+    ],
+    [
+      "hashtable",
+      360
+    ],
+    [
+      "asyncResult",
+      353
+    ],
+    [
+      "utf8StringHandle",
+      339
+    ],
+    [
+      "valueArray",
+      332
+    ],
+    [
+      "encoding",
+      324
+    ],
+    [
+      "cultureInfo",
+      324
+    ],
+    [
+      "arrayList",
+      322
+    ]
+  ],
+  "stability": {
+    "files_before": 11200,
+    "files_after": 11200,
+    "changed_files": 5398,
+    "csharp_line_delta": 0,
+    "unknown_token_delta": 0,
+    "math_sqrt_delta": 0,
+    "raw_sqrt_helper_after": 0
+  },
+  "proof_boundary": "Only already concrete declaration types drive names. Untracked object locals remain objN. Object declarations refine only for single-definition array, string, or exact typeof RHS values with no ref/out/in/address escape."
+}

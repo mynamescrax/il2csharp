@@ -1,0 +1,30 @@
+{
+  "stage": "pre-final archive extraction; final archive differs only in release evidence/docs and the regenerated manifest, not source, tests, fixtures, or final_out",
+  "archive": "il2csharp-review80-provisional.zip",
+  "archive_bytes": 113866101,
+  "archive_sha256": "e9890969148142e67f433d06560c1ebdbe99ca3817c3cd1ed1f10a086acab98c",
+  "root_layout": "il2csharp/il2csharp.py",
+  "root_layout_ok": true,
+  "manifest_entries_checked": 11753,
+  "manifest_failures": 0,
+  "tests_passed": 265,
+  "tests_exit_code": 0,
+  "compiled_smoke_passed": true,
+  "compiled_smoke_exit_code": 0,
+  "compiled_smoke_scope": "actual CFG-loop/lifter patterns and emitter-generated unsafe project; not final_out",
+  "core_sha256": {
+    "il2csharp.py": "214aebc8833c50415441c0649427b560bb7d05d4530be824be5f52b0de96e348",
+    "decompiler.py": "5e787d4cd949f6f60668480e37617201630bb21c65430f5a6ee2c79b5399aac0"
+  },
+  "fixtures_sha256": {
+    "GameAssembly.dll": "d7209d756930bcb2d9bc2e763a74de3b86ec5d94910796f4dc610308650a70ab",
+    "global-metadata.dat": "a2c6baf6b3aa18866f1871a393cd88d9f8397593284dd2d49cfb9adaaacf81d9"
+  },
+  "logs": [
+    "tests_release_copy.log",
+    "csharp_smoke_release_copy.log",
+    "manifest_release_copy.log"
+  ],
+  "initial_extracted_file_count": 11755,
+  "post_test_file_count_including_disposable_caches": 11831
+}

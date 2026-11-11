@@ -1,0 +1,18 @@
+{
+  "il2csharp.py": {
+    "bytes": 460306,
+    "sha256": "9cfd13799917ba9edf4550489335d39a2a4eed39a9608d140efa4f2411550216",
+    "utf8_bom": true,
+    "lf_count": 9943,
+    "crlf_count": 9943,
+    "crlf_only": true
+  },
+  "decompiler.py": {
+    "bytes": 383736,
+    "sha256": "79cd0d79d8b89374ca99da73ca4a639dbd4cc8ff2f2be5c89125e2e2dcda617a",
+    "utf8_bom": false,
+    "lf_count": 8140,
+    "crlf_count": 8140,
+    "crlf_only": true
+  }
+}

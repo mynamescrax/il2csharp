@@ -1,0 +1,30 @@
+{
+  "before_errors": 10305,
+  "after_errors": 2463,
+  "before_files_with_errors": 1516,
+  "after_files_with_errors": 726,
+  "changed_codes": {
+    "CS0073": [
+      26,
+      0
+    ],
+    "CS0501": [
+      7718,
+      0
+    ],
+    "CS0523": [
+      1,
+      0
+    ],
+    "CS0535": [
+      88,
+      0
+    ],
+    "CS8051": [
+      9,
+      0
+    ]
+  },
+  "unavailable_body_throws": 9193,
+  "broken_global_exception_references": 0
+}

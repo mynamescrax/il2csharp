@@ -1,0 +1,12 @@
+{
+  "candidate": "work/review122_out",
+  "promoted": "final_out",
+  "candidate_files": 11274,
+  "promoted_files": 11274,
+  "candidate_aggregate_sha256": "3a513e9a97037d8fe12807addb6c1bfd205be2cd9cce131d472ea6eda13b49de",
+  "promoted_aggregate_sha256": "3a513e9a97037d8fe12807addb6c1bfd205be2cd9cce131d472ea6eda13b49de",
+  "only_in_candidate": [],
+  "only_in_promoted": [],
+  "mismatches": [],
+  "backup_of_superseded": "bckups/final_out_fix121"
+}

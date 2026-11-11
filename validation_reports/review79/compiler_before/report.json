@@ -1,0 +1,5 @@
+{
+  "scope": "baseline emitter-generated unsafe project only",
+  "exit_code": 1,
+  "expected_missing_unsafe_flag_failure": true
+}

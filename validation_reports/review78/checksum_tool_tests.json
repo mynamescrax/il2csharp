@@ -1,0 +1,7 @@
+{
+  "matching_content": true,
+  "unlisted_extras_allowed": true,
+  "modified_content_rejected": true,
+  "missing_file_rejected": true,
+  "escaping_manifest_path_rejected": true
+}

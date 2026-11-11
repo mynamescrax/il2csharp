@@ -1,0 +1,16 @@
+{
+  "scope": "synthetic instruction-generated C# only; NOT final_out",
+  "fragments": {
+    "sqrt_float": "(float)Math.Sqrt(value)",
+    "sqrt_double": "Math.Sqrt(value)",
+    "array_body": "var t0 = new string[2];\nt0[0x0] = \"left\";\nt0[0x1] = \"right\";\nvar t1 = new string[2];",
+    "first_array": "t0",
+    "second_array": "t1",
+    "sret_body": "s_40 = s_20.point;",
+    "loop_body": "while (true)\n{\nvar t0 = loopSource;\nif (!(t0 != 0))\n{\nt0 = Refill();\n}\nif (t0 == 0)\n{\nbreak;\n}\nTick();\n}"
+  },
+  "compiled": true,
+  "executed": true,
+  "generated_unsafe_project_compiled": true,
+  "exit_code": 0
+}

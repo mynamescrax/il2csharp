@@ -1,0 +1,28 @@
+{
+  "kind": "Review 82 separately extracted candidate-archive verification",
+  "verified_at_utc": "2026-09-09T22:41:26.416090+00:00",
+  "archive_filename": "il2csharp_review82_candidate.zip",
+  "archive_bytes": 226286727,
+  "archive_sha256": "fb2c80eaaa3c942aef47315725657e0241bce79be26898bc681ba2229f7e0b64",
+  "root_layout": "il2csharp/il2csharp.py",
+  "manifest": {
+    "checked_files": 12414,
+    "failures": 0,
+    "log": "manifest_release_copy.log"
+  },
+  "tests": {
+    "passed": 293,
+    "failed": 0,
+    "python_hash_seed": "0",
+    "fixture_environment": true,
+    "log": "tests_release_copy.log"
+  },
+  "generated_output": {
+    "csharp_files": 11107,
+    "project_files": 91,
+    "concrete_typed_obj_declarations": 802,
+    "raw_sqrt_helper_references": 0
+  },
+  "success": true,
+  "packaging_note": "The handoff ZIP is rebuilt after adding these verification records and regenerating SHA256SUMS.txt. Core source, tests, fixtures, and final_out are unchanged; the final handoff ZIP is then extracted, checksum-verified, and fully retested."
+}

@@ -1,0 +1,159 @@
+{
+ "kind": "audit batch 3 landing evidence (unpromoted candidate r10_out1)",
+ "date": "2026-09-28",
+ "fixes": [
+  "shared-body argument lanes: _shared_slot_classes/_shared_positional_args (il2cpp/lifter/calls.py)",
+  "icall overload selection by the runtime signature: _icall_sig_params/_icall_type_key/_icall_pick_overload (il2cpp/runtime/fields.py)",
+  "literal-safe $ sanitize (_sanitize_dollar) and _rename_locals masking (_mask_literals) (il2cpp/dec/textpass.py, il2cpp/dec/highlevel.py)",
+  "five per-instance runtime caches _tn_cache/_slot_cache/_fo_cache/_sf_infl_cache/_mod_ptr_cache (types/fields/registration/cli)"
+ ],
+ "fixture": {
+  "metadata_sha256": "a2c6baf6b3aa18866f1871a393cd88d9f8397593284dd2d49cfb9adaaacf81d9",
+  "binary_sha256": "d7209d756930bcb2d9bc2e763a74de3b86ec5d94910796f4dc610308650a70ab"
+ },
+ "source_sha256": {
+  "il2csharp.py": "d38845b02a16b545e1ca9e7ae214fa465e46e6dede36e96ee295b4182c1c9599",
+  "il2cpp/__init__.py": "d7e03798d1469aef63f5fdddc5cf0c69e11ebf986ce3501a89044081bea6684d",
+  "il2cpp/__main__.py": "e32a707830fc65788697593eaab69858be54ae67f0fc9e96658eedfc5e482dc4",
+  "il2cpp/arm64.py": "48c20cd29d93676a3d4e1b6527d09026211e53faf00a48ac2a2ce3d3708faca2",
+  "il2cpp/arm64_dec.py": "324c58a2da6f3c340aaa7746093a27b7ccf9fb0f75ec043e70da5b1d653f7d08",
+  "il2cpp/binary.py": "50d795723811a3b1a54067e1fc4fbddffa8ba2b6f05117e66ad81756a10ad84f",
+  "il2cpp/cfg.py": "5b475d23ce6b902f8db315c73537c9af8c88ed6ecd0b8a547df4aa6aa000f271",
+  "il2cpp/cli.py": "6f3ec3ea40b1b0e9075eddc0daa265051f24ff0290fc17363ec126de1f230a1e",
+  "il2cpp/common.py": "22e90429c9412b6b0f95cca7b05b8d3e0ff0e16ff608abd23a93418f9990ff55",
+  "il2cpp/csharp.py": "efe96ff669b2d789780b905eab61866166a9e16ac0910e20486eabf17e6cce1b",
+  "il2cpp/dec/__init__.py": "9f678c95ba6c7e390558a96d65dec18708ed45613071fbbcece2af04567847f6",
+  "il2cpp/dec/analyze.py": "17e3b9a55eb8d3645e432cf6529b56651fc0ecf40d1dc6380fe0cd46dde1da32",
+  "il2cpp/dec/build.py": "35f4c0ca6bd632b351189b797720c551c3e10a2ae32deb179e556dd3ff6dd526",
+  "il2cpp/dec/dataflow.py": "4f58512c620c8b85d74063c82d13eee4d95f8353d4dff49c97888436ff6755a5",
+  "il2cpp/dec/emit.py": "45e1ed1eb1d7009dd7be0116c883b4e525c40202a012775aa1cfc3cbc4f16e3f",
+  "il2cpp/dec/flow.py": "cd95da456779740067491eadebce78a79fe879427ef7ec5ab4af5cb5b617efa0",
+  "il2cpp/dec/highlevel.py": "f7e5567227a2d273d88980fbe5088b450a406231b4da5a189b52e6d3b2b30ab0",
+  "il2cpp/dec/seh.py": "36a08eb15acadb6e6fe4c48c2e34dc3941c84f56c8887950300b0c458a95abc1",
+  "il2cpp/dec/structure.py": "07aed325f67909841f1dbee15448d0819c2159a1db298580972429b6a379d8fb",
+  "il2cpp/dec/sugar.py": "e77998545e3af805115a64de4a1758c969791967dd8966e8d52e03195505ba56",
+  "il2cpp/dec/textpass.py": "6d981fe119c1b1f4dd895f216c40fe49f2484e6a84fe4112bcf1800c88a3e65a",
+  "il2cpp/emitter.py": "3e599e0495266985e82070fc9b374029b7184cb8fee726002dcb023291c0be13",
+  "il2cpp/expr.py": "5d3eacecb4262d704c7eb96924d7c3cfc136d06dfa4826562f1718c1e6bb5f5e",
+  "il2cpp/headers.py": "a976e3337f6a21fb56b67ed370972b8bef90b95f76c8e0c70f68eb713b69f7e3",
+  "il2cpp/lifter/__init__.py": "e76a5c053880af143736891cddf472cb2021e4000791f99b56bd51daca68ec6f",
+  "il2cpp/lifter/aggregates.py": "88fe21c27ce065a1f4d574ffed5d7b72829a1dd5cb600a2c814eb6f1fe313097",
+  "il2cpp/lifter/calls.py": "c3938162b66976ffd01bef7d809f11bcb76f6e0906b4c2d279ff63d37d9a8847",
+  "il2cpp/lifter/insn.py": "3ed33689c65a4bb6a682995c3a281a9675481c2cd9ec8b9b2e5b976a45b63007",
+  "il2cpp/lifter/render.py": "c352c606404f0f5813ff80b81e1032a1c06f9fb0c378747d1886cc2b12096258",
+  "il2cpp/lifter/state.py": "eb9bbb8ae8c366355dafb74f9a40a531877315ef6b13b2570b084093fadac36b",
+  "il2cpp/lifter/values.py": "35ef15b86e3d1133f160aa81a7c4b38c13ebbd611424d1aec8f116a0940b2da6",
+  "il2cpp/metadata.py": "cc8a697e2fef9b2158d99ef60e1d4b13a31e8b16487a45e476a6a1ba076cf721",
+  "il2cpp/names.py": "d2938287d8c5f0a097a7d60d10e045868e8bfc9b51c0b87fc3df531e9966e54e",
+  "il2cpp/prelude.py": "89d1f63e0b05e02b6d963cee6bfef67d207db3f5e8a5522589e560ee8b686de5",
+  "il2cpp/runtime/__init__.py": "6b7f8f8b2eae25a2cb2989183e49223f42f8d085536da42314ab68c29e37e508",
+  "il2cpp/runtime/core.py": "f420a8b68fb0c62187fb364b66ab04655d103848f1887051cbdbd517e443810c",
+  "il2cpp/runtime/eh.py": "89a47dff0d6a06b17352bb9c55b2cee899be576a51feb103bb50c2114af91336",
+  "il2cpp/runtime/fields.py": "d76c215ecefa9c62fbec8ddae6035deffa9b09a07763df458cbe51829fee10a8",
+  "il2cpp/runtime/meta.py": "174d5786763e3efdda8769e262d58904cf069837929ce362202b82150bf1b6b9",
+  "il2cpp/runtime/registration.py": "86cd52ff1d83963162ad81fddce7ecaf76934659c1296333eb7f640b5c3f1f35",
+  "il2cpp/runtime/types.py": "1302185b9ee40dd441791b74b221062bacfb7fd1d63f74949677d227bb8aa543",
+  "il2cpp/stmt_text.py": "6c7d6ff3213f9c11cd567cc4b419432586ea43947c50b01c7c19c90e801bd546",
+  "il2cpp/text.py": "f4f6bf1b61e87170ca08b89ce38c614a505ae5764fa6af2292c7dbdec0f7503d",
+  "il2cpp/x64.py": "96a5ec7c509191db43b0c45501b0b7e8fe6078efea1ca49d23e6cec47e4bc7cd"
+ },
+ "strict_build_r10_out1": {
+  "files": 11183,
+  "bodies": 114458,
+  "failed": 0,
+  "structured_fallbacks": 0,
+  "type_emission_failures": 0,
+  "seconds": 1465953,
+  "note": "24.4 min; the box ran an unrelated mc-wasm build concurrently (r9's 1,085 s was an idle box)",
+  "scope": "all 88 images"
+ },
+ "brace_audit": {
+  "files": 11183,
+  "unbalanced": 0
+ },
+ "parse_gate": {
+  "files": 11183,
+  "bad_files": 0,
+  "errors": 0,
+  "missing": 0,
+  "recovery_nodes": 0
+ },
+ "paired_corpus_sweep": {
+  "methods": 116178,
+  "crashes": 0,
+  "totals": {
+   "brace_unclosed": 0,
+   "brace_underflow": 0,
+   "dangling_gotos": 0,
+   "into_block_gotos": 8075,
+   "empty_args": 0,
+   "lines": 2251858
+  },
+  "baseline_crashes": 0,
+  "baseline_lines": 2253029,
+  "into_block_identical_to_r9_baseline": true,
+  "changed_bodies": 613,
+  "added_methods": 0,
+  "removed_methods": 0,
+  "changed_body_buckets": {
+   "shared_body_marker": 230,
+   "icall_names": 48,
+   "diffgram_urn": 20,
+   "unclassified": "DCE cascade (comments no longer renamed -> a dead pure self-referential cluster drops; all stores survive) and $ literal restorations"
+  }
+ },
+ "tree_diff_final_out_r9_to_r10_out1": {
+  "paths": 11276,
+  "only_in_r9": 0,
+  "only_in_r10": 0,
+  "files_changed": 302,
+  "line_delta_in_changed_files": -1171,
+  "markers": {
+   "shared": [
+    5477,
+    5476
+   ],
+   "unknown": [
+    5225,
+    5168
+   ],
+   "indirect": [
+    946,
+    946
+   ],
+   "goto": [
+    2491,
+    2491
+   ],
+   "memN": [
+    0,
+    0
+   ],
+   "qaddr": [
+    0,
+    0
+   ],
+   "nothing": [
+    0,
+    0
+   ],
+   "dollar_literals": [
+    1,
+    75
+   ],
+   "diffgram_v1": [
+    0,
+    50
+   ]
+  },
+  "shape": "[r9, r10] occurrence counts inside the 302 changed files"
+ },
+ "golden": {
+  "rows": 64,
+  "changed_bodies": [
+   80548
+  ],
+  "review": "comments keep raw t1000/v46 names (the rename pass is now literal/comment-safe), which stops renamed comment text from feeding the later DCE: a dead pure cluster (real1..real12, self-referential) drops; all 6 stores and the array bases' renumbering survive. Regenerated with tools/make_goldens.py from this sweep+parse evidence."
+ },
+ "suite": "1117 passed / 0 failed on the merged tree (917 portable + 200 game; 1114 before rebasing onto e3763a8's three CLI tests)"
+}

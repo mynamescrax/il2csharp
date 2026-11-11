@@ -1,0 +1,80 @@
+{
+  "changed": {
+    "method": 21410,
+    "constructor": 858
+  },
+  "examples": [
+    {
+      "method": 76,
+      "flags": "0xc6",
+      "before": "public bool Equals(object obj)",
+      "after": "public override bool Equals(object obj)"
+    },
+    {
+      "method": 77,
+      "flags": "0xc6",
+      "before": "public int GetHashCode()",
+      "after": "public override int GetHashCode()"
+    },
+    {
+      "method": 88,
+      "flags": "0xc6",
+      "before": "public bool Equals(object obj)",
+      "after": "public override bool Equals(object obj)"
+    },
+    {
+      "method": 89,
+      "flags": "0xc6",
+      "before": "public int GetHashCode()",
+      "after": "public override int GetHashCode()"
+    },
+    {
+      "method": 92,
+      "flags": "0xc6",
+      "before": "public bool Equals(object obj)",
+      "after": "public override bool Equals(object obj)"
+    },
+    {
+      "method": 93,
+      "flags": "0xc6",
+      "before": "public int GetHashCode()",
+      "after": "public override int GetHashCode()"
+    },
+    {
+      "method": 232,
+      "flags": "0x1e1",
+      "before": "private int System.Globalization.ISimpleCollator.Compare(string s1, int idx1, int len1, string s2, int idx2, int len2, System.Globalization.CompareOptions options)",
+      "after": "int System.Globalization.ISimpleCollator.Compare(string s1, int idx1, int len1, string s2, int idx2, int len2, System.Globalization.CompareOptions options)"
+    },
+    {
+      "method": 277,
+      "flags": "0x1c6",
+      "before": "public byte[] GetBytes()",
+      "after": "public virtual byte[] GetBytes()"
+    },
+    {
+      "method": 280,
+      "flags": "0xc6",
+      "before": "public string ToString()",
+      "after": "public override string ToString()"
+    },
+    {
+      "method": 324,
+      "flags": "0xc6",
+      "before": "public void Initialize()",
+      "after": "public override void Initialize()"
+    },
+    {
+      "method": 325,
+      "flags": "0xc4",
+      "before": "protected void HashCore(byte[] array, int ibStart, int cbSize)",
+      "after": "protected override void HashCore(byte[] array, int ibStart, int cbSize)"
+    },
+    {
+      "method": 326,
+      "flags": "0xc4",
+      "before": "protected byte[] HashFinal()",
+      "after": "protected override byte[] HashFinal()"
+    }
+  ]
+}

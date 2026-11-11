@@ -1,0 +1,13 @@
+{
+  "kind": "environment limitation observed during fix-124 validation",
+  "symptom": "python -X utf8 il2csharp.py ... --workers N fails at ProcessPoolExecutor construction; any multi-image parallel build is unavailable, so multi-image work was restructured into per-image processes (10 balanced groups).",
+  "error": "PermissionError: [WinError 5] Access is denied (CreateFile on the Pipe)",
+  "repro": "python -c \"from concurrent.futures import ProcessPoolExecutor; ProcessPoolExecutor(2)\"",
+  "repro_result": "PermissionError: [WinError 5] Access is denied",
+  "tests_affected": [
+    "tests/test_game_parallel_build.py::test_parallel_build_is_byte_identical_to_serial",
+    "tests/test_game_parallel_build.py::test_scoped_parallel_build_engages_the_pool"
+  ],
+  "unrelated_to_fix_124": true,
+  "note": "cli.py takes the serial path when --only selects a single image, which is why the paired Assembly-CSharp builds complete normally."
+}

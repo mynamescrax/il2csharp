@@ -1,0 +1,11 @@
+{
+  "kind": "tree-sitter C# syntax gate",
+  "tree": "/vercel/sandbox/data/il2csharp_work/il2csharp/final_out",
+  "files": 11107,
+  "bad_files": 0,
+  "errors": 0,
+  "missing": 0,
+  "recovery_nodes": 0,
+  "details": {},
+  "elapsed_seconds": 27.063
+}

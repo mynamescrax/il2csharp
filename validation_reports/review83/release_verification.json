@@ -1,0 +1,24 @@
+{
+  "kind": "Review 83 isolated replacement preflight",
+  "verified_at_utc": "2026-09-10T08:00:52.126299+00:00",
+  "staging_root": "/data/il2csharp_review83_preflight/il2csharp",
+  "root_layout": "il2csharp/il2csharp.py",
+  "core_source_hashes": {
+    "il2csharp.py": "2499e0a4cee29670d289164ed1e250b7d0b91c7b04e9256b36ea8cf40a4decac",
+    "decompiler.py": "b0a9c0660e9708d18da611d7b725d9962c33b4315e89d5e1c218f386ebe88814"
+  },
+  "fixture_hashes": {
+    "testgame/GameAssembly.dll": "d7209d756930bcb2d9bc2e763a74de3b86ec5d94910796f4dc610308650a70ab",
+    "testgame/ShiftAtMidnight_Data/il2cpp_data/Metadata/global-metadata.dat": "a2c6baf6b3aa18866f1871a393cd88d9f8397593284dd2d49cfb9adaaacf81d9"
+  },
+  "final_output_files": 11200,
+  "final_output_aggregate_sha256": "3958d64f272824dede14ae130ba557f8745df50ec0f13f97db933a6d94fea8af",
+  "promotion_aggregate_sha256": "3958d64f272824dede14ae130ba557f8745df50ec0f13f97db933a6d94fea8af",
+  "output_matches_promoted": true,
+  "tests_passed": 318,
+  "tests_failed": 0,
+  "python_caches_created": 0,
+  "test_log": "tests_staging_preflight.log",
+  "success": true,
+  "note": "This isolated-copy preflight precedes the final checksum manifest. The final archive is separately extracted and manifest/test verified outside the self-checksummed tree."
+}

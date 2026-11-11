@@ -1,0 +1,334 @@
+{
+  "release": "Review 83",
+  "date": "2026-09-10",
+  "status": "complete private replacement",
+  "focus": "all-candidate shared-body return-type consensus and preserved call semantics",
+  "input_archive": {
+    "filename": "il2csharp.rar",
+    "sha256": "c0a9a7b8348f7fcdd4b74390f18747ba2e5ff7aec2194ffc0d03831d9e4d7b91",
+    "bytes": 177790169
+  },
+  "fixtures": {
+    "read_statically": true,
+    "executed": false,
+    "unchanged": true,
+    "files": {
+      "testgame/GameAssembly.dll": "d7209d756930bcb2d9bc2e763a74de3b86ec5d94910796f4dc610308650a70ab",
+      "testgame/ShiftAtMidnight_Data/il2cpp_data/Metadata/global-metadata.dat": "a2c6baf6b3aa18866f1871a393cd88d9f8397593284dd2d49cfb9adaaacf81d9"
+    }
+  },
+  "source": {
+    "hashes": {
+      "il2csharp.py": "2499e0a4cee29670d289164ed1e250b7d0b91c7b04e9256b36ea8cf40a4decac",
+      "decompiler.py": "b0a9c0660e9708d18da611d7b725d9962c33b4315e89d5e1c218f386ebe88814"
+    },
+    "review82_hashes": {
+      "il2csharp.py": "c4d6e78d8e4cd4591301f74f2e9b5d72c4ba4acc236e5e127124fb5d95ce64e9",
+      "decompiler.py": "b0a9c0660e9708d18da611d7b725d9962c33b4315e89d5e1c218f386ebe88814"
+    },
+    "formats": {
+      "il2csharp.py": {
+        "bytes": 451266,
+        "sha256": "2499e0a4cee29670d289164ed1e250b7d0b91c7b04e9256b36ea8cf40a4decac",
+        "utf8_bom": true,
+        "lf_count": 9746,
+        "crlf_count": 9746,
+        "crlf_only": true
+      },
+      "decompiler.py": {
+        "bytes": 383844,
+        "sha256": "b0a9c0660e9708d18da611d7b725d9962c33b4315e89d5e1c218f386ebe88814",
+        "utf8_bom": false,
+        "lf_count": 8141,
+        "crlf_count": 8141,
+        "crlf_only": true
+      }
+    },
+    "format_success": true
+  },
+  "tests": {
+    "review82_baseline": {
+      "passed": 293,
+      "failed": 0,
+      "log": "tests_baseline.log"
+    },
+    "final": {
+      "passed": 318,
+      "failed": 0,
+      "breakdown": {
+        "portable": 228,
+        "snapshot": 64,
+        "native_semantic": 26
+      },
+      "log": "tests_complete.log"
+    }
+  },
+  "strict_build": {
+    "partitioned": true,
+    "partitions": [
+      {
+        "log": "build_part1.log",
+        "type_files": 6787,
+        "elapsed_ms": 675254,
+        "bodies": 63112,
+        "failed": 0,
+        "fallbacks": 0,
+        "type_failures": 0
+      },
+      {
+        "log": "build_part2.log",
+        "type_files": 4662,
+        "elapsed_ms": 490846,
+        "bodies": 57829,
+        "failed": 0,
+        "fallbacks": 0,
+        "type_failures": 0
+      }
+    ],
+    "processed_with_identical_overlap": {
+      "type_files": 11449,
+      "bodies": 120941
+    },
+    "assemblies": 91,
+    "type_files": 11107,
+    "bodies": 115658,
+    "failed": 0,
+    "fallbacks": 0,
+    "type_failures": 0,
+    "overlapping_assemblies": [
+      "Unity.InputSystem.dll"
+    ],
+    "overlapping_files": 345,
+    "overlap_hash_mismatches": [],
+    "merged_files": 11200,
+    "success": true,
+    "report": "build_merge.json"
+  },
+  "syntax_gate": {
+    "tree": "final_out",
+    "files": 11107,
+    "bad_files": 0,
+    "errors": 0,
+    "missing": 0,
+    "recovery_nodes": 0,
+    "elapsed_seconds": 25.561,
+    "report": "final_parse.json"
+  },
+  "direct_sweep": {
+    "partitioned": true,
+    "methods": 116178,
+    "crashes": 0,
+    "totals": {
+      "brace_unclosed": 0,
+      "brace_underflow": 0,
+      "dangling_gotos": 0,
+      "into_block_gotos": 8067,
+      "empty_args": 0,
+      "lines": 2206891
+    },
+    "affected_methods": {
+      "into_block_gotos": 2047
+    },
+    "tail_argument_changes": 1218,
+    "tail_argument_methods": 1177,
+    "partition_elapsed_seconds": [
+      660.446,
+      442.695
+    ],
+    "raw_comparison_to_review82": {
+      "common_methods": 116178,
+      "added_methods": 0,
+      "removed_methods": 0,
+      "changed_hashes": 6351,
+      "structural_changes": 0,
+      "new_crashes": 0
+    },
+    "fixed_order_source_attribution": {
+      "source_changed_methods": 4322,
+      "partition_state_only_deltas": 2029,
+      "changed_with_consensus_lookup": 4322,
+      "changed_with_proven_consensus": 4322,
+      "unchanged_exercising_lookup": 0
+    },
+    "report": "final_sweep.json",
+    "comparison_report": "sweep_comparison.json",
+    "scope_report": "changed_method_scope.json"
+  },
+  "shared_return_consensus": {
+    "address_candidates": {
+      "shared_addresses": 13721,
+      "candidates": 147212,
+      "declined_open_or_unreadable": 2255,
+      "consensus_addresses": 7402,
+      "consensus_candidates": 34930,
+      "declined_type_disagreement": 4047,
+      "declined_abi_or_ref_model": 17
+    },
+    "review82_call_sites": {
+      "all_shared_calls": 17918,
+      "address_consensus_calls": 8932,
+      "shared_object_result_declarations": 11031,
+      "eligible_object_results": 6388,
+      "declined_no_consensus": 4633,
+      "declined_unobserved_sret_buffer": 10
+    },
+    "proof_boundary": "Every candidate must be readable, fully closed, structurally identical, and ABI-supported; root MethodSpec VAR/MVAR may inflate exactly. Ref returns, generic value types, unsupported ABI classes, disagreements, and open/unreadable candidates decline. Sret additionally requires an observed address buffer per call.",
+    "rendered_semantics": {
+      "counts": {
+        "bare": 3543,
+        "direct_condition": 2550
+      },
+      "types": {
+        "bare": {
+          "void": 3543
+        },
+        "direct_condition": {
+          "bool": 2550
+        }
+      },
+      "success": true
+    },
+    "census_report": "consensus_census.json",
+    "render_report": "rendered_shared_semantics.json"
+  },
+  "generated_output": {
+    "inventory": {
+      "before": 11200,
+      "after": 11200,
+      "shared": 11200,
+      "added": [],
+      "removed": [],
+      "changed": 1376,
+      "unchanged": 9824,
+      "changed_cs": 1376
+    },
+    "before_metrics": {
+      "files": 11200,
+      "cs_files": 11107,
+      "cs_lines": 2907732,
+      "obj_tokens": 1101280,
+      "object_obj_decls": 116839,
+      "shared_calls": 17918,
+      "shared_typed_decls": 14010,
+      "shared_condition_lines": 0,
+      "shared_object_decls": 11031
+    },
+    "after_metrics": {
+      "files": 11200,
+      "cs_files": 11107,
+      "cs_lines": 2913021,
+      "obj_tokens": 1099283,
+      "object_obj_decls": 113155,
+      "shared_calls": 21504,
+      "shared_typed_decls": 11417,
+      "shared_condition_lines": 2550,
+      "shared_bare_statements": 3543,
+      "shared_object_decls": 5368,
+      "shared_leading_assignments": 544
+    },
+    "deltas": {
+      "cs_files": 0,
+      "cs_lines": 5289,
+      "files": 0,
+      "obj_tokens": -1997,
+      "object_obj_decls": -3684,
+      "shared_bare_statements": 3543,
+      "shared_calls": 3586,
+      "shared_condition_lines": 2550,
+      "shared_leading_assignments": 544,
+      "shared_object_decls": -5663,
+      "shared_typed_decls": -2593
+    },
+    "aggregate_sha256": "3958d64f272824dede14ae130ba557f8745df50ec0f13f97db933a6d94fea8af",
+    "report": "output_audit.json",
+    "complete_diff": "output_changes.diff.gz"
+  },
+  "snapshots": {
+    "snapshots": 64,
+    "changed": 4,
+    "unchanged": 60,
+    "same_method_inventory": true,
+    "changed_methods": [
+      {
+        "mi": 15013,
+        "va": "0x182eaa190",
+        "type": "UnityEngine.UIElements.SortColumnDescription",
+        "name": "set_columnName"
+      },
+      {
+        "mi": 32833,
+        "va": "0x18264a0d0",
+        "type": "UnityEngine.InputSystem.Touchscreen",
+        "name": "OnStateEvent"
+      },
+      {
+        "mi": 32837,
+        "va": "0x18264a970",
+        "type": "UnityEngine.InputSystem.Touchscreen",
+        "name": "UnityEngine.InputSystem.LowLevel.ICustomDeviceReset.Reset"
+      },
+      {
+        "mi": 64986,
+        "va": "0x1829eb670",
+        "type": "<>c",
+        "name": "<RenderHDRDebug>b__17_1"
+      }
+    ],
+    "report": "snapshot_comparison.json",
+    "diff": "snapshot_changes.diff"
+  },
+  "promotion": {
+    "kind": "Review 83 clean output promotion verification",
+    "verified_at_utc": "2026-09-10T07:55:59.546002+00:00",
+    "source": "/data/il2csharp_work/review83_out",
+    "destination": "final_out",
+    "files_verified": 11200,
+    "candidate_aggregate_sha256": "3958d64f272824dede14ae130ba557f8745df50ec0f13f97db933a6d94fea8af",
+    "promoted_aggregate_sha256": "3958d64f272824dede14ae130ba557f8745df50ec0f13f97db933a6d94fea8af",
+    "candidate_vs_promoted_mismatches": [],
+    "output_audit_changed_files_checked": 1376,
+    "output_audit_after_hash_mismatches": [],
+    "inventory_matches_output_audit": true,
+    "success": true
+  },
+  "environment": {
+    "os": "Amazon Linux 2023",
+    "kernel": "6.18.40",
+    "architecture": "x86_64",
+    "python": "3.13.14",
+    "python_hash_seed": "0",
+    "dotnet_sdk_available": false
+  },
+  "compiled_smoke": {
+    "run_for_review83": false,
+    "reason": "No .NET SDK was available in the validation environment.",
+    "historical_evidence": "Review 80 focused compiler smoke passed; it was not rerun for Reviews 81-83.",
+    "full_generated_tree_compiled": false
+  },
+  "release_copy_verification": {
+    "status": "passed",
+    "kind": "Review 83 isolated replacement preflight",
+    "root_layout": "il2csharp/il2csharp.py",
+    "output_files": 11200,
+    "output_matches_promoted": true,
+    "tests_passed": 318,
+    "tests_failed": 0,
+    "report": "release_verification.json",
+    "test_log": "tests_staging_preflight.log",
+    "final_archive_check": "performed externally after packaging to avoid a self-hash cycle"
+  },
+  "limits": [
+    "The complete recovered C# tree was not compiled or executed.",
+    "The supplied game binary and recovered game were not executed.",
+    "A clean syntax gate and all-candidate metadata consensus are not semantic-equivalence claims.",
+    "113,155 object objN declarations remain deliberately unresolved.",
+    "4,633 Review 82 shared-object result sites had no address-level consensus.",
+    "8,067 into-block gotos remain across 2,047 methods.",
+    "Generic value-type sizing, ref returns, non-address sret, broader virtual/indirect targets, vector/struct, cyclic-allocation, ARM64, and independent-fixture cases remain open."
+  ],
+  "documentation": {
+    "markdownlint_files": 7,
+    "markdownlint_errors": 0,
+    "log": "markdownlint.log"
+  }
+}

@@ -1,0 +1,7 @@
+==== 2181 0x181ca4fb0 6
+0x181ca4fb0 xorps xmm1,xmm1
+0x181ca4fb3 ucomisd xmm1,xmm0
+0x181ca4fb7 ja short 0000000181CA4FBEh
+0x181ca4fb9 sqrtsd xmm0,xmm0
+0x181ca4fbd ret
+0x181ca4fbe jmp 00000001804CE6D8h

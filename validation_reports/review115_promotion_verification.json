@@ -1,0 +1,13 @@
+{
+  "candidate": "work/review115_out",
+  "promoted": "final_out",
+  "candidate_files": 11274,
+  "promoted_files": 11274,
+  "candidate_aggregate_sha256": "2379110f106b51f6958d0eb0a3f0c7bdc1a6b0de2a0490ba5612d0e03e9a07a4",
+  "promoted_aggregate_sha256": "2379110f106b51f6958d0eb0a3f0c7bdc1a6b0de2a0490ba5612d0e03e9a07a4",
+  "only_in_candidate": [],
+  "only_in_promoted": [],
+  "mismatches": [],
+  "backup_of_superseded_fix99": "bckups/final_out_fix99",
+  "note": "Rewritten 2026-09-17 after the fix-116 promotion run accidentally overwrote this file with a review115-vs-review116 comparison; values restored from the verified fix-115 promotion output (match True, 0 mismatches), consistent with docs/todo.md."
+}

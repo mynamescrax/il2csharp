@@ -1,0 +1,12 @@
+{
+  "kind": "package split byte-identity rebuild",
+  "rebuilt_files": 11200,
+  "rebuilt_aggregate_sha256": "0b906f7d1c8ab400a8718f745df1182bad9e9ffbb55a2bea18c30f51839323b5",
+  "final_out_files": 11200,
+  "final_out_aggregate_sha256": "0b906f7d1c8ab400a8718f745df1182bad9e9ffbb55a2bea18c30f51839323b5",
+  "expected_aggregate_sha256": "0b906f7d1c8ab400a8718f745df1182bad9e9ffbb55a2bea18c30f51839323b5",
+  "content_mismatches": [],
+  "only_in_rebuild": [],
+  "only_in_final_out": [],
+  "success": true
+}

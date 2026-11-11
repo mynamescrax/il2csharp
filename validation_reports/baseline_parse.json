@@ -1,0 +1,80 @@
+{
+  "kind": "tree-sitter C# syntax gate",
+  "tree": "baseline-emitted-tree (not bundled)",
+  "files": 11107,
+  "bad_files": 2,
+  "errors": 0,
+  "missing": 0,
+  "recovery_nodes": 8,
+  "details": {
+    "Obi/Obi/BurstDensityConstraintsBatch.cs": [
+      {
+        "kind": "RECOVERY",
+        "node_type": "identifier",
+        "row": 34080,
+        "column": 80,
+        "zero_width": true,
+        "text": ""
+      }
+    ],
+    "Unity.InputSystem/UnityEngine/InputSystem/Touchscreen.cs": [
+      {
+        "kind": "RECOVERY",
+        "node_type": "identifier",
+        "row": 210,
+        "column": 40,
+        "zero_width": true,
+        "text": ""
+      },
+      {
+        "kind": "RECOVERY",
+        "node_type": "identifier",
+        "row": 210,
+        "column": 101,
+        "zero_width": true,
+        "text": ""
+      },
+      {
+        "kind": "RECOVERY",
+        "node_type": "identifier",
+        "row": 211,
+        "column": 40,
+        "zero_width": true,
+        "text": ""
+      },
+      {
+        "kind": "RECOVERY",
+        "node_type": "identifier",
+        "row": 211,
+        "column": 106,
+        "zero_width": true,
+        "text": ""
+      },
+      {
+        "kind": "RECOVERY",
+        "node_type": "identifier",
+        "row": 217,
+        "column": 29,
+        "zero_width": true,
+        "text": ""
+      },
+      {
+        "kind": "RECOVERY",
+        "node_type": "identifier",
+        "row": 221,
+        "column": 44,
+        "zero_width": true,
+        "text": ""
+      },
+      {
+        "kind": "RECOVERY",
+        "node_type": "identifier",
+        "row": 17284,
+        "column": 44,
+        "zero_width": true,
+        "text": ""
+      }
+    ]
+  },
+  "elapsed_seconds": 29.582
+}

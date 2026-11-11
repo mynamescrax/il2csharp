@@ -1,0 +1,539 @@
+{
+  "release": "Review 82",
+  "date": "2026-09-09",
+  "status": "complete private replacement",
+  "focus": "semantic local names and conservative object type refinement",
+  "input_archive": {
+    "filename": "il2csharp.rar",
+    "sha256": "c0a9a7b8348f7fcdd4b74390f18747ba2e5ff7aec2194ffc0d03831d9e4d7b91"
+  },
+  "fixtures": {
+    "read_statically": true,
+    "executed": false,
+    "unchanged": true,
+    "files": {
+      "testgame/GameAssembly.dll": "d7209d756930bcb2d9bc2e763a74de3b86ec5d94910796f4dc610308650a70ab",
+      "testgame/ShiftAtMidnight_Data/il2cpp_data/Metadata/global-metadata.dat": "a2c6baf6b3aa18866f1871a393cd88d9f8397593284dd2d49cfb9adaaacf81d9"
+    }
+  },
+  "source": {
+    "hashes": {
+      "il2csharp.py": "c4d6e78d8e4cd4591301f74f2e9b5d72c4ba4acc236e5e127124fb5d95ce64e9",
+      "decompiler.py": "b0a9c0660e9708d18da611d7b725d9962c33b4315e89d5e1c218f386ebe88814"
+    },
+    "review81_hashes": {
+      "il2csharp.py": "c4d6e78d8e4cd4591301f74f2e9b5d72c4ba4acc236e5e127124fb5d95ce64e9",
+      "decompiler.py": "e61472bfb281ab808f0c17ab7edb7914b72ce83c7370fc89a1f01544f0f021e9"
+    },
+    "formats": {
+      "il2csharp.py": {
+        "utf8_bom": true,
+        "crlf_only": true,
+        "bytes": 441100
+      },
+      "decompiler.py": {
+        "utf8_bom": false,
+        "crlf_only": true,
+        "bytes": 383844
+      }
+    }
+  },
+  "tests": {
+    "review81_baseline": {
+      "passed": 285,
+      "failed": 0,
+      "log": "tests_baseline.log"
+    },
+    "portable": {
+      "passed": 210,
+      "deselected": 83,
+      "failed": 0,
+      "log": "tests_portable.log"
+    },
+    "native_behavior": {
+      "passed": 19,
+      "failed": 0,
+      "log": "tests_native.log"
+    },
+    "final": {
+      "passed": 293,
+      "failed": 0,
+      "breakdown": {
+        "portable": 210,
+        "snapshot": 64,
+        "native_fixture": 19
+      },
+      "log": "tests_final.log"
+    }
+  },
+  "strict_build": {
+    "csharp_type_files": 11107,
+    "project_files": 91,
+    "lifted_bodies": 115658,
+    "failed_bodies": 0,
+    "structured_fallbacks": 0,
+    "type_emission_failures": 0,
+    "elapsed_ms": 1433971,
+    "log": "final_build.log"
+  },
+  "syntax_gate": {
+    "tree": "final_out",
+    "files": 11107,
+    "bad_files": 0,
+    "errors": 0,
+    "missing": 0,
+    "recovery_nodes": 0,
+    "elapsed_seconds": 27.063,
+    "report": "final_parse.json",
+    "log": "final_parse.log"
+  },
+  "direct_sweep": {
+    "methods": 116178,
+    "crashes": 0,
+    "totals": {
+      "brace_unclosed": 0,
+      "brace_underflow": 0,
+      "dangling_gotos": 0,
+      "into_block_gotos": 8067,
+      "empty_args": 0,
+      "lines": 2201604
+    },
+    "affected_methods": {
+      "into_block_gotos": 2047
+    },
+    "tail_argument_changes": 1218,
+    "tail_argument_methods": 1177,
+    "elapsed_seconds": 1381.075,
+    "comparison_to_review81": {
+      "common_methods": 116178,
+      "added_methods": 0,
+      "removed_methods": 0,
+      "changed_methods": 37140,
+      "structural_changes": 0,
+      "new_crashes": 0
+    },
+    "report": "final_sweep.json",
+    "comparison_report": "comparison.json"
+  },
+  "object_local_cleanup": {
+    "kind": "Review 82 object-local readability audit",
+    "scope": "all 11,107 generated C# files",
+    "concrete_typed_obj_declarations": {
+      "before": 115093,
+      "after": 802,
+      "reduced_by": 114291,
+      "reduction_percent": 99.303
+    },
+    "obj_identifier_occurrences": {
+      "before": 1425443,
+      "after": 1101280,
+      "reduced_by": 324163,
+      "reduction_percent": 22.741
+    },
+    "syntax_provable_object_declarations": {
+      "before": 414,
+      "after": 21,
+      "refined": 393,
+      "refined_percent": 94.928,
+      "retained_by_guard": [
+        {
+          "path": "System/Mono/Net/Security/MobileAuthenticatedStream.cs",
+          "line": 791,
+          "text": "object obj55 = new byte[internalBuffer.Size + internalBuffer.Offset + num2];"
+        },
+        {
+          "path": "System/Mono/Net/Security/MobileAuthenticatedStream.cs",
+          "line": 798,
+          "text": "object obj55 = new byte[internalBuffer.Size + internalBuffer.Offset + num2];"
+        },
+        {
+          "path": "System/Mono/Net/Security/MobileAuthenticatedStream.cs",
+          "line": 826,
+          "text": "object obj104 = new byte[internalBuffer.Size + internalBuffer.Offset + num2];"
+        },
+        {
+          "path": "System/Mono/Net/Security/MobileAuthenticatedStream.cs",
+          "line": 833,
+          "text": "object obj104 = new byte[internalBuffer.Size + internalBuffer.Offset + num2];"
+        },
+        {
+          "path": "Unity.InputSystem/UnityEngine/InputSystem/InputActionMap.cs",
+          "line": 968,
+          "text": "object obj94 = new InputControl[num9 >> 32];"
+        },
+        {
+          "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+          "line": 452,
+          "text": "object obj4 = new object[0];"
+        },
+        {
+          "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+          "line": 458,
+          "text": "object obj4 = new object[0];"
+        },
+        {
+          "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+          "line": 464,
+          "text": "object obj4 = new object[0];"
+        },
+        {
+          "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+          "line": 475,
+          "text": "object obj4 = new object[0];"
+        },
+        {
+          "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+          "line": 481,
+          "text": "object obj4 = new object[0];"
+        },
+        {
+          "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+          "line": 487,
+          "text": "object obj4 = new object[0];"
+        },
+        {
+          "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+          "line": 493,
+          "text": "object obj4 = new object[0];"
+        },
+        {
+          "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+          "line": 499,
+          "text": "object obj4 = new object[0];"
+        },
+        {
+          "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+          "line": 505,
+          "text": "object obj4 = new object[0];"
+        },
+        {
+          "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+          "line": 511,
+          "text": "object obj4 = new object[0];"
+        },
+        {
+          "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+          "line": 517,
+          "text": "object obj4 = new object[0];"
+        },
+        {
+          "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+          "line": 523,
+          "text": "object obj4 = new object[0];"
+        },
+        {
+          "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+          "line": 529,
+          "text": "object obj4 = new object[0];"
+        },
+        {
+          "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+          "line": 535,
+          "text": "object obj4 = new object[0];"
+        },
+        {
+          "path": "mscorlib/System/Runtime/Serialization/Formatters/Binary/Converter.cs",
+          "line": 541,
+          "text": "object obj4 = new object[0];"
+        },
+        {
+          "path": "mscorlib/Mono/Math/BigInteger.cs",
+          "line": 609,
+          "text": "object obj17 = new byte[(obj15 == 0) ? obj14 : (this.BitCount() >> 5 + 0x1) * 4];"
+        }
+      ]
+    },
+    "typed_foreach_obj_declarations": {
+      "before": 781,
+      "after": 496,
+      "reduced_by": 285
+    },
+    "semantic_declarations_after": 113921,
+    "top_semantic_prefixes_after": [
+      [
+        "type",
+        35484
+      ],
+      [
+        "text",
+        7672
+      ],
+      [
+        "list",
+        2596
+      ],
+      [
+        "vector",
+        2111
+      ],
+      [
+        "dictionary",
+        1626
+      ],
+      [
+        "character",
+        1581
+      ],
+      [
+        "func",
+        1227
+      ],
+      [
+        "action",
+        1097
+      ],
+      [
+        "byteArray",
+        1050
+      ],
+      [
+        "enumerator",
+        975
+      ],
+      [
+        "textArray",
+        803
+      ],
+      [
+        "gameObject",
+        763
+      ],
+      [
+        "value",
+        747
+      ],
+      [
+        "exception",
+        736
+      ],
+      [
+        "stringBuilder",
+        719
+      ],
+      [
+        "array",
+        670
+      ],
+      [
+        "bytePtr",
+        659
+      ],
+      [
+        "transform",
+        655
+      ],
+      [
+        "visualElement",
+        579
+      ],
+      [
+        "instruction",
+        554
+      ],
+      [
+        "inputControl",
+        543
+      ],
+      [
+        "commandBuffer",
+        537
+      ],
+      [
+        "simulation",
+        532
+      ],
+      [
+        "simulationMessagePtr",
+        516
+      ],
+      [
+        "controlBuilder",
+        453
+      ],
+      [
+        "task",
+        447
+      ],
+      [
+        "typeConverter",
+        435
+      ],
+      [
+        "quaternion",
+        426
+      ],
+      [
+        "delegate",
+        423
+      ],
+      [
+        "xmlQualifiedName",
+        402
+      ],
+      [
+        "bigInteger",
+        393
+      ],
+      [
+        "float",
+        388
+      ],
+      [
+        "intArray",
+        387
+      ],
+      [
+        "hashtable",
+        360
+      ],
+      [
+        "asyncResult",
+        353
+      ],
+      [
+        "utf8StringHandle",
+        339
+      ],
+      [
+        "valueArray",
+        332
+      ],
+      [
+        "encoding",
+        324
+      ],
+      [
+        "cultureInfo",
+        324
+      ],
+      [
+        "arrayList",
+        322
+      ]
+    ],
+    "stability": {
+      "files_before": 11200,
+      "files_after": 11200,
+      "changed_files": 5398,
+      "csharp_line_delta": 0,
+      "unknown_token_delta": 0,
+      "math_sqrt_delta": 0,
+      "raw_sqrt_helper_after": 0
+    },
+    "proof_boundary": "Only already concrete declaration types drive names. Untracked object locals remain objN. Object declarations refine only for single-definition array, string, or exact typeof RHS values with no ref/out/in/address escape."
+  },
+  "snapshot_proof": {
+    "snapshots": 64,
+    "changed": 21,
+    "exact_final_pass_transform_matches": 64,
+    "mismatches": [],
+    "success": true
+  },
+  "generated_output": {
+    "inventory": {
+      "before": 11200,
+      "after": 11200,
+      "shared": 11200,
+      "added": [],
+      "removed": [],
+      "unchanged": 5802,
+      "changed": 5398,
+      "changed_cs": 5398
+    },
+    "metrics": {
+      "before": {
+        "files": 11200,
+        "cs_files": 11107,
+        "cs_lines": 2907732,
+        "obj_tokens": 1425443,
+        "unknown_tokens": 10601,
+        "math_sqrt": 439,
+        "raw_sqrt_helper": 0,
+        "object_obj_decls": 117232,
+        "concrete_obj_decls": 115093,
+        "foreach_obj_decls": 781,
+        "syntax_provable_object_decls": 414,
+        "semantic_decls": 26
+      },
+      "after": {
+        "files": 11200,
+        "cs_files": 11107,
+        "cs_lines": 2907732,
+        "obj_tokens": 1101280,
+        "unknown_tokens": 10601,
+        "math_sqrt": 439,
+        "raw_sqrt_helper": 0,
+        "object_obj_decls": 116839,
+        "concrete_obj_decls": 802,
+        "foreach_obj_decls": 496,
+        "syntax_provable_object_decls": 21,
+        "semantic_decls": 113921
+      }
+    },
+    "deltas": {
+      "concrete_obj_decls": -114291,
+      "cs_files": 0,
+      "cs_lines": 0,
+      "files": 0,
+      "foreach_obj_decls": -285,
+      "math_sqrt": 0,
+      "obj_tokens": -324163,
+      "object_obj_decls": -393,
+      "raw_sqrt_helper": 0,
+      "semantic_decls": 113895,
+      "syntax_provable_object_decls": -393,
+      "unknown_tokens": 0
+    },
+    "aggregate_sha256": "fe7db50a98e3c4beb9b22edd74145db73eade70a9180edfa9b1207a918645b3e",
+    "report": "output_comparison.json"
+  },
+  "promotion": {
+    "kind": "Review 82 clean output promotion verification",
+    "verified_at_utc": "2026-09-09T22:36:46.750538+00:00",
+    "source": "work/review82_out",
+    "destination": "final_out",
+    "files_verified": 11200,
+    "candidate_aggregate_sha256": "fe7db50a98e3c4beb9b22edd74145db73eade70a9180edfa9b1207a918645b3e",
+    "promoted_aggregate_sha256": "fe7db50a98e3c4beb9b22edd74145db73eade70a9180edfa9b1207a918645b3e",
+    "candidate_vs_promoted_mismatches": [],
+    "output_comparison_changed_files_checked": 5398,
+    "output_comparison_after_hash_mismatches": [],
+    "inventory_matches_output_comparison": true,
+    "success": true
+  },
+  "environment": {
+    "os": "Amazon Linux 2023",
+    "python": "3.13.14",
+    "python_hash_seed": "0",
+    "dotnet_sdk_available": false
+  },
+  "compiled_smoke": {
+    "run_for_review82": false,
+    "reason": "No .NET SDK was available in the validation environment.",
+    "historical_evidence": "Review 80 focused compiler smoke passed; it was not rerun for Review 81 or Review 82.",
+    "full_generated_tree_compiled": false
+  },
+  "release_copy_verification": {
+    "status": "passed",
+    "candidate_archive_sha256": "fb2c80eaaa3c942aef47315725657e0241bce79be26898bc681ba2229f7e0b64",
+    "candidate_archive_bytes": 226286727,
+    "root_layout": "il2csharp/il2csharp.py",
+    "manifest_checked_files": 12414,
+    "manifest_failures": 0,
+    "tests_passed": 293,
+    "tests_failed": 0,
+    "concrete_typed_obj_declarations": 802,
+    "raw_sqrt_helper_references": 0,
+    "report": "release_verification.json",
+    "manifest_log": "manifest_release_copy.log",
+    "test_log": "tests_release_copy.log"
+  },
+  "limits": [
+    "The complete recovered C# tree was not compiled or executed.",
+    "The supplied game binary and recovered game were not executed.",
+    "A clean syntax gate and readability-only transform are not semantic-equivalence claims.",
+    "116,839 object objN declarations remain deliberately unresolved.",
+    "8,067 into-block gotos remain across 2,047 methods.",
+    "Broader shared, virtual, indirect, vector, struct, reference, cyclic-allocation, and ARM64 cases remain open."
+  ]
+}

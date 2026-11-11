@@ -1,0 +1,28 @@
+{
+  "kind": "twin + box-only guard promotion verification (r11)",
+  "verified_at_utc": "2026-10-01T18:16:23.208870+00:00",
+  "candidate": "r11_out1",
+  "destination": "final_out",
+  "moved_in_place": true,
+  "source_commit": "1cafd3f",
+  "files": 11276,
+  "candidate_aggregate_sha256": "735f2e9a6963a32ec877edaf203e6696459b6dc942697ac2c62976d7db91707f",
+  "promoted_aggregate_sha256": "735f2e9a6963a32ec877edaf203e6696459b6dc942697ac2c62976d7db91707f",
+  "aggregate_method": "sha256 over sorted '<relpath>\\0<file sha256>\\n' (reproduces r10 b0c87509...b9fe)",
+  "per_file_mismatches": [],
+  "missing_files": [],
+  "stale_files": [],
+  "files_changed_vs_r10": 2838,
+  "files_added_vs_r10": 0,
+  "files_removed_vs_r10": 0,
+  "gates": {
+    "strict_build": "11,183 files / 114,458 bodies / 0 failed / 0 structured fallbacks / 0 type-emission failures in 459,411 ms (--strict --workers 8)",
+    "brace": "0 unbalanced / 11,183 files",
+    "parse": "0 bad / 0 ERROR / 0 MISSING",
+    "suite": "1435 passed / 0 failed on 1cafd3f (goldens 64/64)",
+    "paired_scoped": "mscorlib + Assembly-CSharp vs 19916ac: 2 files changed (see docs/todo.md)",
+    "paired_sweep": "not re-run for this promotion; strict build lifted every body with 0 failures"
+  },
+  "previous_tree": "r10 (b0c87509...b9fe) moved to local temp scratch for rollback, not tracked",
+  "success": true
+}

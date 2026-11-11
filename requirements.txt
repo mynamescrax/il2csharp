@@ -1,0 +1,3 @@
+iced-x86>=1.21,<2
+# Optional at runtime: ARM64 disassembly (the CLI warns when missing).
+capstone>=5,<6

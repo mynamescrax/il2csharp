@@ -1,0 +1,10 @@
+{
+  "kind": "tree-sitter C# syntax gate",
+  "tree": "inventorymanager-cli-smoke-tree (not bundled)",
+  "files": 1,
+  "bad_files": 0,
+  "errors": 0,
+  "missing": 0,
+  "details": {},
+  "elapsed_seconds": 0.019
+}

@@ -1,0 +1,12 @@
+{
+  "files": {
+    "il2csharp.py": {
+      "review81": "c4d6e78d8e4cd4591301f74f2e9b5d72c4ba4acc236e5e127124fb5d95ce64e9",
+      "review82": "c4d6e78d8e4cd4591301f74f2e9b5d72c4ba4acc236e5e127124fb5d95ce64e9"
+    },
+    "decompiler.py": {
+      "review81": "e61472bfb281ab808f0c17ab7edb7914b72ce83c7370fc89a1f01544f0f021e9",
+      "review82": "b0a9c0660e9708d18da611d7b725d9962c33b4315e89d5e1c218f386ebe88814"
+    }
+  }
+}

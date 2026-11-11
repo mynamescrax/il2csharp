@@ -1,0 +1,14 @@
+{
+  "kind": "Review 82 clean output promotion verification",
+  "verified_at_utc": "2026-09-09T22:36:46.750538+00:00",
+  "source": "work/review82_out",
+  "destination": "final_out",
+  "files_verified": 11200,
+  "candidate_aggregate_sha256": "fe7db50a98e3c4beb9b22edd74145db73eade70a9180edfa9b1207a918645b3e",
+  "promoted_aggregate_sha256": "fe7db50a98e3c4beb9b22edd74145db73eade70a9180edfa9b1207a918645b3e",
+  "candidate_vs_promoted_mismatches": [],
+  "output_comparison_changed_files_checked": 5398,
+  "output_comparison_after_hash_mismatches": [],
+  "inventory_matches_output_comparison": true,
+  "success": true
+}

@@ -1,0 +1,156 @@
+==== 287 0x181ad1d60 33
+0x181ad1d60 sub rsp,28h
+0x181ad1d64 test rcx,rcx
+0x181ad1d67 je short 0000000181AD1DC5h
+0x181ad1d69 cmp edx,[rcx+18h]
+0x181ad1d6c jae short 0000000181AD1DCBh
+0x181ad1d6e movsxd rax,edx
+0x181ad1d71 movzx r8d,byte [rax+rcx+20h]
+0x181ad1d77 movsxd rax,edx
+0x181ad1d7a inc rax
+0x181ad1d7d mov [rsp+38h],r8b
+0x181ad1d82 cmp eax,[rcx+18h]
+0x181ad1d85 jae short 0000000181AD1DCBh
+0x181ad1d87 movzx eax,byte [rax+rcx+20h]
+0x181ad1d8c mov [rsp+39h],al
+0x181ad1d90 movsxd rax,edx
+0x181ad1d93 add rax,2
+0x181ad1d97 cmp eax,[rcx+18h]
+0x181ad1d9a jae short 0000000181AD1DCBh
+0x181ad1d9c movzx eax,byte [rax+rcx+20h]
+0x181ad1da1 mov [rsp+3Ah],al
+0x181ad1da5 movsxd rax,edx
+0x181ad1da8 add rax,3
+0x181ad1dac cmp eax,[rcx+18h]
+0x181ad1daf jae short 0000000181AD1DCBh
+0x181ad1db1 movzx eax,byte [rax+rcx+20h]
+0x181ad1db6 mov [rsp+3Bh],al
+0x181ad1dba movss xmm0,[rsp+38h]
+0x181ad1dc0 add rsp,28h
+0x181ad1dc4 ret
+0x181ad1dc5 call 00000001804356B0h
+0x181ad1dca int3
+0x181ad1dcb call 00000001804356A0h
+0x181ad1dd0 int3
+==== 288 0x181ad1d10 23
+0x181ad1d10 sub rsp,28h
+0x181ad1d14 xorps xmm0,xmm0
+0x181ad1d17 mov r9,rcx
+0x181ad1d1a movsd [rsp+30h],xmm0
+0x181ad1d20 xor r8d,r8d
+0x181ad1d23 test rcx,rcx
+0x181ad1d26 je short 0000000181AD1D52h
+0x181ad1d28 cmp edx,[r9+18h]
+0x181ad1d2c jae short 0000000181AD1D58h
+0x181ad1d2e movsxd rax,edx
+0x181ad1d31 inc edx
+0x181ad1d33 movzx ecx,byte [rax+r9+20h]
+0x181ad1d39 mov [rsp+r8+30h],cl
+0x181ad1d3e inc r8
+0x181ad1d41 cmp r8,8
+0x181ad1d45 jl short 0000000181AD1D28h
+0x181ad1d47 movsd xmm0,[rsp+30h]
+0x181ad1d4d add rsp,28h
+0x181ad1d51 ret
+0x181ad1d52 call 00000001804356B0h
+0x181ad1d57 int3
+0x181ad1d58 call 00000001804356A0h
+0x181ad1d5d int3
+==== 1092 0x181c04db0 35
+0x181c04db0 mov [rsp+8],rbx
+0x181c04db5 push rdi
+0x181c04db6 sub rsp,20h
+0x181c04dba movsxd rdi,edx
+0x181c04dbd mov rbx,rcx
+0x181c04dc0 test rcx,rcx
+0x181c04dc3 je short 0000000181C04E08h
+0x181c04dc5 cmp edi,[rcx+18h]
+0x181c04dc8 jb short 0000000181C04DD9h
+0x181c04dca xor r8d,r8d
+0x181c04dcd lea edx,[r8+16h]
+0x181c04dd1 lea ecx,[rdx-8]
+0x181c04dd4 call 0000000181CC5E30h
+0x181c04dd9 mov eax,[rbx+18h]
+0x181c04ddc sub eax,4
+0x181c04ddf cmp edi,eax
+0x181c04de1 jle short 0000000181C04DF2h
+0x181c04de3 xor r8d,r8d
+0x181c04de6 lea edx,[r8+0Fh]
+0x181c04dea lea ecx,[rdx-0Ah]
+0x181c04ded call 0000000181CC5D20h
+0x181c04df2 cmp edi,[rbx+18h]
+0x181c04df5 jae short 0000000181C04E18h
+0x181c04df7 movss xmm0,[rdi+rbx+20h]
+0x181c04dfd mov rbx,[rsp+30h]
+0x181c04e02 add rsp,20h
+0x181c04e06 pop rdi
+0x181c04e07 ret
+0x181c04e08 xor edx,edx
+0x181c04e0a lea ecx,[rdx+0Fh]
+0x181c04e0d call 0000000181CC5E00h
+0x181c04e12 call 00000001804356B0h
+0x181c04e17 int3
+0x181c04e18 call 00000001804356A0h
+0x181c04e1d int3
+==== 1160 0x181c06a50 18
+0x181c06a50 push rbx
+0x181c06a52 sub rsp,20h
+0x181c06a56 cmp byte [rel 183E794B2h],0
+0x181c06a5d mov rbx,rcx
+0x181c06a60 jne short 0000000181C06A75h
+0x181c06a62 lea rcx,[rel 183BED330h]
+0x181c06a69 call 0000000180435400h
+0x181c06a6e mov byte [rel 183E794B2h],1
+0x181c06a75 mov rcx,[rel 183BED330h]
+0x181c06a7c movzx ebx,byte [rbx]
+0x181c06a7f cmp dword [rcx+0E4h],0
+0x181c06a86 jne short 0000000181C06A8Dh
+0x181c06a88 call 0000000180435750h
+0x181c06a8d movd xmm0,ebx
+0x181c06a91 cvtdq2ps xmm0,xmm0
+0x181c06a94 add rsp,20h
+0x181c06a98 pop rbx
+0x181c06a99 ret
+==== 1405 0x181c0fcf0 42
+0x181c0fcf0 push rbx
+0x181c0fcf2 sub rsp,20h
+0x181c0fcf6 cmp byte [rel 183E79529h],0
+0x181c0fcfd mov rbx,rcx
+0x181c0fd00 jne short 0000000181C0FD15h
+0x181c0fd02 lea rcx,[rel 183C259F0h]
+0x181c0fd09 call 0000000180435400h
+0x181c0fd0e mov byte [rel 183E79529h],1
+0x181c0fd15 test rbx,rbx
+0x181c0fd18 jne short 0000000181C0FD23h
+0x181c0fd1a xorps xmm0,xmm0
+0x181c0fd1d add rsp,20h
+0x181c0fd21 pop rbx
+0x181c0fd22 ret
+0x181c0fd23 mov [rsp+30h],rdi
+0x181c0fd28 mov rcx,rbx
+0x181c0fd2b mov rdi,[rel 183C259F0h]
+0x181c0fd32 mov rdx,rdi
+0x181c0fd35 call 0000000180434690h
+0x181c0fd3a mov rcx,rbx
+0x181c0fd3d test rax,rax
+0x181c0fd40 je short 0000000181C0FD77h
+0x181c0fd42 mov rdi,[rel 183C259F0h]
+0x181c0fd49 mov rdx,rdi
+0x181c0fd4c call 0000000180434690h
+0x181c0fd51 test rax,rax
+0x181c0fd54 je short 0000000181C0FD80h
+0x181c0fd56 mov rdx,[rel 183C259F0h]
+0x181c0fd5d mov ecx,0Bh
+0x181c0fd62 xor r9d,r9d
+0x181c0fd65 mov r8,rax
+0x181c0fd68 mov rdi,[rsp+30h]
+0x181c0fd6d add rsp,20h
+0x181c0fd71 pop rbx
+0x181c0fd72 jmp 000000018032A740h
+0x181c0fd77 mov rdx,rdi
+0x181c0fd7a call 00000001804346B0h
+0x181c0fd7f int3
+0x181c0fd80 mov rdx,rdi
+0x181c0fd83 mov rcx,rbx
+0x181c0fd86 call 00000001804346B0h
+0x181c0fd8b int3

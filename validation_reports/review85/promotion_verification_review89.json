@@ -1,0 +1,24 @@
+{
+  "kind": "fix 92 gated output promotion verification",
+  "verified_at_utc": "2026-09-12T14:05:08.191960+00:00",
+  "source": "C:\\Users\\crax\\Downloads\\il2csharp\\work\\review89_out",
+  "destination": "final_out",
+  "previous_final_out_backup": "C:\\Users\\crax\\Downloads\\il2csharp\\bckups\\final_out_review88",
+  "previous_final_out_files": 11200,
+  "previous_final_out_aggregate_sha256": "0ef7607e317dbb00f59ad72ccaa8089b36ccf0a79c42bae7f525ebeb30118d00",
+  "files_verified": 11200,
+  "candidate_aggregate_sha256": "0b906f7d1c8ab400a8718f745df1182bad9e9ffbb55a2bea18c30f51839323b5",
+  "promoted_aggregate_sha256": "0b906f7d1c8ab400a8718f745df1182bad9e9ffbb55a2bea18c30f51839323b5",
+  "candidate_vs_promoted_mismatches": [],
+  "gate_reports": [
+    "validation_reports/review85/sweep4.json",
+    "validation_reports/review85/sweep4_comparison.json",
+    "validation_reports/review85/parse4.json"
+  ],
+  "source_sha256": {
+    "il2csharp.py": "e82000e0e8f4f6dc886cd2dd5346334edb4e4fe4a2328f109c8887d00f487ad4",
+    "decompiler.py": "bc67576693838e41b78887b95b65dc04abb04b75ff2afd6ea6cf8d2db58816d7"
+  },
+  "elapsed_seconds": 14.134,
+  "success": true
+}

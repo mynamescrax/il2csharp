@@ -1,0 +1,243 @@
+{
+  "release": "Review 81",
+  "date": "2026-09-09",
+  "status": "complete private replacement",
+  "input_archive": {
+    "filename": "il2csharp.rar",
+    "sha256": "c0a9a7b8348f7fcdd4b74390f18747ba2e5ff7aec2194ffc0d03831d9e4d7b91"
+  },
+  "fixtures": {
+    "read_statically": true,
+    "executed": false,
+    "unchanged": true,
+    "files": {
+      "testgame/GameAssembly.dll": "d7209d756930bcb2d9bc2e763a74de3b86ec5d94910796f4dc610308650a70ab",
+      "testgame/ShiftAtMidnight_Data/il2cpp_data/Metadata/global-metadata.dat": "a2c6baf6b3aa18866f1871a393cd88d9f8397593284dd2d49cfb9adaaacf81d9"
+    }
+  },
+  "source": {
+    "hashes": {
+      "il2csharp.py": "c4d6e78d8e4cd4591301f74f2e9b5d72c4ba4acc236e5e127124fb5d95ce64e9",
+      "decompiler.py": "e61472bfb281ab808f0c17ab7edb7914b72ce83c7370fc89a1f01544f0f021e9"
+    },
+    "review80_hashes": {
+      "il2csharp.py": "214aebc8833c50415441c0649427b560bb7d05d4530be824be5f52b0de96e348",
+      "decompiler.py": "5e787d4cd949f6f60668480e37617201630bb21c65430f5a6ee2c79b5399aac0"
+    },
+    "formats": {
+      "il2csharp.py": {
+        "utf8_bom": true,
+        "crlf_only": true,
+        "bytes": 441100
+      },
+      "decompiler.py": {
+        "utf8_bom": false,
+        "crlf_only": true,
+        "bytes": 372572
+      }
+    }
+  },
+  "tests": {
+    "review80_baseline": {
+      "passed": 265,
+      "failed": 0,
+      "log": "tests_baseline.log"
+    },
+    "portable": {
+      "passed": 202,
+      "skipped": 83,
+      "failed": 0,
+      "log": "tests_portable.log"
+    },
+    "final": {
+      "passed": 285,
+      "failed": 0,
+      "breakdown": {
+        "portable": 202,
+        "snapshot": 64,
+        "native_fixture": 19
+      },
+      "log": "tests_final.log"
+    }
+  },
+  "strict_build": {
+    "csharp_type_files": 11107,
+    "project_files": 91,
+    "lifted_bodies": 115658,
+    "failed_bodies": 0,
+    "structured_fallbacks": 0,
+    "type_emission_failures": 0,
+    "elapsed_ms": 1526504,
+    "log": "final_build.log"
+  },
+  "syntax_gate": {
+    "tree": "final_out",
+    "files": 11107,
+    "bad_files": 0,
+    "errors": 0,
+    "missing": 0,
+    "recovery_nodes": 0,
+    "elapsed_seconds": 28.053,
+    "report": "final_parse.json",
+    "log": "final_parse.log"
+  },
+  "direct_sweep": {
+    "methods": 116178,
+    "crashes": 0,
+    "totals": {
+      "brace_unclosed": 0,
+      "brace_underflow": 0,
+      "dangling_gotos": 0,
+      "into_block_gotos": 8067,
+      "empty_args": 0,
+      "lines": 2201604
+    },
+    "affected_methods": {
+      "into_block_gotos": 2047
+    },
+    "tail_argument_changes": 1218,
+    "tail_argument_methods": 1177,
+    "elapsed_seconds": 1443.052,
+    "comparison_to_review80": {
+      "common_methods": 116178,
+      "added_methods": 0,
+      "removed_methods": 0,
+      "changed_methods": 2047,
+      "structural_changes": 0,
+      "new_crashes": 0,
+      "line_delta": -3530
+    },
+    "report": "final_sweep.json",
+    "comparison_report": "comparison.json"
+  },
+  "sqrt_recovery": {
+    "helper_discovery": "unique structural match; no address/name hardcoded",
+    "distinct_native_instruction_sites": {
+      "CVTPS2PD": 975,
+      "SQRTPD": 211,
+      "CVTPD2PS": 634
+    },
+    "proved_packed_pattern_sites": {
+      "SQRTPD_roots": 211,
+      "conversions": 155,
+      "normal_arm_narrowings": 15
+    },
+    "distinct_native_helper_transfers": {
+      "total": 248,
+      "paired_packed_diamond_calls": 211,
+      "direct_scalar_calls": 29,
+      "direct_tail_jumps": 8
+    },
+    "methoddef_output_audit": {
+      "methods": 205,
+      "exceptions": 0,
+      "helper_calls_in_methoddef_rows": 244,
+      "helper_tail_jumps_in_methoddef_rows": 8,
+      "sqrtpd_in_methoddef_rows": 215,
+      "math_sqrt_expressions": 374,
+      "raw_helper_methods": 0,
+      "methods_without_source_math_sqrt": [
+        {
+          "method_index": 29267,
+          "type": "Fimp_JoystickInput",
+          "name": "Update",
+          "reason": "scalar result feeds an unmodelled UNPCKLPS vector pack"
+        }
+      ]
+    }
+  },
+  "change_scope": {
+    "changed_methods": 2047,
+    "changed_scalar_float_value_returns": 1883,
+    "total_scalar_float_value_returns": 2518,
+    "changed_byref_float_returns": 0,
+    "total_byref_float_returns": 8,
+    "changed_sqrt_family_methods": 205,
+    "sqrt_family_methods": 205,
+    "changed_scalar_and_sqrt_methods": 43,
+    "changed_scalar_outside_sqrt_methods": 1840,
+    "changed_sqrt_non_scalar_return_methods": 162,
+    "changed_outside_scalar_or_sqrt_scope": 2
+  },
+  "generated_output_comparison": {
+    "inventory": {
+      "before": 11200,
+      "after": 11200,
+      "shared": 11200,
+      "added": [],
+      "removed": [],
+      "unchanged": 10622,
+      "changed": 578,
+      "changed_cs": 578
+    },
+    "metrics": {
+      "before": {
+        "files": 11200,
+        "cs_files": 11107,
+        "cs_lines": 2911274,
+        "math_sqrt": 88,
+        "raw_sqrt_helper": 271,
+        "unknown_tokens": 10660
+      },
+      "after": {
+        "files": 11200,
+        "cs_files": 11107,
+        "cs_lines": 2907732,
+        "math_sqrt": 439,
+        "raw_sqrt_helper": 0,
+        "unknown_tokens": 10601
+      }
+    },
+    "csharp_line_delta": -3542,
+    "unknown_token_delta": -59,
+    "report": "output_comparison.json"
+  },
+  "promotion": {
+    "kind": "Review 81 clean output promotion verification",
+    "verified_at_utc": "2026-09-09T20:16:07.990847+00:00",
+    "source": "work/review81_out",
+    "destination": "final_out",
+    "files_verified": 11200,
+    "candidate_aggregate_sha256": "e14aeed20561727844a3d9aa3f3cd1c5c9ed71bd4918141a6f7d21ee6c5864a3",
+    "promoted_aggregate_sha256": "e14aeed20561727844a3d9aa3f3cd1c5c9ed71bd4918141a6f7d21ee6c5864a3",
+    "candidate_vs_promoted_mismatches": [],
+    "output_comparison_changed_files_checked": 578,
+    "output_comparison_after_hash_mismatches": [],
+    "inventory_matches_output_comparison": true,
+    "success": true
+  },
+  "environment": {
+    "os": "Amazon Linux 2023",
+    "python": "3.13.14",
+    "python_hash_seed": "0",
+    "dotnet_sdk_available": false
+  },
+  "compiled_smoke": {
+    "run_for_review81": false,
+    "reason": "No .NET SDK was available in the validation environment.",
+    "historical_evidence": "Review 80 focused compiler smoke passed; it was not rerun.",
+    "full_generated_tree_compiled": false
+  },
+  "release_copy_verification": {
+    "status": "passed",
+    "candidate_archive_sha256": "efe6aa2c2a50c1322bb0e2aafa7766aaca2cccfdddcaa1c0c61875dfe12dc660",
+    "candidate_archive_bytes": 200369915,
+    "root_layout": "il2csharp/il2csharp.py",
+    "manifest_checked_files": 11856,
+    "manifest_failures": 0,
+    "tests_passed": 285,
+    "tests_failed": 0,
+    "raw_sqrt_helper_references": 0,
+    "report": "release_verification.json",
+    "manifest_log": "manifest_release_copy.log",
+    "test_log": "tests_release_copy.log"
+  },
+  "limits": [
+    "The complete recovered C# tree was not compiled or executed.",
+    "The supplied game binary and recovered game were not executed.",
+    "A clean syntax gate is not a semantic-equivalence claim.",
+    "8,067 into-block gotos remain across 2,047 methods.",
+    "Fimp_JoystickInput.Update still loses its source Math.Sqrt because UNPCKLPS vector packing is unmodelled.",
+    "Broader shared, virtual, indirect, vector, struct, reference, and ARM64 ABI/semantic cases remain open."
+  ]
+}

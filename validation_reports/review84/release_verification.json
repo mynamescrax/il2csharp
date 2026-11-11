@@ -1,0 +1,18 @@
+{
+  "kind": "Review 84 isolated replacement preflight",
+  "verified_at_utc": "2026-09-10T10:07:13.326855+00:00",
+  "stage": "/data/il2csharp_review84_stage/il2csharp",
+  "root_layout": "il2csharp/il2csharp.py",
+  "root_layout_valid": true,
+  "output_files": 11200,
+  "expected_output_files": 11200,
+  "output_matches_promoted": true,
+  "output_mismatches": [],
+  "tests_passed": 358,
+  "tests_failed": 0,
+  "fixture_sha256": {
+    "testgame/GameAssembly.dll": "d7209d756930bcb2d9bc2e763a74de3b86ec5d94910796f4dc610308650a70ab",
+    "testgame/ShiftAtMidnight_Data/il2cpp_data/Metadata/global-metadata.dat": "a2c6baf6b3aa18866f1871a393cd88d9f8397593284dd2d49cfb9adaaacf81d9"
+  },
+  "success": true
+}

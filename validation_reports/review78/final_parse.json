@@ -1,0 +1,12 @@
+{
+  "kind": "tree-sitter C# syntax gate",
+  "tree": "../../final_out",
+  "files": 11107,
+  "bad_files": 0,
+  "errors": 0,
+  "missing": 0,
+  "recovery_nodes": 0,
+  "details": {},
+  "elapsed_seconds": 24.987,
+  "validation_tree": "/vercel/sandbox/data/validation/candidate_out"
+}

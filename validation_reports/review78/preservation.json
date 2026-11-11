@@ -1,0 +1,34 @@
+{
+  "preserved_original_non_generated_files": 384,
+  "unexpected_original_file_changes": [],
+  "original_goldens_unchanged": true,
+  "intentional_original_file_updates": [
+    "CLAUDE.md",
+    "README.md",
+    "REVIEW.md",
+    "SHA256SUMS.txt",
+    "decompiler.py",
+    "il2csharp.py",
+    "new.md",
+    "tests/test_validation.py",
+    "todo.md",
+    "tools/inspect_methods.py",
+    "tools/validate_corpus.py",
+    "validation_reports/README.md"
+  ],
+  "windows_case_collisions": [],
+  "windows_invalid_filenames": [],
+  "longest_relative_path_chars": 147,
+  "core_line_endings": {
+    "il2csharp.py": {
+      "crlf": 9202,
+      "lf": 9202,
+      "utf8_bom": true
+    },
+    "decompiler.py": {
+      "crlf": 7539,
+      "lf": 7539,
+      "utf8_bom": false
+    }
+  }
+}

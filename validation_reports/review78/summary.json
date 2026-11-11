@@ -1,0 +1,93 @@
+{
+  "review": 78,
+  "date": "2026-09-08",
+  "scope": "Private replacement project; static-only Windows x64 validation, no game execution.",
+  "environment": {
+    "python": "3.13.14",
+    "PYTHONHASHSEED": "0",
+    "iced-x86": "1.21.0",
+    "pytest": "9.1.1",
+    "tree-sitter": "0.26.0",
+    "tree-sitter-c-sharp": "0.23.5"
+  },
+  "uploaded_source_sha256": {
+    "il2csharp.py": "ebc3baf4fc0975de99a806a69716001aa82fa2a123496f861b94a9fe45093147",
+    "decompiler.py": "84ed2517b5416a876726f9ef38b0839f0d9cab38fbc4eaeb3db6c641ede95ed3"
+  },
+  "final_source_sha256": {
+    "il2csharp.py": "8cc258cd5dae2a98eec13ca6a78111d4c7daeb409efa8a2f6db1568b4138da04",
+    "decompiler.py": "4d52608634c3da144adc1aabe2888dec570788585028ef55d04e4e15180fb689"
+  },
+  "fixture_sha256": {
+    "metadata": "a2c6baf6b3aa18866f1871a393cd88d9f8397593284dd2d49cfb9adaaacf81d9",
+    "binary": "d7209d756930bcb2d9bc2e763a74de3b86ec5d94910796f4dc610308650a70ab"
+  },
+  "input_archive": {
+    "filename": "il2csharp.rar",
+    "generated_cs_files": 489,
+    "generated_assemblies": [
+      "Assembly-CSharp"
+    ]
+  },
+  "tests": {
+    "uploaded_original_suite": {
+      "passed": 80,
+      "failed": 56
+    },
+    "restored_original_suite": {
+      "passed": 136,
+      "failed": 0
+    },
+    "release_suite": {
+      "passed": 193,
+      "failed": 0,
+      "portable": 125,
+      "original_game_snapshots": 64,
+      "new_native_grounded_tests": 4
+    },
+    "original_snapshots_regenerated": false
+  },
+  "full_build": {
+    "strict": true,
+    "exit_code": 0,
+    "type_files": 11107,
+    "bodies_lifted": 115658,
+    "failed": 0,
+    "structured_fallbacks": 0,
+    "type_emit_failures": 0
+  },
+  "parse": {
+    "files": 11107,
+    "bad_files": 0,
+    "errors": 0,
+    "missing": 0,
+    "recovery_nodes": 0
+  },
+  "comparison": {
+    "common_methods": 116178,
+    "changed_method_count": 3492,
+    "structural_change_count": 0,
+    "new_crash_count": 0
+  },
+  "direct_sweep": {
+    "methods": 116178,
+    "crashes": 0,
+    "totals": {
+      "brace_unclosed": 0,
+      "brace_underflow": 0,
+      "dangling_gotos": 0,
+      "into_block_gotos": 13642,
+      "empty_args": 0,
+      "lines": 2054559
+    },
+    "affected_methods": {
+      "into_block_gotos": 2997
+    }
+  },
+  "boundaries": [
+    "No game execution or native binary modifications",
+    "No C# compilation or semantic-equivalence claim",
+    "No ARM64 fixture validation",
+    "New register/memory arithmetic remains deferred in cyclic or indirect-dispatch methods"
+  ]
+}

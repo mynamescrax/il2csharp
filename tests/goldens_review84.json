@@ -1,0 +1,584 @@
+{
+  "description": "Focused native regressions plus a deterministic corpus spread; not a semantic oracle. [hash-only public variant]",
+  "metadata_sha256": "a2c6baf6b3aa18866f1871a393cd88d9f8397593284dd2d49cfb9adaaacf81d9",
+  "binary_sha256": "d7209d756930bcb2d9bc2e763a74de3b86ec5d94910796f4dc610308650a70ab",
+  "source_sha256": {
+    "il2csharp.py": "d38845b02a16b545e1ca9e7ae214fa465e46e6dede36e96ee295b4182c1c9599",
+    "il2cpp/__init__.py": "d7e03798d1469aef63f5fdddc5cf0c69e11ebf986ce3501a89044081bea6684d",
+    "il2cpp/__main__.py": "e32a707830fc65788697593eaab69858be54ae67f0fc9e96658eedfc5e482dc4",
+    "il2cpp/arm64.py": "48c20cd29d93676a3d4e1b6527d09026211e53faf00a48ac2a2ce3d3708faca2",
+    "il2cpp/arm64_dec.py": "324c58a2da6f3c340aaa7746093a27b7ccf9fb0f75ec043e70da5b1d653f7d08",
+    "il2cpp/binary.py": "50d795723811a3b1a54067e1fc4fbddffa8ba2b6f05117e66ad81756a10ad84f",
+    "il2cpp/cfg.py": "5b475d23ce6b902f8db315c73537c9af8c88ed6ecd0b8a547df4aa6aa000f271",
+    "il2cpp/cli.py": "fea0edcc50e95788338ef29f4cda21d762b4b414b6d44ede512eec8d100ad4af",
+    "il2cpp/common.py": "22e90429c9412b6b0f95cca7b05b8d3e0ff0e16ff608abd23a93418f9990ff55",
+    "il2cpp/csharp.py": "efe96ff669b2d789780b905eab61866166a9e16ac0910e20486eabf17e6cce1b",
+    "il2cpp/dec/__init__.py": "9f678c95ba6c7e390558a96d65dec18708ed45613071fbbcece2af04567847f6",
+    "il2cpp/dec/analyze.py": "2606bf8f3edb7016ba73af7756f12f2c52b61ca573d2c4390048e64ac64ec102",
+    "il2cpp/dec/build.py": "119a013a57da042d7ba23149e6c6b1fa25e80e8fbc90e68d8f7b254857d86113",
+    "il2cpp/dec/dataflow.py": "4f58512c620c8b85d74063c82d13eee4d95f8353d4dff49c97888436ff6755a5",
+    "il2cpp/dec/emit.py": "45e1ed1eb1d7009dd7be0116c883b4e525c40202a012775aa1cfc3cbc4f16e3f",
+    "il2cpp/dec/flow.py": "2822fd2a70cebcdd9faf50b7018d71517f01642ccca319df1f2f2d60bc6e460a",
+    "il2cpp/dec/highlevel.py": "3fae3960cb05cf06efc90ad1b9e631d783b85fe6db9e650c038698e689205ba6",
+    "il2cpp/dec/seh.py": "36a08eb15acadb6e6fe4c48c2e34dc3941c84f56c8887950300b0c458a95abc1",
+    "il2cpp/dec/structure.py": "748c19bb33120b73048d606ede73353281dc5e54daaa95f9ae638ef89bc6f899",
+    "il2cpp/dec/sugar.py": "1202b2822f102dec0e6214e13989875e26a4199186458a591d95c0c37bf5f2cb",
+    "il2cpp/dec/textpass.py": "df74b43e745a72ab5282e814c606ebcefdae5d2d29e20a21171e48f6bb83a9f3",
+    "il2cpp/emitter.py": "07de733e7256b52dca404b80327c49aae412d91e2a05bc689d1890e3b0e483f7",
+    "il2cpp/expr.py": "5ddf50f2804843e876c6b047d49c4af6e946891e9ca206050971a2c8e657ee56",
+    "il2cpp/headers.py": "a976e3337f6a21fb56b67ed370972b8bef90b95f76c8e0c70f68eb713b69f7e3",
+    "il2cpp/lifter/__init__.py": "e76a5c053880af143736891cddf472cb2021e4000791f99b56bd51daca68ec6f",
+    "il2cpp/lifter/aggregates.py": "697b1213e69555d438c82b69c6a91c678755b7b3a4f01b96ebf253b4776e4f23",
+    "il2cpp/lifter/calls.py": "529ff4c8bee8aa25bb6fdc656e31fefc72ae55bed5148effa2018661c8c6be74",
+    "il2cpp/lifter/insn.py": "4fa409294b7805171ff7f0b1e4b734f0028152d904799c63a285c7665dbcb252",
+    "il2cpp/lifter/render.py": "c352c606404f0f5813ff80b81e1032a1c06f9fb0c378747d1886cc2b12096258",
+    "il2cpp/lifter/state.py": "787f07639df3be8af2aedc7b55c05554f1ea1007b7c6c11314fec6403b0fd492",
+    "il2cpp/lifter/values.py": "58913cc2ea23889a663feb2ac2c5c2e00ffdbd79af717595d34f1875dbbe19e8",
+    "il2cpp/metadata.py": "8665a4ae09376cc3d0b406dd01484542246fb317a46ca78dc0716ced6f548086",
+    "il2cpp/names.py": "d2938287d8c5f0a097a7d60d10e045868e8bfc9b51c0b87fc3df531e9966e54e",
+    "il2cpp/prelude.py": "89d1f63e0b05e02b6d963cee6bfef67d207db3f5e8a5522589e560ee8b686de5",
+    "il2cpp/runtime/__init__.py": "6b7f8f8b2eae25a2cb2989183e49223f42f8d085536da42314ab68c29e37e508",
+    "il2cpp/runtime/core.py": "f420a8b68fb0c62187fb364b66ab04655d103848f1887051cbdbd517e443810c",
+    "il2cpp/runtime/eh.py": "89a47dff0d6a06b17352bb9c55b2cee899be576a51feb103bb50c2114af91336",
+    "il2cpp/runtime/fields.py": "b82d9cc1b4b46b4ecf88b275327a59945a8370194ade7c2158d99cdcaae7f19a",
+    "il2cpp/runtime/meta.py": "174d5786763e3efdda8769e262d58904cf069837929ce362202b82150bf1b6b9",
+    "il2cpp/runtime/registration.py": "ed1ccdac9bdb524971de9508c3498069e110ebb58bd1ad2f6870e14a5e934a8a",
+    "il2cpp/runtime/types.py": "40a2b1a8bdc6bf07f0c626d7c9309c12856a02354c84bba44da74ba1be2df44c",
+    "il2cpp/stmt_text.py": "6c7d6ff3213f9c11cd567cc4b419432586ea43947c50b01c7c19c90e801bd546",
+    "il2cpp/text.py": "ac49330728c4df3046c95aadfc4da9988be6f221c87359dd6e7fc1658c82249d",
+    "il2cpp/x64.py": "24b427806fb6a0cf020f122bb6c42ab0c3db6e3cf34b5975106bc0ecc9b83bdd"
+  },
+  "focus_indices": [
+    1354,
+    2157,
+    2158,
+    4687,
+    4688,
+    12162,
+    23546,
+    23547,
+    25663,
+    26747,
+    31361,
+    31362,
+    31371,
+    32832,
+    32833,
+    32837,
+    80548
+  ],
+  "methods": [
+    {
+      "mi": 0,
+      "va": "0x181ad2a40",
+      "type": "Interop",
+      "name": "GetRandomBytes",
+      "body_sha256": "f446ec2f4051897decd7d047869c136ca35f85875378956a474574db6a84e691",
+      "body_lines": 7
+    },
+    {
+      "mi": 1354,
+      "va": "0x181c0eb10",
+      "type": "System.Convert",
+      "name": "ToInt32",
+      "body_sha256": "8a24049cff7e6ecb19cdb658a6c97e58f72bbc62841e49550fbabaed5c98a31a",
+      "body_lines": 1
+    },
+    {
+      "mi": 2157,
+      "va": "0x181ca4a60",
+      "type": "System.Math",
+      "name": "Round",
+      "body_sha256": "98ace1febe1ee09137e961d1786182dd11176425abe34ebbcd5de4354cd952b5",
+      "body_lines": 1
+    },
+    {
+      "mi": 2158,
+      "va": "0x181ca4df0",
+      "type": "System.Math",
+      "name": "Round",
+      "body_sha256": "9a9e3e86795c31f58dfcb9c421de64f9d0821fe4bac06db1d5408a5baf42ff08",
+      "body_lines": 1
+    },
+    {
+      "mi": 2864,
+      "va": "0x181ccc910",
+      "type": "System.Type",
+      "name": "get_NameOrDefault",
+      "body_sha256": "263b68f8f8079544cb81cf0c00c5b4629edb7e0591a3a6f9fb9fcf54533146ff",
+      "body_lines": 2
+    },
+    {
+      "mi": 4687,
+      "va": "0x181d168b0",
+      "type": "System.Threading.ExecutionContext",
+      "name": "Capture",
+      "body_sha256": "28c5aed486f25e4c4b811e26b42c0a075f54ff5f6e73b26bd58417d1b5474925",
+      "body_lines": 1
+    },
+    {
+      "mi": 4688,
+      "va": "0x181d16d80",
+      "type": "System.Threading.ExecutionContext",
+      "name": "FastCapture",
+      "body_sha256": "316e9b010546835fd657662380d9c204499dddee9f3a734cde00829edabf18f5",
+      "body_lines": 1
+    },
+    {
+      "mi": 5769,
+      "va": "0x181b0fc00",
+      "type": "System.Text.UTF7Encoding",
+      "name": "GetChars",
+      "body_sha256": "e99099d4b705550c8df694cd75811e6bd0a0760dde729cfcbebd7e454411f78c",
+      "body_lines": 168
+    },
+    {
+      "mi": 8467,
+      "va": "0x180500870",
+      "type": "<>c",
+      "name": ".ctor",
+      "body_sha256": "6841c9d1b5cd1c1a4f8a15b0b00cf9600a8d461b04ead7b6c98c3d90509cc401",
+      "body_lines": 1
+    },
+    {
+      "mi": 11974,
+      "va": "0x181c57390",
+      "type": "System.IO.StreamReader",
+      "name": "ReadSpan",
+      "body_sha256": "dd90456b87aed6f5f78e692614ab41fa3105ea59d2f7031aa37fcdcd74ac9456",
+      "body_lines": 85
+    },
+    {
+      "mi": 12162,
+      "va": "0x181c65640",
+      "type": "System.IO.UnmanagedMemoryStream",
+      "name": "get_Position",
+      "body_sha256": "ddb32af3bd24e3e01b82736a042d46eec83d11ee2743a5d7aaecc0b9db0c7dbc",
+      "body_lines": 1
+    },
+    {
+      "mi": 15013,
+      "va": "0x182eaa190",
+      "type": "UnityEngine.UIElements.SortColumnDescription",
+      "name": "set_columnName",
+      "body_sha256": "7cef4008468c82168076890493247c2ac5be3094b2e8dba54297dd24da771514",
+      "body_lines": 13
+    },
+    {
+      "mi": 18054,
+      "va": "0x182f22d60",
+      "type": "UnityEngine.UIElements.InlineStyleAccess",
+      "name": "UnityEngine.UIElements.IStyle.get_unitySliceType",
+      "body_sha256": "f24732ff3118954bfae16f00f4cb6e0bb70b198e70c763b0bdc4b382e01fe49c",
+      "body_lines": 4
+    },
+    {
+      "mi": 21027,
+      "va": "0x182db53b0",
+      "type": "ManagedJobData",
+      "name": "Release",
+      "body_sha256": "a8263c17fc7a4abd346a27ba974d6b91047658dfb74f892bfbb03cb49f8e741d",
+      "body_lines": 13
+    },
+    {
+      "mi": 23546,
+      "va": "0x180500390",
+      "type": "AudioVolumeSliders",
+      "name": "SetMusicVolume",
+      "body_sha256": "fedc30f3c80af9aa07689318b04bcb4b83c4017a82d28375924719e1bbaa9a20",
+      "body_lines": 1
+    },
+    {
+      "mi": 23547,
+      "va": "0x180500540",
+      "type": "AudioVolumeSliders",
+      "name": "SetSFXVolume",
+      "body_sha256": "f7862abc3087b6a0e1fecf5b4e9e3418cb421d7c781c5a4142bd604858270c7b",
+      "body_lines": 1
+    },
+    {
+      "mi": 23931,
+      "va": "0x180517b70",
+      "type": "FPSDisplay",
+      "name": "Update",
+      "body_sha256": "a7648302d4e0d8638176cdb4184c9638ca51f2ce50b93f78971a7955b350c9fb",
+      "body_lines": 30
+    },
+    {
+      "mi": 25663,
+      "va": "0x180709d80",
+      "type": "InventoryManager",
+      "name": "SpeedBoost",
+      "body_sha256": "55ac3281bcd8fb9747748d3ccba81a245cf53fc8addad96f72679512de0d2df0",
+      "body_lines": 8
+    },
+    {
+      "mi": 26469,
+      "va": "0x180540860",
+      "type": "<AbortStartGame>d__57",
+      "name": "SetStateMachine",
+      "body_sha256": "19dcc7c823d80364eb0cf6126fa7a2233fc9d0f0d1742f5a7f0d7057f076ce08",
+      "body_lines": 1
+    },
+    {
+      "mi": 26747,
+      "va": "0x18057b760",
+      "type": "PlayerManager",
+      "name": "Rpc_CMD_Heal",
+      "body_sha256": "d69ce959bf01f474bc0f69bfaa8c1b8678afa3b9e04ab52fa6ea279a0ce3d0ce",
+      "body_lines": 58
+    },
+    {
+      "mi": 29002,
+      "va": "0x18063d350",
+      "type": "FIMSpace.FTools.FMuscle_Quaternion",
+      "name": "Push",
+      "body_sha256": "edf3565392fe337a212b38f1cb031d206b06366b265f614a94aa4bbd2fb3edf6",
+      "body_lines": 9
+    },
+    {
+      "mi": 31361,
+      "va": "0x1825d2fb0",
+      "type": "UnityEngine.InputSystem.InputInteractionContext",
+      "name": "get_action",
+      "body_sha256": "77c0cc0387bebda69a08bc12f43cba6c3a8d6fee371800d74f0efac1349c243f",
+      "body_lines": 1
+    },
+    {
+      "mi": 31362,
+      "va": "0x1825d2ff0",
+      "type": "UnityEngine.InputSystem.InputInteractionContext",
+      "name": "get_control",
+      "body_sha256": "680de7460a52a2d4b1cb8af599e8d6b229418aae56e6169fbc5c14d0b54b66d4",
+      "body_lines": 1
+    },
+    {
+      "mi": 31371,
+      "va": "0x1825d2cf0",
+      "type": "UnityEngine.InputSystem.InputInteractionContext",
+      "name": "ControlIsActuated",
+      "body_sha256": "1e5e46595c36bbd2b51a6c65ad92b9e045c25d596a8d50a2737d6a96c9e95183",
+      "body_lines": 1
+    },
+    {
+      "mi": 31664,
+      "va": "0x1825c4510",
+      "type": "ControlBuilder",
+      "name": "WithShortDisplayName",
+      "body_sha256": "5299d50c769e194a81f40677aacfc612f9f2c8c0c9fdbed4fe660a03188db79b",
+      "body_lines": 7
+    },
+    {
+      "mi": 32832,
+      "va": "0x182649bf0",
+      "type": "UnityEngine.InputSystem.Touchscreen",
+      "name": "OnNextUpdate",
+      "body_sha256": "423aa4cafb8fb05cb3a13f48e8c92e10a2a686f656bbf19f1739d3f49ce8f058",
+      "body_lines": 59
+    },
+    {
+      "mi": 32833,
+      "va": "0x18264a0d0",
+      "type": "UnityEngine.InputSystem.Touchscreen",
+      "name": "OnStateEvent",
+      "body_sha256": "6ecbd7df943e9b95e6a9fa352a71997199e5bdeec975e14b6c8e566e7c457895",
+      "body_lines": 95
+    },
+    {
+      "mi": 32837,
+      "va": "0x18264a970",
+      "type": "UnityEngine.InputSystem.Touchscreen",
+      "name": "UnityEngine.InputSystem.LowLevel.ICustomDeviceReset.Reset",
+      "body_sha256": "fb60f8cbf0f7352a657e0b7802ee7c3c5eb8c22eae5432af8071faaea6435ae4",
+      "body_lines": 70
+    },
+    {
+      "mi": 34279,
+      "va": "0x182693210",
+      "type": "UnityEngine.InputSystem.LowLevel.QueryUserIdCommand",
+      "name": "get_Type",
+      "body_sha256": "4da4b490171a065f6dbfff4d4f512332e0ad5a51ff4039d8a1c87be383b02332",
+      "body_lines": 3
+    },
+    {
+      "mi": 37191,
+      "va": "0x1822265e0",
+      "type": "System.Xml.XmlTextReaderImpl",
+      "name": "FinishAttributeValueIterator",
+      "body_sha256": "16b3d182c176bd5df41427664f21d96bb5243ce248ff93483a17af0b3729bef5",
+      "body_lines": 55
+    },
+    {
+      "mi": 39789,
+      "va": "0x1823901d0",
+      "type": "System.Xml.Schema.BaseProcessor",
+      "name": "AddToTable",
+      "body_sha256": "8d482bf8d9ed9e6077f6937d73a95c9a7cf9390c861b2e8a8930c5ea99592c02",
+      "body_lines": 337
+    },
+    {
+      "mi": 42414,
+      "va": "0x1822e15c0",
+      "type": "System.Xml.Schema.XsdBuilder",
+      "name": "InitComplexType",
+      "body_sha256": "7a540c1600d83696e149da2547c6be7661eebd9c7c9dad152176f3e396d6a1b9",
+      "body_lines": 33
+    },
+    {
+      "mi": 45016,
+      "va": "0x18248ab20",
+      "type": "System.ComponentModel.DateTimeConverter",
+      "name": "ConvertTo",
+      "body_sha256": "d257df5b9f9848e7f0ffecd180708a6a2dcb3e4b061e3ec52ec9961b00cb0639",
+      "body_lines": 71
+    },
+    {
+      "mi": 47817,
+      "va": "0x1823f2fb0",
+      "type": "AwaitableSocketAsyncEventArgs",
+      "name": "Reserve",
+      "body_sha256": "241fd86c764ec29dbecfe2acab9b9a2bf8b124e8e2ed765dd7cc9a874bb5386b",
+      "body_lines": 2
+    },
+    {
+      "mi": 50990,
+      "va": "0x180509780",
+      "type": "RuntimeResources",
+      "name": "get_taaCS",
+      "body_sha256": "cf958669d743829e23b03f281793375dd6e4abf8e4f04495bc9eac186ebd80f5",
+      "body_lines": 1
+    },
+    {
+      "mi": 53876,
+      "va": "0x182b86ec0",
+      "type": "UnityEngine.Camera",
+      "name": "GetFilterMode_Injected",
+      "body_sha256": "12bdef00123f68d38ebe7ac4971874677bf28a4d08933310d3ef4793611d92c4",
+      "body_lines": 1
+    },
+    {
+      "mi": 56514,
+      "va": "0x180500870",
+      "type": "UnityEngine.YieldInstruction",
+      "name": ".ctor",
+      "body_sha256": "6841c9d1b5cd1c1a4f8a15b0b00cf9600a8d461b04ead7b6c98c3d90509cc401",
+      "body_lines": 1
+    },
+    {
+      "mi": 59257,
+      "va": "0x18085f790",
+      "type": "Fusion.CloudServices",
+      "name": "Update",
+      "body_sha256": "5133e3a9633d438f08c0a8c471de56c1dfe913cee9ecefec3456a5aaf5e8806a",
+      "body_lines": 11
+    },
+    {
+      "mi": 62312,
+      "va": "0x1808e7450",
+      "type": "Fusion.Simulation",
+      "name": "RegisterUniqueIdPlayerMapping",
+      "body_sha256": "013d3733cfa2935e3ac08cb04ac439aee84c2f9245a4ab231ddd115a506e396d",
+      "body_lines": 18
+    },
+    {
+      "mi": 64986,
+      "va": "0x1829eb670",
+      "type": "<>c",
+      "name": "<RenderHDRDebug>b__17_1",
+      "body_sha256": "1dd2975adef5cf4667916f6d7f98da69f7d256274d9f5afea5660306e7ef40a7",
+      "body_lines": 9
+    },
+    {
+      "mi": 67525,
+      "va": "0x1826f83f0",
+      "type": "Unity.Mathematics.math",
+      "name": "saturate",
+      "body_sha256": "7792a7eeaaa0fb0d71cc088773112e879ba3130ee85b2120ccdeca55b709fded",
+      "body_lines": 1
+    },
+    {
+      "mi": 70050,
+      "va": "0x18275fc60",
+      "type": "Unity.Mathematics.double3x3",
+      "name": "op_UnaryNegation",
+      "body_sha256": "9ed7614f0124e00ab76788b0cc9ed1ba68bc83a3a7f73418fab8c04302e056fb",
+      "body_lines": 11
+    },
+    {
+      "mi": 72576,
+      "va": "0x1827a04e0",
+      "type": "Unity.Mathematics.half4",
+      "name": "get_ywxx",
+      "body_sha256": "e897886276ed1c5a3aa8a98c196faad39579c6fd5605e19ac74a25970bd61442",
+      "body_lines": 2
+    },
+    {
+      "mi": 75101,
+      "va": "0x1826da850",
+      "type": "Unity.Mathematics.uint3x3",
+      "name": "op_Explicit",
+      "body_sha256": "882ca386bd5630836ceeb2bd507e51cc0b1fab836d072ff40dbd79e126c1ee82",
+      "body_lines": 14
+    },
+    {
+      "mi": 77892,
+      "va": "0x181db6fd0",
+      "type": "Newtonsoft.Json.Serialization.DefaultContractResolver",
+      "name": "ResolveExtensionDataName",
+      "body_sha256": "915f38c5fee3e32d742c3543fab976667a623b2c15a9baad7bbb4a4d89e88c0c",
+      "body_lines": 6
+    },
+    {
+      "mi": 80548,
+      "va": "0x181eab2f0",
+      "type": "ViscosityVorticityJob",
+      "name": "Execute",
+      "body_sha256": "b7ceadd33f9d08246d701dc8de08fcaf7bd6ed7bb416fedb8c8b2c360b2195ee",
+      "body_lines": 57
+    },
+    {
+      "mi": 80616,
+      "va": "0x181ea09d0",
+      "type": "Obi.BurstSkinConstraints",
+      "name": ".ctor",
+      "body_sha256": "252b65e74b83e9d12ffcff38725146a40c0a9c999eedd74518c199361983010b",
+      "body_lines": 1
+    },
+    {
+      "mi": 83647,
+      "va": "0x182119e60",
+      "type": "System.Data.ExceptionBuilder",
+      "name": "TypeNotAllowed",
+      "body_sha256": "008a3fed774cc916da53051c0d7b71a7b59c10872837d005e56440c0ea41b6eb",
+      "body_lines": 3
+    },
+    {
+      "mi": 86310,
+      "va": "0x1821c3720",
+      "type": "System.Data.Common.DateTimeStorage",
+      "name": "Set",
+      "body_sha256": "8e1629b58c1ba30386b96bdcc4cb8c2500227300206ce9c1f77c891d4a5c2ce9",
+      "body_lines": 54
+    },
+    {
+      "mi": 88846,
+      "va": "0x18074f8d0",
+      "type": "Unity.XGamingRuntime.XblMultiplayerSessionHandle",
+      "name": "get_IsInvalid",
+      "body_sha256": "c39d3e015f95ac2cd713b0bbe50d037be105b99fc3e5240cada81f07946b2f99",
+      "body_lines": 1
+    },
+    {
+      "mi": 91407,
+      "va": "0x18061c4a0",
+      "type": "Unity.XGamingRuntime.Interop.XSystemHandleCallback",
+      "name": "EndInvoke",
+      "body_sha256": "85601400cbcf39df56cfcd9326a251859a9f361ddf2407121a037055eeaa8318",
+      "body_lines": 1
+    },
+    {
+      "mi": 96052,
+      "va": "0x18075ac70",
+      "type": "TMPro.TMP_SubMeshUI",
+      "name": "get_spriteAsset",
+      "body_sha256": "b46de4ccde6c36ef4879d8555e6d6d24e5414458e2ba74c118347beff6f7660b",
+      "body_lines": 1
+    },
+    {
+      "mi": 98685,
+      "va": "0x1807c8cc0",
+      "type": "Steamworks.RemoteStorageGetPublishedFileDetailsResult_t",
+      "name": "set_m_rgchTags",
+      "body_sha256": "f8b468f6d2869c66247992ce7cf91ba8b24bddd340e453eaa7a8820d94b5386a",
+      "body_lines": 8
+    },
+    {
+      "mi": 101566,
+      "va": "0x180d20360",
+      "type": "System.Linq.Expressions.InvocationExpression2",
+      "name": "get_ArgumentCount",
+      "body_sha256": "4903bb33de010addf26d0644f5308f0c205649abd73fa1abfd4989d987b8ece2",
+      "body_lines": 1
+    },
+    {
+      "mi": 104428,
+      "va": "0x18072e1b0",
+      "type": "Pathfinding.GraphUpdateShape",
+      "name": "GetBounds",
+      "body_sha256": "2ae5f37b7bb99ba37d22da580a551d69501a2d23fadfd92d7b5e9f1c1b8e8203",
+      "body_lines": 26
+    },
+    {
+      "mi": 107123,
+      "va": "0x182518510",
+      "type": "Neon",
+      "name": "vorn_u32",
+      "body_sha256": "b2377f54d6eb7958bd6009d3b5eeb98ce2ac2e58c25a3aeda6b7ddcd40085d9b",
+      "body_lines": 1
+    },
+    {
+      "mi": 109664,
+      "va": "0x182cd78f0",
+      "type": "ParseError",
+      "name": "Equals",
+      "body_sha256": "2e204899129c4d166f94f4b1b810bced89b1491cc7ed5b579e79c3eb3651468f",
+      "body_lines": 18
+    },
+    {
+      "mi": 112379,
+      "va": "0x181f98470",
+      "type": "ExitGames.Client.Photon.EnetPeer",
+      "name": ".ctor",
+      "body_sha256": "91157f2d32b73c959c0229ebd02ca8ef1e3978916746cf47014f34146843a112",
+      "body_lines": 25
+    },
+    {
+      "mi": 115017,
+      "va": "0x18061c4a0",
+      "type": "UnityEngine.Rendering.CreateDrawBatches_00000188$PostfixBurstDelegate",
+      "name": "EndInvoke",
+      "body_sha256": "20cebcc25c36bf8456648b9b72bb4e1315c729e03ee88b34d8ba4b52f2ab8fc3",
+      "body_lines": 1
+    },
+    {
+      "mi": 117958,
+      "va": "0x1805410f0",
+      "type": "Fusion.Sockets.Stun.StunErrorAttribute",
+      "name": "get_Code",
+      "body_sha256": "dd5eae5cff846948321e4a50b6114a91f99cd674c4d9cc76b2cfd7f333c1bfc0",
+      "body_lines": 1
+    },
+    {
+      "mi": 120625,
+      "va": "0x181ab1d30",
+      "type": "StateOrProvinceName",
+      "name": ".ctor",
+      "body_sha256": "04e7c134e34b6e4b4b931deaa21a7c4ad7b31f4428e10849a630254c5a778993",
+      "body_lines": 5
+    },
+    {
+      "mi": 123616,
+      "va": "0x18070bd70",
+      "type": "Photon.Voice.Unity.WebRtcAudioDsp",
+      "name": "get_HighPass",
+      "body_sha256": "20e5b6994b213393909a267f7db4ac2f92fe3e10a5b9fb4406d96dfe1fa9670e",
+      "body_lines": 1
+    },
+    {
+      "mi": 126258,
+      "va": "0x182c42fe0",
+      "type": "Unity.Hierarchy.Hierarchy",
+      "name": "GetNodeTypeHandlersBaseCount",
+      "body_sha256": "df9ae4d167054ad3d55569bf77fe3842e26ff657f11f39dee0d6262b79db0055",
+      "body_lines": 7
+    },
+    {
+      "mi": 128953,
+      "va": "0x182f84900",
+      "type": "System.__Il2CppComDelegate",
+      "name": "Finalize",
+      "body_sha256": "271beebd13ef9f0f2dd85b779ca3ed072e63359df7caa340a8ad64960f96bac9",
+      "body_lines": 10
+    }
+  ]
+}

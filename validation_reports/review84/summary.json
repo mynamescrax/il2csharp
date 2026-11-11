@@ -1,0 +1,375 @@
+{
+  "release": "Review 84",
+  "date": "2026-09-10",
+  "status": "complete private replacement",
+  "focus": "metadata-safe constructor chains and single-identity object allocation",
+  "input_archive": {
+    "filename": "il2csharp.rar",
+    "sha256": "c0a9a7b8348f7fcdd4b74390f18747ba2e5ff7aec2194ffc0d03831d9e4d7b91",
+    "bytes": 177790169
+  },
+  "fixtures": {
+    "read_statically": true,
+    "executed": false,
+    "unchanged": true,
+    "files": {
+      "testgame/GameAssembly.dll": "d7209d756930bcb2d9bc2e763a74de3b86ec5d94910796f4dc610308650a70ab",
+      "testgame/ShiftAtMidnight_Data/il2cpp_data/Metadata/global-metadata.dat": "a2c6baf6b3aa18866f1871a393cd88d9f8397593284dd2d49cfb9adaaacf81d9"
+    }
+  },
+  "source": {
+    "hashes": {
+      "il2csharp.py": "9cfd13799917ba9edf4550489335d39a2a4eed39a9608d140efa4f2411550216",
+      "decompiler.py": "79cd0d79d8b89374ca99da73ca4a639dbd4cc8ff2f2be5c89125e2e2dcda617a"
+    },
+    "review83_hashes": {
+      "il2csharp.py": "2499e0a4cee29670d289164ed1e250b7d0b91c7b04e9256b36ea8cf40a4decac",
+      "decompiler.py": "b0a9c0660e9708d18da611d7b725d9962c33b4315e89d5e1c218f386ebe88814"
+    },
+    "formats": {
+      "il2csharp.py": {
+        "bytes": 460306,
+        "sha256": "9cfd13799917ba9edf4550489335d39a2a4eed39a9608d140efa4f2411550216",
+        "utf8_bom": true,
+        "lf_count": 9943,
+        "crlf_count": 9943,
+        "crlf_only": true
+      },
+      "decompiler.py": {
+        "bytes": 383736,
+        "sha256": "79cd0d79d8b89374ca99da73ca4a639dbd4cc8ff2f2be5c89125e2e2dcda617a",
+        "utf8_bom": false,
+        "lf_count": 8140,
+        "crlf_count": 8140,
+        "crlf_only": true
+      }
+    },
+    "format_success": true,
+    "diff": "source_changes.diff"
+  },
+  "tests": {
+    "review83_baseline": {
+      "passed": 318,
+      "failed": 0,
+      "log": "tests_baseline.log"
+    },
+    "portable": {
+      "passed": 260,
+      "skipped_without_fixtures": 98,
+      "failed": 0,
+      "log": "tests_portable_all.log"
+    },
+    "snapshot": {
+      "passed": 64,
+      "failed": 0,
+      "log": "tests_snapshots_final.log"
+    },
+    "native_semantic": {
+      "passed": 34,
+      "failed": 0,
+      "log": "tests_native_semantic.log"
+    },
+    "final": {
+      "passed": 358,
+      "failed": 0,
+      "breakdown": {
+        "portable": 260,
+        "snapshot": 64,
+        "native_semantic": 34
+      },
+      "log": "tests_complete.log"
+    }
+  },
+  "strict_build": {
+    "partitioned": true,
+    "partitions": [
+      {
+        "log": "build_part1.log",
+        "type_files": 6787,
+        "elapsed_ms": 904799,
+        "bodies": 63112,
+        "failed": 0,
+        "fallbacks": 0,
+        "type_failures": 0
+      },
+      {
+        "log": "build_part2.log",
+        "type_files": 4662,
+        "elapsed_ms": 650319,
+        "bodies": 57829,
+        "failed": 0,
+        "fallbacks": 0,
+        "type_failures": 0
+      }
+    ],
+    "processed_with_identical_overlap": {
+      "type_files": 11449,
+      "bodies": 120941
+    },
+    "assemblies": 91,
+    "type_files": 11107,
+    "bodies": 115658,
+    "failed": 0,
+    "fallbacks": 0,
+    "type_failures": 0,
+    "overlapping_assemblies": [
+      "Unity.InputSystem.dll"
+    ],
+    "overlapping_files": 345,
+    "overlap_hash_mismatches": [],
+    "merged_files": 11200,
+    "success": true,
+    "report": "build_merge.json"
+  },
+  "syntax_gate": {
+    "tree": "/data/il2csharp_work/il2csharp/final_out",
+    "files": 11107,
+    "bad_files": 0,
+    "errors": 0,
+    "missing": 0,
+    "recovery_nodes": 0,
+    "elapsed_seconds": 27.435,
+    "report": "final_parse.json"
+  },
+  "direct_sweep": {
+    "partitioned": true,
+    "methods": 116178,
+    "crashes": 0,
+    "totals": {
+      "brace_unclosed": 0,
+      "brace_underflow": 0,
+      "dangling_gotos": 0,
+      "into_block_gotos": 8067,
+      "empty_args": 0,
+      "lines": 2192894
+    },
+    "affected_methods": {
+      "into_block_gotos": 2047
+    },
+    "tail_argument_changes": 1206,
+    "tail_argument_methods": 1165,
+    "partition_elapsed_seconds": [
+      863.425,
+      571.927
+    ],
+    "comparison_to_review83": {
+      "common_methods": 116178,
+      "added_methods": 0,
+      "removed_methods": 0,
+      "changed_hashes": 14688,
+      "structural_changes": 0,
+      "new_crashes": 0
+    },
+    "report": "final_sweep.json",
+    "comparison_report": "sweep_comparison.json"
+  },
+  "constructor_sweep": {
+    "constructors": 11737,
+    "crashes": 0,
+    "counts": {
+      "methods": 11737,
+      "base": 8252,
+      "this": 325,
+      "shared_506120": 12,
+      "legacy_this": 3
+    },
+    "conservative_leftovers": 15,
+    "proof_boundary": "Typed current-constructor this or exact fresh-allocation provenance; closed reference type; eligible inheritance owner; exact instance void zero-parameter constructor ABI; exactly one concrete MethodDef. Generic, multiple-match, unknown, byref, value-type, malformed, or unsupported candidates decline.",
+    "report": "constructor_sweep.json"
+  },
+  "generated_output": {
+    "inventory": {
+      "before": 11200,
+      "after": 11200,
+      "shared": 11200,
+      "added": [],
+      "removed": [],
+      "changed": 4428,
+      "unchanged": 6772,
+      "changed_cs": 4428
+    },
+    "before_metrics": {
+      "files": 11200,
+      "cs_files": 11107,
+      "cs_lines": 2913021,
+      "object_obj_decls": 113155,
+      "allocation_declarations": 27117,
+      "empty_allocation_declarations": 21624,
+      "standalone_constructor_allocations": 13292,
+      "shared_calls": 21504,
+      "shared_180506120": 2958,
+      "legacy_this_ctor_calls": 2186,
+      "base_initializers": 5960,
+      "this_initializers": 0
+    },
+    "after_metrics": {
+      "files": 11200,
+      "cs_files": 11107,
+      "cs_lines": 2892453,
+      "object_obj_decls": 112423,
+      "allocation_declarations": 27527,
+      "empty_allocation_declarations": 13254,
+      "standalone_constructor_allocations": 0,
+      "shared_calls": 18703,
+      "shared_180506120": 160,
+      "legacy_this_ctor_calls": 45,
+      "base_initializers": 9530,
+      "this_initializers": 325
+    },
+    "deltas": {
+      "cs_lines": -20568,
+      "object_obj_decls": -732,
+      "allocation_declarations": 410,
+      "empty_allocation_declarations": -8370,
+      "standalone_constructor_allocations": -13292,
+      "shared_calls": -2801,
+      "shared_180506120": -2798,
+      "legacy_this_ctor_calls": -2141,
+      "base_initializers": 3570,
+      "this_initializers": 325
+    },
+    "aggregate_sha256": "4ffcdeaccfc5f51fdef50243b56d56c1e300632ad486af15003fc6b0f501ede1",
+    "report": "output_audit.json",
+    "complete_diff": "output_changes.diff.gz"
+  },
+  "constructor_output_invariants": {
+    "kind": "Review 84 full-output constructor invariants",
+    "tree": "final_out",
+    "cs_files": 11107,
+    "counts": {
+      "raw_pseudo_ctor_calls": 0,
+      "leading_comma_allocations": 0,
+      "standalone_constructor_allocations": 0,
+      "base_initializers": 9530,
+      "this_initializers": 325,
+      "legacy_this_ctor_calls": 45,
+      "shared_180506120": 160
+    },
+    "success": true,
+    "report": "constructor_output_invariants.json"
+  },
+  "snapshots": {
+    "snapshots": 64,
+    "changed": 8,
+    "unchanged": 56,
+    "same_method_inventory": true,
+    "changed_methods": [
+      {
+        "mi": 5769,
+        "va": "0x181b0fc00",
+        "type": "System.Text.UTF7Encoding",
+        "name": "GetChars"
+      },
+      {
+        "mi": 8467,
+        "va": "0x180500870",
+        "type": "<>c",
+        "name": ".ctor"
+      },
+      {
+        "mi": 39789,
+        "va": "0x1823901d0",
+        "type": "System.Xml.Schema.BaseProcessor",
+        "name": "AddToTable"
+      },
+      {
+        "mi": 42414,
+        "va": "0x1822e15c0",
+        "type": "System.Xml.Schema.XsdBuilder",
+        "name": "InitComplexType"
+      },
+      {
+        "mi": 56514,
+        "va": "0x180500870",
+        "type": "UnityEngine.YieldInstruction",
+        "name": ".ctor"
+      },
+      {
+        "mi": 83647,
+        "va": "0x182119e60",
+        "type": "System.Data.ExceptionBuilder",
+        "name": "TypeNotAllowed"
+      },
+      {
+        "mi": 112379,
+        "va": "0x181f98470",
+        "type": "ExitGames.Client.Photon.EnetPeer",
+        "name": ".ctor"
+      },
+      {
+        "mi": 120625,
+        "va": "0x181ab1d30",
+        "type": "StateOrProvinceName",
+        "name": ".ctor"
+      }
+    ],
+    "report": "snapshot_comparison.json",
+    "diff": "snapshot_changes.diff"
+  },
+  "promotion": {
+    "kind": "Review 84 clean output promotion verification",
+    "verified_at_utc": "2026-09-10T10:04:02.208022+00:00",
+    "source": "/data/il2csharp_work/review84_out",
+    "destination": "final_out",
+    "files_verified": 11200,
+    "candidate_aggregate_sha256": "4ffcdeaccfc5f51fdef50243b56d56c1e300632ad486af15003fc6b0f501ede1",
+    "promoted_aggregate_sha256": "4ffcdeaccfc5f51fdef50243b56d56c1e300632ad486af15003fc6b0f501ede1",
+    "candidate_vs_promoted_mismatches": [],
+    "output_audit_changed_files_checked": 4428,
+    "output_audit_after_hash_mismatches": [],
+    "inventory_matches_output_audit": true,
+    "success": true
+  },
+  "environment": {
+    "os": "Amazon Linux 2023",
+    "kernel": "6.18.40",
+    "architecture": "x86_64",
+    "python": "3.13.14",
+    "python_hash_seed": "0",
+    "dotnet_sdk_available": false
+  },
+  "compiled_smoke": {
+    "run_for_review84": false,
+    "reason": "No .NET SDK was available in the validation environment.",
+    "historical_evidence": "Review 80 focused compiler smoke passed; it was not rerun for Reviews 81-84.",
+    "full_generated_tree_compiled": false
+  },
+  "release_copy_verification": {
+    "kind": "Review 84 isolated replacement preflight",
+    "verified_at_utc": "2026-09-10T10:07:13.326855+00:00",
+    "stage": "/data/il2csharp_review84_stage/il2csharp",
+    "root_layout": "il2csharp/il2csharp.py",
+    "root_layout_valid": true,
+    "output_files": 11200,
+    "expected_output_files": 11200,
+    "output_matches_promoted": true,
+    "output_mismatches": [],
+    "tests_passed": 358,
+    "tests_failed": 0,
+    "fixture_sha256": {
+      "testgame/GameAssembly.dll": "d7209d756930bcb2d9bc2e763a74de3b86ec5d94910796f4dc610308650a70ab",
+      "testgame/ShiftAtMidnight_Data/il2cpp_data/Metadata/global-metadata.dat": "a2c6baf6b3aa18866f1871a393cd88d9f8397593284dd2d49cfb9adaaacf81d9"
+    },
+    "success": true,
+    "report": "release_verification.json",
+    "test_log": "tests_staging_preflight.log",
+    "final_archive_check": "performed externally after packaging to avoid a self-hash cycle"
+  },
+  "limits": [
+    "The complete recovered C# tree was not compiled or executed.",
+    "The supplied game binary and recovered game were not executed.",
+    "A clean syntax gate and exact metadata/provenance proof are not semantic-equivalence claims.",
+    "112,423 object objN declarations remain deliberately unresolved.",
+    "13,254 empty allocation declarations remain; some are legitimately parameterless.",
+    "160 sub_180506120 call sites remain output-wide.",
+    "Twelve ambiguous shared-address constructors and three complex legacy this.ctor constructors remain conservative declines.",
+    "8,067 into-block gotos remain across 2,047 methods.",
+    "Definite assignment, project references, constructor/SEH edges, generic/ref/vector ABIs, cyclic allocation identity, ARM64, and independent-fixture cases remain open."
+  ],
+  "documentation": {
+    "current_release_notes": "../../REVIEW84.md",
+    "validation_index": "README.md",
+    "markdown_files_checked_for_stale_current_references": 7,
+    "stale_current_references": 0
+  }
+}

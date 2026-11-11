@@ -1,0 +1,68 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Test / coverage caches
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+*.whl
+
+# Type checkers / linters
+.mypy_cache/
+.ruff_cache/
+
+# Editors / OS
+.vscode/
+.idea/
+.vs/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Repo-specific: large generated trees, private fixtures, backups
+# testgame/ is LOCAL ONLY (licensed game data; removed from git in the
+# 2026-09-28 history scrub — see docs/public_release.md). Never track it.
+work/
+work/logs/
+work/*_out/
+work/*.log
+work/*.err
+work/*.pid
+final_out/
+bckups/
+testgame/
+temptools/
+il2csharp_out/
+il2csharp_out*/
+b*_out1/
+*_out1/
+*_out2/
+*_dbg/
+*.zip
+
+# validation_reports: keep summaries/verification + SHA256SUMS, ignore big blobs
+validation_reports/**/*.methods.jsonl.gz
+validation_reports/**/output_changes.diff.gz
+validation_reports/**/*comparison.json
+validation_reports/**/output_audit.json
+validation_reports/**/*_vs*.json

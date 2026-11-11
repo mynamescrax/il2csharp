@@ -1,0 +1,13 @@
+{
+  "kind": "fixed-order targeted source parity manifest",
+  "source": "/data/il2csharp_work/review83_baseline_src",
+  "source_sha256": {
+    "il2csharp.py": "c4d6e78d8e4cd4591301f74f2e9b5d72c4ba4acc236e5e127124fb5d95ce64e9",
+    "decompiler.py": "b0a9c0660e9708d18da611d7b725d9962c33b4315e89d5e1c218f386ebe88814"
+  },
+  "metadata_sha256": "a2c6baf6b3aa18866f1871a393cd88d9f8397593284dd2d49cfb9adaaacf81d9",
+  "binary_sha256": "d7209d756930bcb2d9bc2e763a74de3b86ec5d94910796f4dc610308650a70ab",
+  "methods": 6351,
+  "manifest": "parity_review82.methods.jsonl.gz",
+  "elapsed_seconds": 218.144
+}

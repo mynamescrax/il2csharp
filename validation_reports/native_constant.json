@@ -1,0 +1,6 @@
+{
+  "description": "Read-only PE constant-pool verification for InventoryManager.SpeedBoost MOVSS XMM2",
+  "va": "0x182fc7bc0",
+  "raw_hex": "00004040",
+  "float32": 3.0
+}

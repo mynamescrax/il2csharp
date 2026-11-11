@@ -1,0 +1,1350 @@
+{
+  "metric": "into_block_gotos",
+  "before_total": 13641,
+  "after_total": 8067,
+  "net_delta": -5574,
+  "before_affected_methods": 2996,
+  "after_affected_methods": 2047,
+  "affected_method_delta": -949,
+  "methods_decreased": 1532,
+  "methods_increased": 83,
+  "increased_with_positive_line_delta": 78,
+  "increased_with_zero_line_delta": 0,
+  "increased_with_negative_line_delta": 5,
+  "largest_decreases": [
+    {
+      "mi": 25660,
+      "va": "0x1806e9ca0",
+      "type": "InventoryManager",
+      "name": "Update",
+      "line_delta": 3694,
+      "before": 224,
+      "after": 60,
+      "delta": -164
+    },
+    {
+      "mi": 84810,
+      "va": "0x18213c8c0",
+      "type": "BinaryNode",
+      "name": "EvalBinaryOp",
+      "line_delta": 796,
+      "before": 176,
+      "after": 12,
+      "delta": -164
+    },
+    {
+      "mi": 96409,
+      "va": "0x182aafb20",
+      "type": "TMP_Text",
+      "name": "ValidateHtmlTag",
+      "line_delta": 1290,
+      "before": 125,
+      "after": 15,
+      "delta": -110
+    },
+    {
+      "mi": 23014,
+      "va": "0x182e36620",
+      "type": "StylePropertyUtil",
+      "name": "TryGetEnumIntValue",
+      "line_delta": 140,
+      "before": 89,
+      "after": 16,
+      "delta": -73
+    },
+    {
+      "mi": 42366,
+      "va": "0x1822e4530",
+      "type": "XsdBuilder",
+      "name": "SetContainer",
+      "line_delta": -180,
+      "before": 62,
+      "after": 0,
+      "delta": -62
+    },
+    {
+      "mi": 110067,
+      "va": "0x182ce3690",
+      "type": "TextGenerator",
+      "name": "LayoutPhase",
+      "line_delta": 1638,
+      "before": 90,
+      "after": 28,
+      "delta": -62
+    },
+    {
+      "mi": 6559,
+      "va": "0x181b3c660",
+      "type": "CryptoConfig",
+      "name": "CreateFromName",
+      "line_delta": 150,
+      "before": 193,
+      "after": 145,
+      "delta": -48
+    },
+    {
+      "mi": 9965,
+      "va": "0x181bf7eb0",
+      "type": "TimeSpanParse",
+      "name": "ProcessTerminal_HMS_F_D",
+      "line_delta": 951,
+      "before": 64,
+      "after": 19,
+      "delta": -45
+    },
+    {
+      "mi": 3727,
+      "va": "0x181cedce0",
+      "type": "RuntimeType",
+      "name": "IsConvertibleToPrimitiveType",
+      "line_delta": 552,
+      "before": 43,
+      "after": 0,
+      "delta": -43
+    },
+    {
+      "mi": 1834,
+      "va": "0x181c8eae0",
+      "type": "DateTimeParse",
+      "name": "ParseByFormat",
+      "line_delta": 222,
+      "before": 61,
+      "after": 21,
+      "delta": -40
+    },
+    {
+      "mi": 108751,
+      "va": "0x18252e6f0",
+      "type": "Avx",
+      "name": "cmp_ps",
+      "line_delta": 22,
+      "before": 40,
+      "after": 1,
+      "delta": -39
+    },
+    {
+      "mi": 1771,
+      "va": "0x181c8cc40",
+      "type": "DateTimeParse",
+      "name": "Lex",
+      "line_delta": 49,
+      "before": 45,
+      "after": 12,
+      "delta": -33
+    },
+    {
+      "mi": 9966,
+      "va": "0x181bf9b70",
+      "type": "TimeSpanParse",
+      "name": "ProcessTerminal_HM_S_D",
+      "line_delta": 668,
+      "before": 46,
+      "after": 13,
+      "delta": -33
+    },
+    {
+      "mi": 37260,
+      "va": "0x182235080",
+      "type": "XmlTextReaderImpl",
+      "name": "SkipUntil",
+      "line_delta": 257,
+      "before": 44,
+      "after": 12,
+      "delta": -32
+    },
+    {
+      "mi": 103375,
+      "va": "0x1820a57f0",
+      "type": "DelegateHelpers",
+      "name": "MakeDelegate",
+      "line_delta": 63,
+      "before": 32,
+      "after": 0,
+      "delta": -32
+    },
+    {
+      "mi": 96741,
+      "va": "0x182adc7e0",
+      "type": "TextMeshPro",
+      "name": "GenerateTextMesh",
+      "line_delta": 894,
+      "before": 115,
+      "after": 85,
+      "delta": -30
+    },
+    {
+      "mi": 96818,
+      "va": "0x182ae88a0",
+      "type": "TextMeshProUGUI",
+      "name": "GenerateTextMesh",
+      "line_delta": 895,
+      "before": 115,
+      "after": 85,
+      "delta": -30
+    },
+    {
+      "mi": 110068,
+      "va": "0x182ce7730",
+      "type": "TextGenerator",
+      "name": "ParsingPhase",
+      "line_delta": 437,
+      "before": 96,
+      "after": 66,
+      "delta": -30
+    },
+    {
+      "mi": 110078,
+      "va": "0x182cee810",
+      "type": "TextGenerator",
+      "name": "PopulateTextProcessingArray",
+      "line_delta": 348,
+      "before": 48,
+      "after": 18,
+      "delta": -30
+    },
+    {
+      "mi": 25768,
+      "va": "0x18053f370",
+      "type": "<Rpc_CMD_PlaceItem>d__288",
+      "name": "MoveNext",
+      "line_delta": 73,
+      "before": 27,
+      "after": 0,
+      "delta": -27
+    },
+    {
+      "mi": 221,
+      "va": "0x181adcef0",
+      "type": "SimpleCollator",
+      "name": "FilterOptions",
+      "line_delta": 45,
+      "before": 26,
+      "after": 0,
+      "delta": -26
+    },
+    {
+      "mi": 9962,
+      "va": "0x181bfb6c0",
+      "type": "TimeSpanParse",
+      "name": "TryParseTimeSpan",
+      "line_delta": 99,
+      "before": 53,
+      "after": 27,
+      "delta": -26
+    },
+    {
+      "mi": 1740,
+      "va": "0x181c818c0",
+      "type": "DateTimeFormat",
+      "name": "FormatCustomized",
+      "line_delta": 173,
+      "before": 32,
+      "after": 7,
+      "delta": -25
+    },
+    {
+      "mi": 42558,
+      "va": "0x1822f79f0",
+      "type": "XsdDuration",
+      "name": "TryParse",
+      "line_delta": 456,
+      "before": 51,
+      "after": 26,
+      "delta": -25
+    },
+    {
+      "mi": 44209,
+      "va": "0x1824627b0",
+      "type": "RegexParser",
+      "name": "ScanGroupOpen",
+      "line_delta": 672,
+      "before": 26,
+      "after": 2,
+      "delta": -24
+    }
+  ],
+  "largest_increases": [
+    {
+      "mi": 82212,
+      "va": "0x181f1b6b0",
+      "type": "MeshVoxelizer",
+      "name": "CreateMesh",
+      "line_delta": 754,
+      "before": 0,
+      "after": 28,
+      "delta": 28
+    },
+    {
+      "mi": 38643,
+      "va": "0x182343f30",
+      "type": "DtdParser",
+      "name": "ParseSubset",
+      "line_delta": 113,
+      "before": 0,
+      "after": 12,
+      "delta": 12
+    },
+    {
+      "mi": 6117,
+      "va": "0x181b25060",
+      "type": "Tokenizer",
+      "name": "GetTokens",
+      "line_delta": 273,
+      "before": 17,
+      "after": 28,
+      "delta": 11
+    },
+    {
+      "mi": 493,
+      "va": "0x181af2e40",
+      "type": "SequentialSearchPrimeGeneratorBase",
+      "name": "GenerateNewPrime",
+      "line_delta": 169,
+      "before": 0,
+      "after": 10,
+      "delta": 10
+    },
+    {
+      "mi": 120938,
+      "va": "0x181acda20",
+      "type": "SequentialSearchPrimeGeneratorBase",
+      "name": "GenerateNewPrime",
+      "line_delta": 169,
+      "before": 0,
+      "after": 10,
+      "delta": 10
+    },
+    {
+      "mi": 141,
+      "va": "0x181ae2070",
+      "type": "SmallXmlParser",
+      "name": "ReadContent",
+      "line_delta": -10,
+      "before": 0,
+      "after": 8,
+      "delta": 8
+    },
+    {
+      "mi": 4409,
+      "va": "0x181d10140",
+      "type": "DecCalc",
+      "name": "ScaleResult",
+      "line_delta": 318,
+      "before": 1,
+      "after": 9,
+      "delta": 8
+    },
+    {
+      "mi": 5811,
+      "va": "0x181b11920",
+      "type": "UTF8Encoding",
+      "name": "GetBytes",
+      "line_delta": 247,
+      "before": 6,
+      "after": 12,
+      "delta": 6
+    },
+    {
+      "mi": 43814,
+      "va": "0x182440000",
+      "type": "DomainNameHelper",
+      "name": "IsValidByIri",
+      "line_delta": 35,
+      "before": 0,
+      "after": 6,
+      "delta": 6
+    },
+    {
+      "mi": 78244,
+      "va": "0x181dcb0b0",
+      "type": "JsonSerializerInternalReader",
+      "name": "PopulateObject",
+      "line_delta": 222,
+      "before": 0,
+      "after": 6,
+      "delta": 6
+    },
+    {
+      "mi": 43813,
+      "va": "0x182440230",
+      "type": "DomainNameHelper",
+      "name": "IsValid",
+      "line_delta": 30,
+      "before": 0,
+      "after": 5,
+      "delta": 5
+    },
+    {
+      "mi": 78242,
+      "va": "0x181dcd250",
+      "type": "JsonSerializerInternalReader",
+      "name": "ResolvePropertyAndCreatorValues",
+      "line_delta": 243,
+      "before": 0,
+      "after": 5,
+      "delta": 5
+    },
+    {
+      "mi": 80016,
+      "va": "0x181e32260",
+      "type": "XmlNodeConverter",
+      "name": "DeserializeNode",
+      "line_delta": 243,
+      "before": 0,
+      "after": 5,
+      "delta": 5
+    },
+    {
+      "mi": 125693,
+      "va": "0x1821feb10",
+      "type": "Number",
+      "name": "ParseNumber",
+      "line_delta": 226,
+      "before": 14,
+      "after": 19,
+      "delta": 5
+    },
+    {
+      "mi": 5807,
+      "va": "0x181b10d40",
+      "type": "UTF8Encoding",
+      "name": "GetByteCount",
+      "line_delta": 85,
+      "before": 5,
+      "after": 9,
+      "delta": 4
+    },
+    {
+      "mi": 5851,
+      "va": "0x181b28f60",
+      "type": "UnicodeEncoding",
+      "name": "GetCharCount",
+      "line_delta": 155,
+      "before": 0,
+      "after": 4,
+      "delta": 4
+    },
+    {
+      "mi": 37938,
+      "va": "0x1823258a0",
+      "type": "DomNameTable",
+      "name": "GetName",
+      "line_delta": 72,
+      "before": 0,
+      "after": 4,
+      "delta": 4
+    },
+    {
+      "mi": 37939,
+      "va": "0x1823254d0",
+      "type": "DomNameTable",
+      "name": "AddName",
+      "line_delta": 60,
+      "before": 0,
+      "after": 4,
+      "delta": 4
+    },
+    {
+      "mi": 38063,
+      "va": "0x18232c530",
+      "type": "XmlDocument",
+      "name": "GetXmlName",
+      "line_delta": 73,
+      "before": 0,
+      "after": 4,
+      "delta": 4
+    },
+    {
+      "mi": 38066,
+      "va": "0x18232c140",
+      "type": "XmlDocument",
+      "name": "GetIDInfoByElement_",
+      "line_delta": 68,
+      "before": 0,
+      "after": 4,
+      "delta": 4
+    },
+    {
+      "mi": 43598,
+      "va": "0x1824253c0",
+      "type": "IPv4AddressHelper",
+      "name": "ParseNonCanonical",
+      "line_delta": 48,
+      "before": 0,
+      "after": 4,
+      "delta": 4
+    },
+    {
+      "mi": 44112,
+      "va": "0x18244ded0",
+      "type": "RegexFCD",
+      "name": "Prefix",
+      "line_delta": 102,
+      "before": 0,
+      "after": 4,
+      "delta": 4
+    },
+    {
+      "mi": 85789,
+      "va": "0x1821a4e30",
+      "type": "SqlDecimal",
+      "name": "op_Addition",
+      "line_delta": 44,
+      "before": 0,
+      "after": 4,
+      "delta": 4
+    },
+    {
+      "mi": 5850,
+      "va": "0x181b28200",
+      "type": "UnicodeEncoding",
+      "name": "GetBytes",
+      "line_delta": 195,
+      "before": 7,
+      "after": 10,
+      "delta": 3
+    },
+    {
+      "mi": 5852,
+      "va": "0x181b29ac0",
+      "type": "UnicodeEncoding",
+      "name": "GetChars",
+      "line_delta": 292,
+      "before": 6,
+      "after": 9,
+      "delta": 3
+    }
+  ],
+  "all_increases": [
+    {
+      "mi": 82212,
+      "va": "0x181f1b6b0",
+      "type": "MeshVoxelizer",
+      "name": "CreateMesh",
+      "line_delta": 754,
+      "before": 0,
+      "after": 28,
+      "delta": 28
+    },
+    {
+      "mi": 38643,
+      "va": "0x182343f30",
+      "type": "DtdParser",
+      "name": "ParseSubset",
+      "line_delta": 113,
+      "before": 0,
+      "after": 12,
+      "delta": 12
+    },
+    {
+      "mi": 6117,
+      "va": "0x181b25060",
+      "type": "Tokenizer",
+      "name": "GetTokens",
+      "line_delta": 273,
+      "before": 17,
+      "after": 28,
+      "delta": 11
+    },
+    {
+      "mi": 493,
+      "va": "0x181af2e40",
+      "type": "SequentialSearchPrimeGeneratorBase",
+      "name": "GenerateNewPrime",
+      "line_delta": 169,
+      "before": 0,
+      "after": 10,
+      "delta": 10
+    },
+    {
+      "mi": 120938,
+      "va": "0x181acda20",
+      "type": "SequentialSearchPrimeGeneratorBase",
+      "name": "GenerateNewPrime",
+      "line_delta": 169,
+      "before": 0,
+      "after": 10,
+      "delta": 10
+    },
+    {
+      "mi": 141,
+      "va": "0x181ae2070",
+      "type": "SmallXmlParser",
+      "name": "ReadContent",
+      "line_delta": -10,
+      "before": 0,
+      "after": 8,
+      "delta": 8
+    },
+    {
+      "mi": 4409,
+      "va": "0x181d10140",
+      "type": "DecCalc",
+      "name": "ScaleResult",
+      "line_delta": 318,
+      "before": 1,
+      "after": 9,
+      "delta": 8
+    },
+    {
+      "mi": 5811,
+      "va": "0x181b11920",
+      "type": "UTF8Encoding",
+      "name": "GetBytes",
+      "line_delta": 247,
+      "before": 6,
+      "after": 12,
+      "delta": 6
+    },
+    {
+      "mi": 43814,
+      "va": "0x182440000",
+      "type": "DomainNameHelper",
+      "name": "IsValidByIri",
+      "line_delta": 35,
+      "before": 0,
+      "after": 6,
+      "delta": 6
+    },
+    {
+      "mi": 78244,
+      "va": "0x181dcb0b0",
+      "type": "JsonSerializerInternalReader",
+      "name": "PopulateObject",
+      "line_delta": 222,
+      "before": 0,
+      "after": 6,
+      "delta": 6
+    },
+    {
+      "mi": 43813,
+      "va": "0x182440230",
+      "type": "DomainNameHelper",
+      "name": "IsValid",
+      "line_delta": 30,
+      "before": 0,
+      "after": 5,
+      "delta": 5
+    },
+    {
+      "mi": 78242,
+      "va": "0x181dcd250",
+      "type": "JsonSerializerInternalReader",
+      "name": "ResolvePropertyAndCreatorValues",
+      "line_delta": 243,
+      "before": 0,
+      "after": 5,
+      "delta": 5
+    },
+    {
+      "mi": 80016,
+      "va": "0x181e32260",
+      "type": "XmlNodeConverter",
+      "name": "DeserializeNode",
+      "line_delta": 243,
+      "before": 0,
+      "after": 5,
+      "delta": 5
+    },
+    {
+      "mi": 125693,
+      "va": "0x1821feb10",
+      "type": "Number",
+      "name": "ParseNumber",
+      "line_delta": 226,
+      "before": 14,
+      "after": 19,
+      "delta": 5
+    },
+    {
+      "mi": 5807,
+      "va": "0x181b10d40",
+      "type": "UTF8Encoding",
+      "name": "GetByteCount",
+      "line_delta": 85,
+      "before": 5,
+      "after": 9,
+      "delta": 4
+    },
+    {
+      "mi": 5851,
+      "va": "0x181b28f60",
+      "type": "UnicodeEncoding",
+      "name": "GetCharCount",
+      "line_delta": 155,
+      "before": 0,
+      "after": 4,
+      "delta": 4
+    },
+    {
+      "mi": 37938,
+      "va": "0x1823258a0",
+      "type": "DomNameTable",
+      "name": "GetName",
+      "line_delta": 72,
+      "before": 0,
+      "after": 4,
+      "delta": 4
+    },
+    {
+      "mi": 37939,
+      "va": "0x1823254d0",
+      "type": "DomNameTable",
+      "name": "AddName",
+      "line_delta": 60,
+      "before": 0,
+      "after": 4,
+      "delta": 4
+    },
+    {
+      "mi": 38063,
+      "va": "0x18232c530",
+      "type": "XmlDocument",
+      "name": "GetXmlName",
+      "line_delta": 73,
+      "before": 0,
+      "after": 4,
+      "delta": 4
+    },
+    {
+      "mi": 38066,
+      "va": "0x18232c140",
+      "type": "XmlDocument",
+      "name": "GetIDInfoByElement_",
+      "line_delta": 68,
+      "before": 0,
+      "after": 4,
+      "delta": 4
+    },
+    {
+      "mi": 43598,
+      "va": "0x1824253c0",
+      "type": "IPv4AddressHelper",
+      "name": "ParseNonCanonical",
+      "line_delta": 48,
+      "before": 0,
+      "after": 4,
+      "delta": 4
+    },
+    {
+      "mi": 44112,
+      "va": "0x18244ded0",
+      "type": "RegexFCD",
+      "name": "Prefix",
+      "line_delta": 102,
+      "before": 0,
+      "after": 4,
+      "delta": 4
+    },
+    {
+      "mi": 85789,
+      "va": "0x1821a4e30",
+      "type": "SqlDecimal",
+      "name": "op_Addition",
+      "line_delta": 44,
+      "before": 0,
+      "after": 4,
+      "delta": 4
+    },
+    {
+      "mi": 5850,
+      "va": "0x181b28200",
+      "type": "UnicodeEncoding",
+      "name": "GetBytes",
+      "line_delta": 195,
+      "before": 7,
+      "after": 10,
+      "delta": 3
+    },
+    {
+      "mi": 5852,
+      "va": "0x181b29ac0",
+      "type": "UnicodeEncoding",
+      "name": "GetChars",
+      "line_delta": 292,
+      "before": 6,
+      "after": 9,
+      "delta": 3
+    },
+    {
+      "mi": 12705,
+      "va": "0x181c703e0",
+      "type": "FileSystemName",
+      "name": "TranslateWin32Expression",
+      "line_delta": 63,
+      "before": 0,
+      "after": 3,
+      "delta": 3
+    },
+    {
+      "mi": 38777,
+      "va": "0x182367800",
+      "type": "XmlConvert",
+      "name": "EncodeName",
+      "line_delta": -49,
+      "before": 4,
+      "after": 7,
+      "delta": 3
+    },
+    {
+      "mi": 85519,
+      "va": "0x18218ddc0",
+      "type": "XmlTreeGen",
+      "name": "FindTypeNode",
+      "line_delta": 44,
+      "before": 0,
+      "after": 3,
+      "delta": 3
+    },
+    {
+      "mi": 103861,
+      "va": "0x1820c3870",
+      "type": "ReaderWriterLockSlim",
+      "name": "TryEnterWriteLockCore",
+      "line_delta": 88,
+      "before": 6,
+      "after": 9,
+      "delta": 3
+    },
+    {
+      "mi": 114731,
+      "va": "0x18294bf60",
+      "type": "ReceiverSphereCuller",
+      "name": "ComputeSplitVisibilityMask",
+      "line_delta": 64,
+      "before": 0,
+      "after": 3,
+      "delta": 3
+    },
+    {
+      "mi": 115366,
+      "va": "0x182979500",
+      "type": "UpdateLODGroupDataJob",
+      "name": "Execute",
+      "line_delta": -120,
+      "before": 0,
+      "after": 3,
+      "delta": 3
+    },
+    {
+      "mi": 132,
+      "va": "0x181ae13f0",
+      "type": "SmallXmlParser",
+      "name": "HandleWhitespaces",
+      "line_delta": 15,
+      "before": 0,
+      "after": 2,
+      "delta": 2
+    },
+    {
+      "mi": 133,
+      "va": "0x181ae3530",
+      "type": "SmallXmlParser",
+      "name": "SkipWhitespaces",
+      "line_delta": 15,
+      "before": 0,
+      "after": 2,
+      "delta": 2
+    },
+    {
+      "mi": 2297,
+      "va": "0x181ca9390",
+      "type": "Number",
+      "name": "Int64ToHexStr",
+      "line_delta": 33,
+      "before": 0,
+      "after": 2,
+      "delta": 2
+    },
+    {
+      "mi": 2298,
+      "va": "0x181caf520",
+      "type": "Number",
+      "name": "TryInt64ToHexStr",
+      "line_delta": 29,
+      "before": 0,
+      "after": 2,
+      "delta": 2
+    },
+    {
+      "mi": 4157,
+      "va": "0x181d07220",
+      "type": "TermInfoDriver",
+      "name": "ReadUntilConditionInternal",
+      "line_delta": 17,
+      "before": 0,
+      "after": 2,
+      "delta": 2
+    },
+    {
+      "mi": 22046,
+      "va": "0x182de65b0",
+      "type": "Allocator2D",
+      "name": "BuildAreas",
+      "line_delta": 15,
+      "before": 0,
+      "after": 2,
+      "delta": 2
+    },
+    {
+      "mi": 31764,
+      "va": "0x1825cc040",
+      "type": "InputControlPath",
+      "name": "MatchPathComponent",
+      "line_delta": 16,
+      "before": 4,
+      "after": 6,
+      "delta": 2
+    },
+    {
+      "mi": 39317,
+      "va": "0x182377620",
+      "type": "XmlReflectionImporter",
+      "name": "CreateMapMember",
+      "line_delta": -112,
+      "before": 1,
+      "after": 3,
+      "delta": 2
+    },
+    {
+      "mi": 43816,
+      "va": "0x18243faf0",
+      "type": "DomainNameHelper",
+      "name": "IdnEquivalent",
+      "line_delta": 104,
+      "before": 0,
+      "after": 2,
+      "delta": 2
+    },
+    {
+      "mi": 47242,
+      "va": "0x1823e2ad0",
+      "type": "MonoChunkParser",
+      "name": "InternalWrite",
+      "line_delta": 14,
+      "before": 2,
+      "after": 4,
+      "delta": 2
+    },
+    {
+      "mi": 85331,
+      "va": "0x182160d70",
+      "type": "XDRSchema",
+      "name": "FindTypeNode",
+      "line_delta": 30,
+      "before": 3,
+      "after": 5,
+      "delta": 2
+    },
+    {
+      "mi": 111337,
+      "va": "0x182f51f30",
+      "type": "ScrollRect",
+      "name": "LateUpdate",
+      "line_delta": 20,
+      "before": 0,
+      "after": 2,
+      "delta": 2
+    },
+    {
+      "mi": 114288,
+      "va": "0x181f77620",
+      "type": "DeflateManager",
+      "name": "DeflateNone",
+      "line_delta": 22,
+      "before": 0,
+      "after": 2,
+      "delta": 2
+    },
+    {
+      "mi": 183,
+      "va": "0x181ad7420",
+      "type": "MSCompatUnicodeTable",
+      "name": "BuildTailoringTables",
+      "line_delta": 76,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 2304,
+      "va": "0x181caa800",
+      "type": "Number",
+      "name": "NumberToStringFormat",
+      "line_delta": 520,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 2313,
+      "va": "0x181ca6890",
+      "type": "Number",
+      "name": "FindSection",
+      "line_delta": 77,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 5437,
+      "va": "0x181d253c0",
+      "type": "ASCIIEncoding",
+      "name": "GetBytes",
+      "line_delta": 62,
+      "before": 5,
+      "after": 6,
+      "delta": 1
+    },
+    {
+      "mi": 5639,
+      "va": "0x181b05fd0",
+      "type": "Latin1Encoding",
+      "name": "GetBytes",
+      "line_delta": 36,
+      "before": 6,
+      "after": 7,
+      "delta": 1
+    },
+    {
+      "mi": 5730,
+      "va": "0x181b0be40",
+      "type": "UTF32Encoding",
+      "name": "GetByteCount",
+      "line_delta": 27,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 6116,
+      "va": "0x181b24db0",
+      "type": "Tokenizer",
+      "name": "ChangeFormat",
+      "line_delta": 4,
+      "before": 1,
+      "after": 2,
+      "delta": 1
+    },
+    {
+      "mi": 11979,
+      "va": "0x181c56620",
+      "type": "StreamReader",
+      "name": "ReadBuffer",
+      "line_delta": 16,
+      "before": 8,
+      "after": 9,
+      "delta": 1
+    },
+    {
+      "mi": 11980,
+      "va": "0x181c56a80",
+      "type": "StreamReader",
+      "name": "ReadBuffer",
+      "line_delta": 16,
+      "before": 8,
+      "after": 9,
+      "delta": 1
+    },
+    {
+      "mi": 12708,
+      "va": "0x181c6f9f0",
+      "type": "FileSystemName",
+      "name": "MatchPattern",
+      "line_delta": 102,
+      "before": 3,
+      "after": 4,
+      "delta": 1
+    },
+    {
+      "mi": 36100,
+      "va": "0x1822055b0",
+      "type": "BinXmlSqlDecimal",
+      "name": "ToString",
+      "line_delta": 24,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 37007,
+      "va": "0x182310780",
+      "type": "XmlTextEncoder",
+      "name": "WriteRawWithSurrogateChecking",
+      "line_delta": 30,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 38689,
+      "va": "0x182345b30",
+      "type": "DtdParser",
+      "name": "ScanCondSection1",
+      "line_delta": 17,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 43639,
+      "va": "0x182427560",
+      "type": "IriHelper",
+      "name": "EscapeUnescapeIri",
+      "line_delta": 207,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 43777,
+      "va": "0x18243a0f0",
+      "type": "UriHelper",
+      "name": "UnescapeString",
+      "line_delta": 190,
+      "before": 1,
+      "after": 2,
+      "delta": 1
+    },
+    {
+      "mi": 43821,
+      "va": "0x1824405e0",
+      "type": "DomainNameHelper",
+      "name": "UnicodeEquivalent",
+      "line_delta": 185,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 44210,
+      "va": "0x1824610e0",
+      "type": "RegexParser",
+      "name": "ScanBlank",
+      "line_delta": 23,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 50225,
+      "va": "0x18289fa70",
+      "type": "ProbeBrickIndex",
+      "name": "MarkBrickInPhysicalBuffer",
+      "line_delta": 61,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 79692,
+      "va": "0x181e22080",
+      "type": "<ExecuteFilter>d__2",
+      "name": "MoveNext",
+      "line_delta": 26,
+      "before": 4,
+      "after": 5,
+      "delta": 1
+    },
+    {
+      "mi": 80060,
+      "va": "0x181e28970",
+      "type": "BsonReader",
+      "name": "ReadString",
+      "line_delta": 6,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 80401,
+      "va": "0x181e3a250",
+      "type": "ApplyForceZonesJob",
+      "name": "Execute",
+      "line_delta": 153,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 80411,
+      "va": "0x181e62d50",
+      "type": "GenerateEdgeMeshContactsJob",
+      "name": "Execute",
+      "line_delta": 62,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 80414,
+      "va": "0x181e63840",
+      "type": "GenerateHeightFieldContactsJob",
+      "name": "Execute",
+      "line_delta": 302,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 80427,
+      "va": "0x181e651f0",
+      "type": "GenerateTriangleMeshContactsJob",
+      "name": "Execute",
+      "line_delta": 164,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 80516,
+      "va": "0x181e611f0",
+      "type": "FrictionConstraintsBatchJob",
+      "name": "Execute",
+      "line_delta": 352,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 80851,
+      "va": "0x181ebc800",
+      "type": "ChaikinSmoothChunksJob",
+      "name": "Execute",
+      "line_delta": -37,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 85445,
+      "va": "0x18217b490",
+      "type": "XmlDataLoader",
+      "name": "LoadRows",
+      "line_delta": 714,
+      "before": 1,
+      "after": 2,
+      "delta": 1
+    },
+    {
+      "mi": 85782,
+      "va": "0x1821a33e0",
+      "type": "SqlDecimal",
+      "name": "ToString",
+      "line_delta": 17,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 105112,
+      "va": "0x1807458d0",
+      "type": "GridGraph",
+      "name": "Pathfinding.IUpdatableGraph.UpdateArea",
+      "line_delta": 245,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 113350,
+      "va": "0x181fd9ff0",
+      "type": "BigInteger",
+      "name": "gcd",
+      "line_delta": 19,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 113366,
+      "va": "0x181fdad00",
+      "type": "BigInteger",
+      "name": "modInverse",
+      "line_delta": 15,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 114187,
+      "va": "0x181f74b40",
+      "type": "BZip2InputStream",
+      "name": "recvDecodingTables",
+      "line_delta": 61,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 114888,
+      "va": "0x1829389d0",
+      "type": "AllocateBinsPerBatch",
+      "name": "Execute",
+      "line_delta": 136,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 114978,
+      "va": "0x18295aae0",
+      "type": "InstanceCullingBatcher",
+      "name": "Dispose",
+      "line_delta": 16,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 114980,
+      "va": "0x18295c410",
+      "type": "InstanceCullingBatcher",
+      "name": "UpdateInstanceDataBufferLayoutVersion",
+      "line_delta": 15,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 115423,
+      "va": "0x182973600",
+      "type": "OcclusionCullingCommon",
+      "name": "UpdateOccluderStats",
+      "line_delta": 16,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 122499,
+      "va": "0x182b52e70",
+      "type": "VisualEffectControlTrackController",
+      "name": "Update",
+      "line_delta": 30,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 125708,
+      "va": "0x1821fc160",
+      "type": "Number",
+      "name": "FindSection",
+      "line_delta": 77,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    },
+    {
+      "mi": 125709,
+      "va": "0x1821fd5b0",
+      "type": "Number",
+      "name": "NumberToStringFormat",
+      "line_delta": 480,
+      "before": 0,
+      "after": 1,
+      "delta": 1
+    }
+  ]
+}

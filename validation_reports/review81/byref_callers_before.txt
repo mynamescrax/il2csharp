@@ -1,0 +1,1362 @@
+===== mi 16955 PanelSettings.ApplyPanelSettings 0x182ef4490 =====
+unsafe
+{
+obj5 = 0;
+this.ScreenDPI = UnityEngine.Screen.dpi;
+System.Type obj7 = typeof(UnityEngine.Object);
+if (this.m_TargetTexture != null)
+{
+    num1 = this.m_TargetTexture.height;
+    num2 = this.m_TargetTexture.width;
+}
+else
+{
+    System.Type obj21 = typeof(UnityEngine.UIElements.BaseRuntimePanel);
+    num1 = UnityEngine.UIElements.BaseRuntimePanel.getScreenRenderingHeight(this.m_TargetDisplay);
+    num2 = UnityEngine.UIElements.BaseRuntimePanel.getScreenRenderingWidth(this.m_TargetDisplay);
+}
+obj23 = 0;
+float real1 = this.m_TargetRect;
+this.m_TargetRect = obj23;
+real2 = 1.0f;
+if (this.m_RenderMode != 1)
+{
+    float real3 = this.ScreenDPI;
+    real4 = 1.0f;
+    if (this.m_ScaleMode != null)
+    {
+        if (this.m_ScaleMode - 1 == PanelScaleMode.ConstantPixelSize)
+        {
+            if (float.IsNaN(real3) || float.IsNaN(0f))
+            {
+                real4 = this.m_ReferenceDpi / real3;
+            }
+            else
+            {
+                real6 = real3;
+                if (unknown == unknown)
+                {
+                    real6 = this.m_FallbackDpi;
+                }
+                if (float.IsNaN(this.m_FallbackDpi) || float.IsNaN(0f))
+                {
+                    real4 = this.m_ReferenceDpi / real6;
+                }
+                else if (unknown == unknown)
+                {
+                    real4 = 1.0f;
+                }
+                else
+                {
+                    real4 = this.m_ReferenceDpi / real6;
+                }
+            }
+        }
+        else
+        {
+            if (this.m_ScaleMode != 2)
+            {
+                real4 = 1.0f;
+            }
+            else
+            {
+                UnityEngine.Vector2Int obj26 = (this.m_ReferenceResolution >> 32) * this.m_ReferenceResolution;
+                if (obj26 == null)
+                {
+                    real4 = 1.0f;
+                }
+                else
+                {
+                    float real7 = this.m_ReferenceResolution;
+                    UnityEngine.Vector2Int obj27 = this.m_ReferenceResolution >> 32;
+                    float real8 = num1 / (obj27);
+                    if (this.m_ScreenMatchMode != this.m_ScaleMode - 1)
+                    {
+                        if (this.m_ScreenMatchMode != PanelScreenMatchMode.Shrink)
+                        {
+                            real9 = 0f > this.m_Match ? 0f : this.m_Match <= 1.0f ? this.m_Match : 1.0f;
+                            real10 = 0f > real9 ? 0f : real9 <= 1.0f ? real9 : 1.0f;
+                            num3 = (real8 - num2 / real7) * real10 + num2 / real7;
+                            num4 = num3;
+                        }
+                        else if (real8 > num2 / real7)
+                        {
+                            num4 = num2 / real7;
+                        }
+                        else
+                        {
+                            num4 = real8;
+                        }
+                    }
+                    else if (num2 / real7 > real8)
+                    {
+                        num4 = num2 / real7;
+                    }
+                    else
+                    {
+                        num4 = real8;
+                    }
+                    if (float.IsNaN(num4) || float.IsNaN(0f))
+                    {
+                        real4 = 1.0f / num4;
+                    }
+                    else if (unknown == unknown)
+                    {
+                        real4 = 1.0f;
+                    }
+                    else
+                    {
+                        real4 = 1.0f / num4;
+                    }
+                }
+            }
+        }
+    }
+    real2 = this.m_Scale > 0f ? real4 / this.m_Scale : 0f;
+}
+float real11 = this.m_ResolvedScale;
+this.m_ResolvedScale = real2;
+UnityEngine.UIElements.BaseRuntimePanel obj28 = this.m_PanelAccess.panel;
+if (this.m_RenderMode == 1)
+{
+    obj29 = obj28;
+}
+else
+{
+    System.Type obj31 = obj28.visualTree.style.getClass();
+    System.Type obj32 = typeof(UnityEngine.UIElements.IStyle);
+    object obj33 = ((byte*)obj28.visualTree.style.getClass() + 0x12e)[0];
+    if (0 >= ((byte*)obj31 + 0x12e)[0])
+    {
+        obj34 = obj28.visualTree.style;
+        object obj36 = sub_18043dc60(obj34, obj32, 164, obj32);
+        obj37 = obj36;
+        obj38 = obj34;
+        obj39 = obj28;
+        real13 = real11;
+    }
+    else
+    {
+        obj40 = obj31;
+        obj41 = ((byte*)obj31 + 0xb0)[0];
+        obj42 = obj28.visualTree.style;
+        obj44 = obj28;
+        real14 = real11;
+        for (num5 = 0; ((byte*)obj41 + (num5 + num5)*8 + 0x0)[0] != obj32; num5++)
+        {
+            if (num5 + 1 >= obj33)
+            {
+                obj34 = obj42;
+                break;
+            }
+        }
+        obj37 = (((byte*)obj41 + (num5 + num5)*8 + 0x8)[0] + 0xa4 << 4) + 0x138 + obj40;
+        obj38 = obj42;
+        obj39 = obj44;
+        real13 = real14;
+    }
+    object obj45 = ((byte*)obj37 + 0x0)[0]() /*indirect*/(&obj23, obj38, ((byte*)obj37 + 0x8)[0], ((byte*)obj37 + 0x0)[0]);
+    obj5 = ((byte*)obj45 + 0x0)[0];
+    UnityEngine.UIElements.Length obj46 = obj5.value;
+    if (UnityEngine.UIElements.Length.op_Equality(obj46, UnityEngine.UIElements.Length.op_Implicit(0f)))
+    {
+        if (float.IsNaN(this.m_ResolvedScale) || float.IsNaN(0f))
+        {
+            real15 = 1.0f / this.m_ResolvedScale;
+        }
+        else if (unknown != unknown)
+        {
+            real15 = 1.0f / this.m_ResolvedScale;
+        }
+        else
+        {
+            real15 = 0f;
+        }
+        object obj47 = sub_180513140(obj48, obj49, 0, obj50);
+        if (obj47 == null)
+        {
+            obj39.m_Scale = real15;
+            obj39.visualTree.IncrementVersion(8);
+            float real16 = obj39.m_PixelsPerPoint * obj39.m_Scale;
+            ((byte*)obj51 + 0x0)[0] = real16;
+            obj39.visualTree.IncrementVersion(16);
+        }
+        obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj53);
+        System.Type obj54 = obj28.visualTree.style.getClass();
+        object obj56 = ((byte*)obj28.visualTree.style.getClass() + 0x12e)[0];
+        if (0 >= ((byte*)obj54 + 0x12e)[0])
+        {
+            obj58 = obj28.visualTree.style;
+            obj60 = obj23.m_Value;
+            object obj61 = sub_18043dc60(obj58, obj32, 67, obj32);
+            obj63 = obj64;
+            obj65 = obj61;
+            obj66 = obj58;
+            obj67 = obj39;
+            obj68 = obj60;
+        }
+        else
+        {
+            obj69 = obj54;
+            obj71 = ((byte*)obj54 + 0xb0)[0];
+            obj72 = obj28.visualTree.style;
+            obj74 = obj39;
+            obj75 = obj23.m_Value;
+            for (num6 = 0; ((byte*)obj71 + (num6 + num6)*8 + 0x0)[0] != obj32; num6++)
+            {
+                if (num6 + 1 >= obj56)
+                {
+                    obj58 = obj72;
+                    obj60 = obj75;
+                    break;
+                }
+            }
+            obj63 = obj32;
+            obj65 = (((byte*)obj71 + (num6 + num6)*8 + 0x8)[0] + 0x43 << 4) + 0x138 + obj69;
+            obj66 = obj72;
+            obj67 = obj74;
+            obj68 = obj75;
+        }
+        obj23 = obj68;
+        object obj76 = ((byte*)obj65 + 0x0)[0]()(obj66, &obj23, ((byte*)obj65 + 0x8)[0], obj63);
+        obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj78);
+        System.Type obj79 = obj28.visualTree.style.getClass();
+        object obj81 = ((byte*)obj28.visualTree.style.getClass() + 0x12e)[0];
+        if (0 >= ((byte*)obj79 + 0x12e)[0])
+        {
+            obj83 = obj28.visualTree.style;
+            obj85 = obj23.m_Value;
+            object obj86 = sub_18043dc60(obj83, obj32, 111, obj32);
+            obj88 = obj89;
+            obj90 = obj86;
+            obj91 = obj83;
+            obj92 = obj67;
+            obj93 = obj85;
+        }
+        else
+        {
+            obj94 = obj79;
+            obj96 = ((byte*)obj79 + 0xb0)[0];
+            obj97 = obj28.visualTree.style;
+            obj99 = obj67;
+            obj100 = obj23.m_Value;
+            for (num7 = 0; ((byte*)obj96 + (num7 + num7)*8 + 0x0)[0] != obj32; num7++)
+            {
+                if (num7 + 1 >= obj81)
+                {
+                    obj83 = obj97;
+                    obj85 = obj100;
+                    break;
+                }
+            }
+            obj88 = obj32;
+            obj90 = (((byte*)obj96 + (num7 + num7)*8 + 0x8)[0] + 0x6f << 4) + 0x138 + obj94;
+            obj91 = obj97;
+            obj92 = obj99;
+            obj93 = obj100;
+        }
+        obj23 = obj93;
+        object obj101 = ((byte*)obj90 + 0x0)[0]()(obj91, &obj23, ((byte*)obj90 + 0x8)[0], obj88);
+        obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj103);
+        System.Type obj104 = obj28.visualTree.style.getClass();
+        object obj106 = ((byte*)obj28.visualTree.style.getClass() + 0x12e)[0];
+        if (0 >= ((byte*)obj104 + 0x12e)[0])
+        {
+            obj108 = obj28.visualTree.style;
+            obj110 = obj23.m_Value;
+            object obj111 = sub_18043dc60(obj108, obj32, 165, obj32);
+            obj113 = obj114;
+            obj115 = obj111;
+            obj116 = obj108;
+            obj117 = obj92;
+            obj118 = obj110;
+        }
+        else
+        {
+            obj119 = obj104;
+            obj121 = ((byte*)obj104 + 0xb0)[0];
+            obj122 = obj28.visualTree.style;
+            obj124 = obj92;
+            obj125 = obj23.m_Value;
+            for (num8 = 0; ((byte*)obj121 + (num8 + num8)*8 + 0x0)[0] != obj32; num8++)
+            {
+                if (num8 + 1 >= obj106)
+                {
+                    obj108 = obj122;
+                    obj110 = obj125;
+                    break;
+                }
+            }
+            obj113 = obj32;
+            obj115 = (((byte*)obj121 + (num8 + num8)*8 + 0x8)[0] + 0xa5 << 4) + 0x138 + obj119;
+            obj116 = obj122;
+            obj117 = obj124;
+            obj118 = obj125;
+        }
+        obj23 = obj118;
+        object obj126 = ((byte*)obj115 + 0x0)[0]()(obj116, &obj23, ((byte*)obj115 + 0x8)[0], obj113);
+        obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj128);
+        System.Type obj129 = obj28.visualTree.style.getClass();
+        object obj131 = ((byte*)obj28.visualTree.style.getClass() + 0x12e)[0];
+        if (0 >= ((byte*)obj129 + 0x12e)[0])
+        {
+            obj133 = obj28.visualTree.style;
+            obj135 = obj23.m_Value;
+            object obj136 = sub_18043dc60(obj133, obj32, 63, obj32);
+            obj138 = obj139;
+            obj140 = obj136;
+            obj141 = obj133;
+            obj142 = obj117;
+            obj143 = obj135;
+        }
+        else
+        {
+            obj144 = obj129;
+            obj146 = ((byte*)obj129 + 0xb0)[0];
+            obj147 = obj28.visualTree.style;
+            obj149 = obj117;
+            obj150 = obj23.m_Value;
+            for (num9 = 0; ((byte*)obj146 + (num9 + num9)*8 + 0x0)[0] != obj32; num9++)
+            {
+                if (num9 + 1 >= obj131)
+                {
+                    obj133 = obj147;
+                    obj135 = obj150;
+                    break;
+                }
+            }
+            obj138 = obj32;
+            obj140 = (((byte*)obj146 + (num9 + num9)*8 + 0x8)[0] + 0x3f << 4) + 0x138 + obj144;
+            obj141 = obj147;
+            obj142 = obj149;
+            obj143 = obj150;
+        }
+        obj23 = obj143;
+        object obj151 = ((byte*)obj140 + 0x0)[0]()(obj141, &obj23, ((byte*)obj140 + 0x8)[0], obj138);
+        obj152 = obj142;
+    }
+    else if (float.IsNaN(this.m_ResolvedScale) || float.IsNaN(real13))
+    {
+        if (float.IsNaN(this.m_ResolvedScale) || float.IsNaN(0f))
+        {
+            obj153 = 1.0f / this.m_ResolvedScale;
+        }
+        else if (unknown != unknown)
+        {
+            obj153 = 1.0f / this.m_ResolvedScale;
+        }
+        else
+        {
+            obj153 = 0f;
+        }
+        object obj154 = sub_180513140(obj48, obj49, 0, obj50);
+        if (obj154 == null)
+        {
+            obj39.m_Scale = obj153;
+            obj39.visualTree.IncrementVersion(8);
+            object obj168 = obj39.m_PixelsPerPoint * obj39.m_Scale;
+            ((byte*)obj169 + 0x0)[0] = obj168;
+            obj39.visualTree.IncrementVersion(16);
+        }
+        object obj177 = this.m_PanelAccess.panel;
+        obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj178);
+        System.Type obj179 = obj177.visualTree.style.getClass();
+        object obj181 = ((byte*)obj177.visualTree.style.getClass() + 0x12e)[0];
+        if (0 >= ((byte*)obj179 + 0x12e)[0])
+        {
+            obj189 = obj177.visualTree.style;
+            obj194 = obj23.m_Value;
+            object obj196 = sub_18043dc60(obj189, obj32, 67, obj32);
+            obj204 = obj205;
+            obj206 = obj196;
+            obj207 = obj189;
+            obj212 = obj39;
+            obj214 = obj194;
+        }
+        else
+        {
+            obj216 = obj179;
+            obj219 = ((byte*)obj179 + 0xb0)[0];
+            obj221 = obj177.visualTree.style;
+            obj223 = obj39;
+            obj225 = obj23.m_Value;
+            for (num10 = 0; ((byte*)obj219 + (num10 + num10)*8 + 0x0)[0] != obj32; num10++)
+            {
+                if (num10 + 1 >= obj181)
+                {
+                    obj189 = obj221;
+                    obj194 = obj225;
+                    break;
+                }
+            }
+            obj204 = obj32;
+            obj206 = (((byte*)obj219 + (num10 + num10)*8 + 0x8)[0] + 0x43 << 4) + 0x138 + obj216;
+            obj207 = obj221;
+            obj212 = obj223;
+            obj214 = obj225;
+        }
+        obj23 = obj214;
+        object obj227 = ((byte*)obj206 + 0x0)[0]()(obj207, &obj23, ((byte*)obj206 + 0x8)[0], obj204);
+        obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj229);
+        System.Type obj230 = obj177.visualTree.style.getClass();
+        object obj232 = ((byte*)obj177.visualTree.style.getClass() + 0x12e)[0];
+        if (0 >= ((byte*)obj230 + 0x12e)[0])
+        {
+            obj240 = obj177.visualTree.style;
+            obj245 = obj23.m_Value;
+            object obj247 = sub_18043dc60(obj240, obj32, 111, obj32);
+            obj255 = obj256;
+            obj257 = obj247;
+            obj258 = obj240;
+            obj263 = obj212;
+            obj265 = obj245;
+        }
+        else
+        {
+            obj267 = obj230;
+            obj270 = ((byte*)obj230 + 0xb0)[0];
+            obj272 = obj177.visualTree.style;
+            obj274 = obj212;
+            obj276 = obj23.m_Value;
+            for (num11 = 0; ((byte*)obj270 + (num11 + num11)*8 + 0x0)[0] != obj32; num11++)
+            {
+                if (num11 + 1 >= obj232)
+                {
+                    obj240 = obj272;
+                    obj245 = obj276;
+                    break;
+                }
+            }
+            obj255 = obj32;
+            obj257 = (((byte*)obj270 + (num11 + num11)*8 + 0x8)[0] + 0x6f << 4) + 0x138 + obj267;
+            obj258 = obj272;
+            obj263 = obj274;
+            obj265 = obj276;
+        }
+        obj23 = obj265;
+        object obj278 = ((byte*)obj257 + 0x0)[0]()(obj258, &obj23, ((byte*)obj257 + 0x8)[0], obj255);
+        obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj280);
+        System.Type obj281 = obj177.visualTree.style.getClass();
+        object obj283 = ((byte*)obj177.visualTree.style.getClass() + 0x12e)[0];
+        if (0 >= ((byte*)obj281 + 0x12e)[0])
+        {
+            obj291 = obj177.visualTree.style;
+            obj296 = obj23.m_Value;
+            object obj298 = sub_18043dc60(obj291, obj32, 165, obj32);
+            obj306 = obj307;
+            obj308 = obj298;
+            obj309 = obj291;
+            obj314 = obj263;
+            obj316 = obj296;
+        }
+        else
+        {
+            obj318 = obj281;
+            obj321 = ((byte*)obj281 + 0xb0)[0];
+            obj323 = obj177.visualTree.style;
+            obj325 = obj263;
+            obj327 = obj23.m_Value;
+            for (num12 = 0; ((byte*)obj321 + (num12 + num12)*8 + 0x0)[0] != obj32; num12++)
+            {
+                if (num12 + 1 >= obj283)
+                {
+                    obj291 = obj323;
+                    obj296 = obj327;
+                    break;
+                }
+            }
+            obj306 = obj32;
+            obj308 = (((byte*)obj321 + (num12 + num12)*8 + 0x8)[0] + 0xa5 << 4) + 0x138 + obj318;
+            obj309 = obj323;
+            obj314 = obj325;
+            obj316 = obj327;
+        }
+        obj23 = obj316;
+        object obj329 = ((byte*)obj308 + 0x0)[0]()(obj309, &obj23, ((byte*)obj308 + 0x8)[0], obj306);
+        obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj331);
+        System.Type obj332 = obj177.visualTree.style.getClass();
+        object obj334 = ((byte*)obj177.visualTree.style.getClass() + 0x12e)[0];
+        if (0 >= ((byte*)obj332 + 0x12e)[0])
+        {
+            obj342 = obj177.visualTree.style;
+            obj347 = obj23.m_Value;
+            object obj349 = sub_18043dc60(obj342, obj32, 63, obj32);
+            obj357 = obj358;
+            obj359 = obj349;
+            obj360 = obj342;
+            obj365 = obj314;
+            obj367 = obj347;
+        }
+        else
+        {
+            obj369 = obj332;
+            obj372 = ((byte*)obj332 + 0xb0)[0];
+            obj374 = obj177.visualTree.style;
+            obj376 = obj314;
+            obj378 = obj23.m_Value;
+            for (num13 = 0; ((byte*)obj372 + (num13 + num13)*8 + 0x0)[0] != obj32; num13++)
+            {
+                if (num13 + 1 >= obj334)
+                {
+                    obj342 = obj374;
+                    obj347 = obj378;
+                    break;
+                }
+            }
+            obj357 = obj32;
+            obj359 = (((byte*)obj372 + (num13 + num13)*8 + 0x8)[0] + 0x3f << 4) + 0x138 + obj369;
+            obj360 = obj374;
+            obj365 = obj376;
+            obj367 = obj378;
+        }
+        obj23 = obj367;
+        object obj380 = ((byte*)obj359 + 0x0)[0]()(obj360, &obj23, ((byte*)obj359 + 0x8)[0], obj357);
+        obj152 = obj365;
+    }
+    else if (unknown != unknown)
+    {
+        if (float.IsNaN(this.m_ResolvedScale) || float.IsNaN(0f))
+        {
+            obj381 = 1.0f / this.m_ResolvedScale;
+        }
+        else if (unknown != unknown)
+        {
+            obj381 = 1.0f / this.m_ResolvedScale;
+        }
+        else
+        {
+            obj381 = 0f;
+        }
+        object obj382 = sub_180513140(obj48, obj49, 0, obj50);
+        if (obj382 == null)
+        {
+            obj39.m_Scale = obj381;
+            obj39.visualTree.IncrementVersion(8);
+            object obj396 = obj39.m_PixelsPerPoint * obj39.m_Scale;
+            ((byte*)obj397 + 0x0)[0] = obj396;
+            obj39.visualTree.IncrementVersion(16);
+        }
+        object obj405 = this.m_PanelAccess.panel;
+        obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj406);
+        System.Type obj407 = obj405.visualTree.style.getClass();
+        object obj409 = ((byte*)obj405.visualTree.style.getClass() + 0x12e)[0];
+        if (0 >= ((byte*)obj407 + 0x12e)[0])
+        {
+            obj417 = obj405.visualTree.style;
+            obj422 = obj23.m_Value;
+            object obj424 = sub_18043dc60(obj417, obj32, 67, obj32);
+            obj432 = obj433;
+            obj434 = obj424;
+            obj435 = obj417;
+            obj440 = obj39;
+            obj442 = obj422;
+        }
+        else
+        {
+            obj444 = obj407;
+            obj447 = ((byte*)obj407 + 0xb0)[0];
+            obj449 = obj405.visualTree.style;
+            obj451 = obj39;
+            obj453 = obj23.m_Value;
+            for (num14 = 0; ((byte*)obj447 + (num14 + num14)*8 + 0x0)[0] != obj32; num14++)
+            {
+                if (num14 + 1 >= obj409)
+                {
+                    obj417 = obj449;
+                    obj422 = obj453;
+                    break;
+                }
+            }
+            obj432 = obj32;
+            obj434 = (((byte*)obj447 + (num14 + num14)*8 + 0x8)[0] + 0x43 << 4) + 0x138 + obj444;
+            obj435 = obj449;
+            obj440 = obj451;
+            obj442 = obj453;
+        }
+        obj23 = obj442;
+        object obj455 = ((byte*)obj434 + 0x0)[0]()(obj435, &obj23, ((byte*)obj434 + 0x8)[0], obj432);
+        obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj457);
+        System.Type obj458 = obj405.visualTree.style.getClass();
+        object obj460 = ((byte*)obj405.visualTree.style.getClass() + 0x12e)[0];
+        if (0 >= ((byte*)obj458 + 0x12e)[0])
+        {
+            obj468 = obj405.visualTree.style;
+            obj473 = obj23.m_Value;
+            object obj475 = sub_18043dc60(obj468, obj32, 111, obj32);
+            obj483 = obj484;
+            obj485 = obj475;
+            obj486 = obj468;
+            obj491 = obj440;
+            obj493 = obj473;
+        }
+        else
+        {
+            obj495 = obj458;
+            obj498 = ((byte*)obj458 + 0xb0)[0];
+            obj500 = obj405.visualTree.style;
+            obj502 = obj440;
+            obj504 = obj23.m_Value;
+            for (num15 = 0; ((byte*)obj498 + (num15 + num15)*8 + 0x0)[0] != obj32; num15++)
+            {
+                if (num15 + 1 >= obj460)
+                {
+                    obj468 = obj500;
+                    obj473 = obj504;
+                    break;
+                }
+            }
+            obj483 = obj32;
+            obj485 = (((byte*)obj498 + (num15 + num15)*8 + 0x8)[0] + 0x6f << 4) + 0x138 + obj495;
+            obj486 = obj500;
+            obj491 = obj502;
+            obj493 = obj504;
+        }
+        obj23 = obj493;
+        object obj506 = ((byte*)obj485 + 0x0)[0]()(obj486, &obj23, ((byte*)obj485 + 0x8)[0], obj483);
+        obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj508);
+        System.Type obj509 = obj405.visualTree.style.getClass();
+        object obj511 = ((byte*)obj405.visualTree.style.getClass() + 0x12e)[0];
+        if (0 >= ((byte*)obj509 + 0x12e)[0])
+        {
+            obj519 = obj405.visualTree.style;
+            obj524 = obj23.m_Value;
+            object obj526 = sub_18043dc60(obj519, obj32, 165, obj32);
+            obj534 = obj535;
+            obj536 = obj526;
+            obj537 = obj519;
+            obj542 = obj491;
+            obj544 = obj524;
+        }
+        else
+        {
+            obj546 = obj509;
+            obj549 = ((byte*)obj509 + 0xb0)[0];
+            obj551 = obj405.visualTree.style;
+            obj553 = obj491;
+            obj555 = obj23.m_Value;
+            for (num16 = 0; ((byte*)obj549 + (num16 + num16)*8 + 0x0)[0] != obj32; num16++)
+            {
+                if (num16 + 1 >= obj511)
+                {
+                    obj519 = obj551;
+                    obj524 = obj555;
+                    break;
+                }
+            }
+            obj534 = obj32;
+            obj536 = (((byte*)obj549 + (num16 + num16)*8 + 0x8)[0] + 0xa5 << 4) + 0x138 + obj546;
+            obj537 = obj551;
+            obj542 = obj553;
+            obj544 = obj555;
+        }
+        obj23 = obj544;
+        object obj557 = ((byte*)obj536 + 0x0)[0]()(obj537, &obj23, ((byte*)obj536 + 0x8)[0], obj534);
+        obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj559);
+        System.Type obj560 = obj405.visualTree.style.getClass();
+        object obj562 = ((byte*)obj405.visualTree.style.getClass() + 0x12e)[0];
+        if (0 >= ((byte*)obj560 + 0x12e)[0])
+        {
+            obj570 = obj405.visualTree.style;
+            obj575 = obj23.m_Value;
+            object obj577 = sub_18043dc60(obj570, obj32, 63, obj32);
+            obj585 = obj586;
+            obj587 = obj577;
+            obj588 = obj570;
+            obj593 = obj542;
+            obj595 = obj575;
+        }
+        else
+        {
+            obj597 = obj560;
+            obj600 = ((byte*)obj560 + 0xb0)[0];
+            obj602 = obj405.visualTree.style;
+            obj604 = obj542;
+            obj606 = obj23.m_Value;
+            for (num17 = 0; ((byte*)obj600 + (num17 + num17)*8 + 0x0)[0] != obj32; num17++)
+            {
+                if (num17 + 1 >= obj562)
+                {
+                    obj570 = obj602;
+                    obj575 = obj606;
+                    break;
+                }
+            }
+            obj585 = obj32;
+            obj587 = (((byte*)obj600 + (num17 + num17)*8 + 0x8)[0] + 0x3f << 4) + 0x138 + obj597;
+            obj588 = obj602;
+            obj593 = obj604;
+            obj595 = obj606;
+        }
+        obj23 = obj595;
+        object obj608 = ((byte*)obj587 + 0x0)[0]()(obj588, &obj23, ((byte*)obj587 + 0x8)[0], obj585);
+        obj152 = obj593;
+    }
+    else if (float.IsNaN(((byte*)this + 0xf0)[0]) || float.IsNaN(real1))
+    {
+        if (float.IsNaN(this.m_ResolvedScale) || float.IsNaN(0f))
+        {
+            obj609 = 1.0f / this.m_ResolvedScale;
+        }
+        else if (unknown != unknown)
+        {
+            obj609 = 1.0f / this.m_ResolvedScale;
+        }
+        else
+        {
+            obj609 = 0f;
+        }
+        object obj610 = sub_180513140(obj48, obj49, 0, obj50);
+        if (obj610 == null)
+        {
+            obj39.m_Scale = obj609;
+            obj39.visualTree.IncrementVersion(8);
+            object obj624 = obj39.m_PixelsPerPoint * obj39.m_Scale;
+            ((byte*)obj625 + 0x0)[0] = obj624;
+            obj39.visualTree.IncrementVersion(16);
+        }
+        object obj633 = this.m_PanelAccess.panel;
+        obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj634);
+        System.Type obj635 = obj633.visualTree.style.getClass();
+        object obj637 = ((byte*)obj633.visualTree.style.getClass() + 0x12e)[0];
+        if (0 >= ((byte*)obj635 + 0x12e)[0])
+        {
+            obj645 = obj633.visualTree.style;
+            obj650 = obj23.m_Value;
+            object obj652 = sub_18043dc60(obj645, obj32, 67, obj32);
+            obj660 = obj661;
+            obj662 = obj652;
+            obj663 = obj645;
+            obj668 = obj39;
+            obj670 = obj650;
+        }
+        else
+        {
+            obj672 = obj635;
+            obj675 = ((byte*)obj635 + 0xb0)[0];
+            obj677 = obj633.visualTree.style;
+            obj679 = obj39;
+            obj681 = obj23.m_Value;
+            for (num18 = 0; ((byte*)obj675 + (num18 + num18)*8 + 0x0)[0] != obj32; num18++)
+            {
+                if (num18 + 1 >= obj637)
+                {
+                    obj645 = obj677;
+                    obj650 = obj681;
+                    break;
+                }
+            }
+            obj660 = obj32;
+            obj662 = (((byte*)obj675 + (num18 + num18)*8 + 0x8)[0] + 0x43 << 4) + 0x138 + obj672;
+            obj663 = obj677;
+            obj668 = obj679;
+            obj670 = obj681;
+        }
+        obj23 = obj670;
+        object obj683 = ((byte*)obj662 + 0x0)[0]()(obj663, &obj23, ((byte*)obj662 + 0x8)[0], obj660);
+        obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj685);
+        System.Type obj686 = obj633.visualTree.style.getClass();
+        object obj688 = ((byte*)obj633.visualTree.style.getClass() + 0x12e)[0];
+        if (0 >= ((byte*)obj686 + 0x12e)[0])
+        {
+            obj696 = obj633.visualTree.style;
+            obj701 = obj23.m_Value;
+            object obj703 = sub_18043dc60(obj696, obj32, 111, obj32);
+            obj711 = obj712;
+            obj713 = obj703;
+            obj714 = obj696;
+            obj719 = obj668;
+            obj721 = obj701;
+        }
+        else
+        {
+            obj723 = obj686;
+            obj726 = ((byte*)obj686 + 0xb0)[0];
+            obj728 = obj633.visualTree.style;
+            obj730 = obj668;
+            obj732 = obj23.m_Value;
+            for (num19 = 0; ((byte*)obj726 + (num19 + num19)*8 + 0x0)[0] != obj32; num19++)
+            {
+                if (num19 + 1 >= obj688)
+                {
+                    obj696 = obj728;
+                    obj701 = obj732;
+                    break;
+                }
+            }
+            obj711 = obj32;
+            obj713 = (((byte*)obj726 + (num19 + num19)*8 + 0x8)[0] + 0x6f << 4) + 0x138 + obj723;
+            obj714 = obj728;
+            obj719 = obj730;
+            obj721 = obj732;
+        }
+        obj23 = obj721;
+        object obj734 = ((byte*)obj713 + 0x0)[0]()(obj714, &obj23, ((byte*)obj713 + 0x8)[0], obj711);
+        obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj736);
+        System.Type obj737 = obj633.visualTree.style.getClass();
+        object obj739 = ((byte*)obj633.visualTree.style.getClass() + 0x12e)[0];
+        if (0 >= ((byte*)obj737 + 0x12e)[0])
+        {
+            obj747 = obj633.visualTree.style;
+            obj752 = obj23.m_Value;
+            object obj754 = sub_18043dc60(obj747, obj32, 165, obj32);
+            obj762 = obj763;
+            obj764 = obj754;
+            obj765 = obj747;
+            obj770 = obj719;
+            obj772 = obj752;
+        }
+        else
+        {
+            obj774 = obj737;
+            obj777 = ((byte*)obj737 + 0xb0)[0];
+            obj779 = obj633.visualTree.style;
+            obj781 = obj719;
+            obj783 = obj23.m_Value;
+            for (num20 = 0; ((byte*)obj777 + (num20 + num20)*8 + 0x0)[0] != obj32; num20++)
+            {
+                if (num20 + 1 >= obj739)
+                {
+                    obj747 = obj779;
+                    obj752 = obj783;
+                    break;
+                }
+            }
+            obj762 = obj32;
+            obj764 = (((byte*)obj777 + (num20 + num20)*8 + 0x8)[0] + 0xa5 << 4) + 0x138 + obj774;
+            obj765 = obj779;
+            obj770 = obj781;
+            obj772 = obj783;
+        }
+        obj23 = obj772;
+        object obj785 = ((byte*)obj764 + 0x0)[0]()(obj765, &obj23, ((byte*)obj764 + 0x8)[0], obj762);
+        obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj787);
+        System.Type obj788 = obj633.visualTree.style.getClass();
+        object obj790 = ((byte*)obj633.visualTree.style.getClass() + 0x12e)[0];
+        if (0 >= ((byte*)obj788 + 0x12e)[0])
+        {
+            obj798 = obj633.visualTree.style;
+            obj803 = obj23.m_Value;
+            object obj805 = sub_18043dc60(obj798, obj32, 63, obj32);
+            obj813 = obj814;
+            obj815 = obj805;
+            obj816 = obj798;
+            obj821 = obj770;
+            obj823 = obj803;
+        }
+        else
+        {
+            obj825 = obj788;
+            obj828 = ((byte*)obj788 + 0xb0)[0];
+            obj830 = obj633.visualTree.style;
+            obj832 = obj770;
+            obj834 = obj23.m_Value;
+            for (num21 = 0; ((byte*)obj828 + (num21 + num21)*8 + 0x0)[0] != obj32; num21++)
+            {
+                if (num21 + 1 >= obj790)
+                {
+                    obj798 = obj830;
+                    obj803 = obj834;
+                    break;
+                }
+            }
+            obj813 = obj32;
+            obj815 = (((byte*)obj828 + (num21 + num21)*8 + 0x8)[0] + 0x3f << 4) + 0x138 + obj825;
+            obj816 = obj830;
+            obj821 = obj832;
+            obj823 = obj834;
+        }
+        obj23 = obj823;
+        object obj836 = ((byte*)obj815 + 0x0)[0]()(obj816, &obj23, ((byte*)obj815 + 0x8)[0], obj813);
+        obj152 = obj821;
+    }
+    else if (unknown != unknown)
+    {
+        if (float.IsNaN(this.m_ResolvedScale) || float.IsNaN(0f))
+        {
+            obj837 = 1.0f / this.m_ResolvedScale;
+        }
+        else if (unknown != unknown)
+        {
+            obj837 = 1.0f / this.m_ResolvedScale;
+        }
+        else
+        {
+            obj837 = 0f;
+        }
+        object obj838 = sub_180513140(obj48, obj49, 0, obj50);
+        if (obj838 == null)
+        {
+            obj39.m_Scale = obj837;
+            obj39.visualTree.IncrementVersion(8);
+            object obj852 = obj39.m_PixelsPerPoint * obj39.m_Scale;
+            ((byte*)obj853 + 0x0)[0] = obj852;
+            obj39.visualTree.IncrementVersion(16);
+        }
+        object obj861 = this.m_PanelAccess.panel;
+        obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj862);
+        System.Type obj863 = obj861.visualTree.style.getClass();
+        object obj865 = ((byte*)obj861.visualTree.style.getClass() + 0x12e)[0];
+        if (0 >= ((byte*)obj863 + 0x12e)[0])
+        {
+            obj873 = obj861.visualTree.style;
+            obj878 = obj23.m_Value;
+            object obj880 = sub_18043dc60(obj873, obj32, 67, obj32);
+            obj888 = obj889;
+            obj890 = obj880;
+            obj891 = obj873;
+            obj896 = obj39;
+            obj898 = obj878;
+        }
+        else
+        {
+            obj900 = obj863;
+            obj903 = ((byte*)obj863 + 0xb0)[0];
+            obj905 = obj861.visualTree.style;
+            obj907 = obj39;
+            obj909 = obj23.m_Value;
+            for (num22 = 0; ((byte*)obj903 + (num22 + num22)*8 + 0x0)[0] != obj32; num22++)
+            {
+                if (num22 + 1 >= obj865)
+                {
+                    obj873 = obj905;
+                    obj878 = obj909;
+                    break;
+                }
+            }
+            obj888 = obj32;
+            obj890 = (((byte*)obj903 + (num22 + num22)*8 + 0x8)[0] + 0x43 << 4) + 0x138 + obj900;
+            obj891 = obj905;
+            obj896 = obj907;
+            obj898 = obj909;
+        }
+        obj23 = obj898;
+        object obj911 = ((byte*)obj890 + 0x0)[0]()(obj891, &obj23, ((byte*)obj890 + 0x8)[0], obj888);
+        obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj913);
+        System.Type obj914 = obj861.visualTree.style.getClass();
+        object obj916 = ((byte*)obj861.visualTree.style.getClass() + 0x12e)[0];
+        if (0 >= ((byte*)obj914 + 0x12e)[0])
+        {
+            obj924 = obj861.visualTree.style;
+            obj929 = obj23.m_Value;
+            object obj931 = sub_18043dc60(obj924, obj32, 111, obj32);
+            obj939 = obj940;
+            obj941 = obj931;
+            obj942 = obj924;
+            obj947 = obj896;
+            obj949 = obj929;
+        }
+        else
+        {
+            obj951 = obj914;
+            obj954 = ((byte*)obj914 + 0xb0)[0];
+            obj956 = obj861.visualTree.style;
+            obj958 = obj896;
+            obj960 = obj23.m_Value;
+            for (num23 = 0; ((byte*)obj954 + (num23 + num23)*8 + 0x0)[0] != obj32; num23++)
+            {
+                if (num23 + 1 >= obj916)
+                {
+                    obj924 = obj956;
+                    obj929 = obj960;
+                    break;
+                }
+            }
+            obj939 = obj32;
+            obj941 = (((byte*)obj954 + (num23 + num23)*8 + 0x8)[0] + 0x6f << 4) + 0x138 + obj951;
+            obj942 = obj956;
+            obj947 = obj958;
+            obj949 = obj960;
+        }
+        obj23 = obj949;
+        object obj962 = ((byte*)obj941 + 0x0)[0]()(obj942, &obj23, ((byte*)obj941 + 0x8)[0], obj939);
+        obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj964);
+        System.Type obj965 = obj861.visualTree.style.getClass();
+        object obj967 = ((byte*)obj861.visualTree.style.getClass() + 0x12e)[0];
+        if (0 >= ((byte*)obj965 + 0x12e)[0])
+        {
+            obj975 = obj861.visualTree.style;
+            obj980 = obj23.m_Value;
+            object obj982 = sub_18043dc60(obj975, obj32, 165, obj32);
+            obj990 = obj991;
+            obj992 = obj982;
+            obj993 = obj975;
+            obj998 = obj947;
+            obj1000 = obj980;
+        }
+        else
+        {
+            obj1002 = obj965;
+            obj1005 = ((byte*)obj965 + 0xb0)[0];
+            obj1007 = obj861.visualTree.style;
+            obj1009 = obj947;
+            obj1011 = obj23.m_Value;
+            for (num24 = 0; ((byte*)obj1005 + (num24 + num24)*8 + 0x0)[0] != obj32; num24++)
+            {
+                if (num24 + 1 >= obj967)
+                {
+                    obj975 = obj1007;
+                    obj980 = obj1011;
+                    break;
+                }
+            }
+            obj990 = obj32;
+            obj992 = (((byte*)obj1005 + (num24 + num24)*8 + 0x8)[0] + 0xa5 << 4) + 0x138 + obj1002;
+            obj993 = obj1007;
+            obj998 = obj1009;
+            obj1000 = obj1011;
+        }
+        obj23 = obj1000;
+        object obj1013 = ((byte*)obj992 + 0x0)[0]()(obj993, &obj23, ((byte*)obj992 + 0x8)[0], obj990);
+        obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj1015);
+        System.Type obj1016 = obj861.visualTree.style.getClass();
+        object obj1018 = ((byte*)obj861.visualTree.style.getClass() + 0x12e)[0];
+        if (0 >= ((byte*)obj1016 + 0x12e)[0])
+        {
+            obj1026 = obj861.visualTree.style;
+            obj1031 = obj23.m_Value;
+            object obj1033 = sub_18043dc60(obj1026, obj32, 63, obj32);
+            obj1041 = obj1042;
+            obj1043 = obj1033;
+            obj1044 = obj1026;
+            obj1049 = obj998;
+            obj1051 = obj1031;
+        }
+        else
+        {
+            obj1053 = obj1016;
+            obj1056 = ((byte*)obj1016 + 0xb0)[0];
+            obj1058 = obj861.visualTree.style;
+            obj1060 = obj998;
+            obj1062 = obj23.m_Value;
+            for (num25 = 0; ((byte*)obj1056 + (num25 + num25)*8 + 0x0)[0] != obj32; num25++)
+            {
+                if (num25 + 1 >= obj1018)
+                {
+                    obj1026 = obj1058;
+                    obj1031 = obj1062;
+                    break;
+                }
+            }
+            obj1041 = obj32;
+            obj1043 = (((byte*)obj1056 + (num25 + num25)*8 + 0x8)[0] + 0x3f << 4) + 0x138 + obj1053;
+            obj1044 = obj1058;
+            obj1049 = obj1060;
+            obj1051 = obj1062;
+        }
+        obj23 = obj1051;
+        object obj1064 = ((byte*)obj1043 + 0x0)[0]()(obj1044, &obj23, ((byte*)obj1043 + 0x8)[0], obj1041);
+        obj152 = obj1049;
+    }
+    else
+    {
+        if (float.IsNaN(((byte*)this + 0xf4)[0]) || float.IsNaN(real1))
+        {
+            obj1065 = 1;
+        }
+        else if (unknown == unknown)
+        {
+            obj1065 = 0;
+        }
+        else
+        {
+            obj1065 = 1;
+        }
+        if (obj1065 != 0)
+        {
+            if (float.IsNaN(this.m_ResolvedScale) || float.IsNaN(0f))
+            {
+                obj1066 = 1.0f / this.m_ResolvedScale;
+            }
+            else if (unknown != unknown)
+            {
+                obj1066 = 1.0f / this.m_ResolvedScale;
+            }
+            else
+            {
+                obj1066 = 0f;
+            }
+            object obj1067 = sub_180513140(obj48, obj49, 0, obj50);
+            if (obj1067 == null)
+            {
+                obj39.m_Scale = obj1066;
+                obj39.visualTree.IncrementVersion(8);
+                object obj1081 = obj39.m_PixelsPerPoint * obj39.m_Scale;
+                ((byte*)obj1082 + 0x0)[0] = obj1081;
+                obj39.visualTree.IncrementVersion(16);
+            }
+            object obj1090 = this.m_PanelAccess.panel;
+            obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj1091);
+            System.Type obj1092 = obj1090.visualTree.style.getClass();
+            object obj1094 = ((byte*)obj1090.visualTree.style.getClass() + 0x12e)[0];
+            if (0 >= ((byte*)obj1092 + 0x12e)[0])
+            {
+                obj1102 = obj1090.visualTree.style;
+                obj1107 = obj23.m_Value;
+                object obj1109 = sub_18043dc60(obj1102, obj32, 67, obj32);
+                obj1117 = obj1118;
+                obj1119 = obj1109;
+                obj1120 = obj1102;
+                obj1125 = obj39;
+                obj1127 = obj1107;
+            }
+            else
+            {
+                obj1129 = obj1092;
+                obj1132 = ((byte*)obj1092 + 0xb0)[0];
+                obj1134 = obj1090.visualTree.style;
+                obj1136 = obj39;
+                obj1138 = obj23.m_Value;
+                for (num26 = 0; ((byte*)obj1132 + (num26 + num26)*8 + 0x0)[0] != obj32; num26++)
+                {
+                    if (num26 + 1 >= obj1094)
+                    {
+                        obj1102 = obj1134;
+                        obj1107 = obj1138;
+                        break;
+                    }
+                }
+                obj1117 = obj32;
+                obj1119 = (((byte*)obj1132 + (num26 + num26)*8 + 0x8)[0] + 0x43 << 4) + 0x138 + obj1129;
+                obj1120 = obj1134;
+                obj1125 = obj1136;
+                obj1127 = obj1138;
+            }
+            obj23 = obj1127;
+            object obj1140 = ((byte*)obj1119 + 0x0)[0]()(obj1120, &obj23, ((byte*)obj1119 + 0x8)[0], obj1117);
+            obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj1142);
+            System.Type obj1143 = obj1090.visualTree.style.getClass();
+            object obj1145 = ((byte*)obj1090.visualTree.style.getClass() + 0x12e)[0];
+            if (0 >= ((byte*)obj1143 + 0x12e)[0])
+            {
+                obj1153 = obj1090.visualTree.style;
+                obj1158 = obj23.m_Value;
+                object obj1160 = sub_18043dc60(obj1153, obj32, 111, obj32);
+                obj1168 = obj1169;
+                obj1170 = obj1160;
+                obj1171 = obj1153;
+                obj1176 = obj1125;
+                obj1178 = obj1158;
+            }
+            else
+            {
+                obj1180 = obj1143;
+                obj1183 = ((byte*)obj1143 + 0xb0)[0];
+                obj1185 = obj1090.visualTree.style;
+                obj1187 = obj1125;
+                obj1189 = obj23.m_Value;
+                for (num27 = 0; ((byte*)obj1183 + (num27 + num27)*8 + 0x0)[0] != obj32; num27++)
+                {
+                    if (num27 + 1 >= obj1145)
+                    {
+                        obj1153 = obj1185;
+                        obj1158 = obj1189;
+                        break;
+                    }
+                }
+                obj1168 = obj32;
+                obj1170 = (((byte*)obj1183 + (num27 + num27)*8 + 0x8)[0] + 0x6f << 4) + 0x138 + obj1180;
+                obj1171 = obj1185;
+                obj1176 = obj1187;
+                obj1178 = obj1189;
+            }
+            obj23 = obj1178;
+            object obj1191 = ((byte*)obj1170 + 0x0)[0]()(obj1171, &obj23, ((byte*)obj1170 + 0x8)[0], obj1168);
+            obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj1193);
+            System.Type obj1194 = obj1090.visualTree.style.getClass();
+            object obj1196 = ((byte*)obj1090.visualTree.style.getClass() + 0x12e)[0];
+            if (0 >= ((byte*)obj1194 + 0x12e)[0])
+            {
+                obj1204 = obj1090.visualTree.style;
+                obj1209 = obj23.m_Value;
+                object obj1211 = sub_18043dc60(obj1204, obj32, 165, obj32);
+                obj1219 = obj1220;
+                obj1221 = obj1211;
+                obj1222 = obj1204;
+                obj1227 = obj1176;
+                obj1229 = obj1209;
+            }
+            else
+            {
+                obj1231 = obj1194;
+                obj1234 = ((byte*)obj1194 + 0xb0)[0];
+                obj1236 = obj1090.visualTree.style;
+                obj1238 = obj1176;
+                obj1240 = obj23.m_Value;
+                for (num28 = 0; ((byte*)obj1234 + (num28 + num28)*8 + 0x0)[0] != obj32; num28++)
+                {
+                    if (num28 + 1 >= obj1196)
+                    {
+                        obj1204 = obj1236;
+                        obj1209 = obj1240;
+                        break;
+                    }
+                }
+                obj1219 = obj32;
+                obj1221 = (((byte*)obj1234 + (num28 + num28)*8 + 0x8)[0] + 0xa5 << 4) + 0x138 + obj1231;
+                obj1222 = obj1236;
+                obj1227 = obj1238;
+                obj1229 = obj1240;
+            }
+            obj23 = obj1229;
+            object obj1242 = ((byte*)obj1221 + 0x0)[0]()(obj1222, &obj23, ((byte*)obj1221 + 0x8)[0], obj1219);
+            obj23 = UnityEngine.UIElements.StyleLength.op_Implicit(obj1244);
+            System.Type obj1245 = obj1090.visualTree.style.getClass();
+            object obj1247 = ((byte*)obj1090.visualTree.style.getClass() + 0x12e)[0];
+            if (0 >= ((byte*)obj1245 + 0x12e)[0])
+            {
+                obj1255 = obj1090.visualTree.style;
+                obj1260 = obj23.m_Value;
+                object obj1262 = sub_18043dc60(obj1255, obj32, 63, obj32);
+                obj1270 = obj1271;
+                obj1272 = obj1262;
+                obj1273 = obj1255;
+                obj1278 = obj1227;
+                obj1280 = obj1260;
+            }
+            else
+            {
+                obj1282 = obj1245;
+                obj1285 = ((byte*)obj1245 + 0xb0)[0];
+                obj1287 = obj1090.visualTree.style;
+                obj1289 = obj1227;
+                obj1291 = obj23.m_Value;
+                for (num29 = 0; ((byte*)obj1285 + (num29 + num29)*8 + 0x0)[0] != obj32; num29++)
+                {
+                    if (num29 + 1 >= obj1247)
+                    {
+                        obj1255 = obj1287;
+                        obj1260 = obj1291;
+                        break;
+                    }
+                }
+                obj1270 = obj32;
+                obj1272 = (((byte*)obj1285 + (num29 + num29)*8 + 0x8)[0] + 0x3f << 4) + 0x138 + obj1282;
+                obj1273 = obj1287;
+                obj1278 = obj1289;
+                obj1280 = obj1291;
+            }
+            obj23 = obj1280;
+            object obj1293 = ((byte*)obj1272 + 0x0)[0]()(obj1273, &obj23, ((byte*)obj1272 + 0x8)[0], obj1270);
+            obj152 = obj1278;
+        }
+        else
+        {
+            obj152 = obj39;
+        }
+    }
+    flag3 = false;
+    if (this.m_TargetTexture != null)
+    {
+        flag3 = this.forceGammaRendering;
+    }
+    object obj1296 = sub_180006500(1, typeof(UnityEngine.UIElements.IPanelRenderer), obj152.panelRenderer, (flag3 != null ? 1 : 0));
+    obj29 = obj152;
+}
+obj29.targetTexture = this.m_TargetTexture;
+obj29.targetDisplay = this.m_TargetDisplay;
+bool flag4 = this.m_RenderMode == 1;
+if (obj29.m_DrawsInCameras != flag4)
+{
+    obj29.m_DrawsInCameras = flag4;
+    System.Action obj1297 = obj29.drawsInCamerasChanged;
+    if (obj1297 != null)
+    {
+        object obj1298 = ((byte*)obj1297 + 0x18)[0]()(obj1297.method_code, obj1297.method);
+    }
+}
+obj29.m_PixelsPerUnit = this.m_PixelsPerUnit;
+bool flag5 = this.m_RenderMode != 1;
+if (obj29.m_IsFlat != flag5)
+{
+    obj29.m_IsFlat = flag5;
+    obj29.SetSpecializedHierarchyFlagsUpdater();
+    if (obj29.isFlatChanged != null)
+    {
+        object obj1299 = ((byte*)obj29.isFlatChanged + 0x18)[0]()(obj29.isFlatChanged.method_code, obj29.isFlatChanged.method);
+    }
+}
+obj23 = 0f;
+obj29.worldSpaceLayer = this.m_WorldSpaceLayer;
+obj23 = this.m_ClearDepthStencil;
+obj29.clearSettings = obj23;
+((byte*)obj29 + 0x70)[0] = unknown;
+float real17 = this.m_ReferenceSpritePixelsPerUnit;
+obj29.referenceSpritePixelsPerUnit = real17;
+System.Type obj1302 = obj29.panelRenderer.getClass();
+System.Type obj1303 = typeof(UnityEngine.UIElements.IPanelRenderer);
+object obj1304 = ((byte*)obj29.panelRenderer.getClass() + 0x12e)[0];
+if (0 >= ((byte*)obj1302 + 0x12e)[0])
+{
+    num30 = this.m_VertexBudget;
+    obj1306 = obj29.panelRenderer;
+    object obj1308 = sub_18043dc60(obj1306, obj1303, 3, obj1302);
+    num31 = num30;
+    obj1309 = obj1310;
+    obj1311 = obj1308;
+    obj1312 = obj1306;
+    obj1313 = obj29;
+}
+else
+{
+    num32 = this.m_VertexBudget;
+    obj1314 = ((byte*)obj1302 + 0xb0)[0];
+    obj1315 = obj1302;
+    obj1316 = obj29.panelRenderer;
+    obj1318 = obj29;
+    for (num33 = 0; ((byte*)obj1314 + (num33 + num33)*8 + 0x0)[0] != obj1303; num33++)
+    {
+        if (num33 + 1 >= obj1304)
+        {
+            num30 = num32;
+            obj1306 = obj1316;
+            break;
+        }
+    }
+    num31 = num32;
+    obj1309 = obj1315;
+    obj1311 = (((byte*)obj1314 + (num33 + num33)*8 + 0x8)[0] + 0x3 << 4) + 0x138 + obj1315;
+    obj1312 = obj1316;
+    obj1313 = obj1318;
+    obj1319 = obj23;
+}
+object obj1320 = ((byte*)obj1311 + 0x0)[0]()(obj1312, num31, ((byte*)obj1311 + 0x8)[0], obj1309, obj1319);
+obj1313.dataBindingManager.logLevel = this.m_BindingLogLevel;
+if (obj1313.atlas != null)
+{
+    System.Type obj1321 = typeof(UnityEngine.UIElements.DynamicAtlas);
+    System.Type obj1322 = obj1313.atlas.getClass();
+    if (obj1313.atlas is UnityEngine.UIElements.DynamicAtlas)
+    {
+        if (((byte*)obj1322.typeHierarchy + typeof(UnityEngine.UIElements.DynamicAtlas).typeHierarchyDepth*8 - 0x8)[0] != obj1321)
+        {
+            obj1323 = obj1313.atlas.getClass().typeHierarchy;
+        }
+        else
+        {
+            UnityEngine.UIElements.DynamicAtlasSettings obj1325 = this.m_DynamicAtlasSettings;
+            obj1313.atlas.minAtlasSize = obj1325.m_MinAtlasSize;
+            obj1313.atlas.maxAtlasSize = obj1325.m_MaxAtlasSize;
+            obj1313.atlas.maxSubTextureSize = obj1325.m_MaxSubTextureSize;
+            obj1313.atlas.activeFilters = obj1325.m_ActiveFilters;
+            obj1313.atlas.customFilter = obj1325.m_CustomFilter;
+        }
+    }
+}
+return;
+}
+===== mi 17200 BaseVisualElementPanel.set_scale 0x182ee8890 =====
+unsafe
+{
+object obj3 = sub_180513140(this, obj4, 0, obj5);
+if (obj3 == null)
+{
+    this.m_Scale = value;
+    Interop.GetRandomBytes(this, ((byte*)this.getClass() + 0x3d0)[0]);
+    obj6.IncrementVersion(8);
+    float real1 = this.m_PixelsPerPoint * this.m_Scale;
+    ((byte*)obj7 + 0x0)[0] = real1;
+    Interop.GetRandomBytes(this, ((byte*)this.getClass() + 0x3d0)[0]);
+    obj8.IncrementVersion(16);
+}
+return;
+}

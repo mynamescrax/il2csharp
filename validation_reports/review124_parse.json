@@ -1,0 +1,11 @@
+{
+  "kind": "tree-sitter C# syntax gate",
+  "tree": "C:\\Users\\crax\\Downloads\\il2csharp\\work\\fix124_ab\\flat",
+  "files": 11183,
+  "bad_files": 0,
+  "errors": 0,
+  "missing": 0,
+  "recovery_nodes": 0,
+  "details": 0,
+  "elapsed_seconds": 14.453
+}

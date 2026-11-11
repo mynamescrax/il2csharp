@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>UnsafeSmoke</AssemblyName>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+    <NoWarn>CS0169;CS0649;CS0108;CS0114;CS8019</NoWarn>
+  </PropertyGroup>
+</Project>

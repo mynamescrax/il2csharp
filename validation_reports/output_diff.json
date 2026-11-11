@@ -1,0 +1,3832 @@
+{
+  "before_files": 11107,
+  "after_files": 11107,
+  "byte_identical_files": 10470,
+  "changed_files": 637,
+  "added_files": [],
+  "removed_files": [],
+  "changes": [
+    {
+      "file": "Assembly-CSharp/AStarDoorGraphUpdater.cs",
+      "before_sha256": "a266c37f324016960d5b77d76365c1ca1c2d9d2b7dc2f77949a20788d1a318c8",
+      "after_sha256": "38e4758795fb999a0bcfb59148d89625dd872d6542bf120341977cfc210a37e6",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/AdaptiveFovByAspect.cs",
+      "before_sha256": "78672ec5f212de7eafef02036c78f70ca29cb231e9f374e68077bae5da0cfbaa",
+      "after_sha256": "a4ee5162738bf41e56515709c6c0811d93d736b31e9a7d84c621715e15f64cd9",
+      "line_delta": 2
+    },
+    {
+      "file": "Assembly-CSharp/AnimationEventTrigger.cs",
+      "before_sha256": "80f9d54c4620207cac74c4bfda0dd997ecaef196a3b4a82c3d73e8a12cb0ecda",
+      "after_sha256": "6f8d02b3ecf39930278beda7f07c94f7697dbb74596018114155aaaf94040b6f",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/AudioVolumeSliders.cs",
+      "before_sha256": "b7f0b9cd692607bde7b014287fb3d584a780d85f8bc809fc0b005033e3804e97",
+      "after_sha256": "733eab06adc023d96b8949ccd3349ab617acff1ff77fe5f902bf3b0adac7f40b",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/BabyDoll.cs",
+      "before_sha256": "2d1d7b2b68b81c6c844ba21e58b4cc8bbcabab38da101b7c86bf90adefa8fae0",
+      "after_sha256": "e56e7dfac324a87c0acd19dea9993a3084839fbcb83e2fe5e45e5a3e903fc762",
+      "line_delta": 3
+    },
+    {
+      "file": "Assembly-CSharp/Barricade.cs",
+      "before_sha256": "35bd86428a4874921b2574d5ac160fc7e2d175705226639dcfdf93d16a574ba3",
+      "after_sha256": "92b97791dcaebbbc020054a9ecc2f29f73a458a39f0d441d9d155a58b20adf56",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/BathroomGuy.cs",
+      "before_sha256": "e43abd273876a8cdf59279207e1743252887a7e5e437fd076fd650d9814d944c",
+      "after_sha256": "835ef5f471e640904344ad277f9dff9eeeda9eec7d0b980a6cb0c7a546ddf2cd",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/BearTrap.cs",
+      "before_sha256": "8cb7f446a49668d396dd2e3266db8ba73c71688be4b62501ee9427ddb14c08b2",
+      "after_sha256": "5eeee257b5598163c7fc1b5fed9a0107457b7003c6ffbfd8215b6494055970c4",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/CFX_LightIntensityFade.cs",
+      "before_sha256": "ff9b28e7ee6d7e101d0c97923b38d9dd21724698bbcc9983736584ab55bea759",
+      "after_sha256": "599a5980231d67e25a902e44766b46ccf50aa4250e8bfc1a3ed7d03ec3eaff57",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/CameraFOVChanger.cs",
+      "before_sha256": "72536b643c138b083653553ecd1678d003d0c908ff0b5b210021e65e189d4b77",
+      "after_sha256": "bcdad8415a975b5b0b8622b3e52cc0e7d5c28de62e62736fed63ea9d15263bbf",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/CamouflagedMonsterRun.cs",
+      "before_sha256": "7313c35dc694c3039c19f38fd4c11ff36a03d003062a5e939f0d0701d3f08fcc",
+      "after_sha256": "6ddf2cc3b529f1ebdb3407eae463e40d361566135294f09913664451155e21a5",
+      "line_delta": -5
+    },
+    {
+      "file": "Assembly-CSharp/CanBeHitByTrap.cs",
+      "before_sha256": "0da83310beae872d701b7e9a0d2d5ec2468a30e89934e57cd52909369450089f",
+      "after_sha256": "eb551d18e79280b856c6cabed999f3d142ca13663e8ddbdb43e3c670b8c30363",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/Car.cs",
+      "before_sha256": "f9bf132b47ac310cb9c0b0bf67b5b1d71a5b6ce72663aa97f1cd44cd17958e0b",
+      "after_sha256": "56419ec48a0aee628d2dede87cb238fb072c96b359f08ab0d8690c9523157398",
+      "line_delta": -2
+    },
+    {
+      "file": "Assembly-CSharp/CarComputer.cs",
+      "before_sha256": "ec5da8b27f1acd644f828f756e7c8938f6b99c05614a4e933077bd264f52b320",
+      "after_sha256": "85de092ed9627d966f4ebffa59d192f95a54a3cef61f603a8b35740895703731",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/CarTutorialManager.cs",
+      "before_sha256": "173b04c0f238850ffee50f05d2b197bd22bb883ebae04c28086b7c1e4a2e31ec",
+      "after_sha256": "b3347185bb8b8f8e62fe120cd03153b5f7154963dd6136771e1a09486cf4335e",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/ChaseNearestPlayer.cs",
+      "before_sha256": "5218ca194f4465ef0f00e26601a831fb4d5e5e88340342ef2f36732b44170c13",
+      "after_sha256": "614d9196b3f9cf949cfbecf6a051d74ea720172628ea09667284be8a37b7d648",
+      "line_delta": -2
+    },
+    {
+      "file": "Assembly-CSharp/ChaseWhenNear.cs",
+      "before_sha256": "9d453a8b24613c613ff62d3532fcc122041ecc2b78e1a0e01ebe1385f09c600e",
+      "after_sha256": "f838f0c5e23fa4c470776536e457a3a2e2f7d2ab2057b6668c53456b5386cc88",
+      "line_delta": 16
+    },
+    {
+      "file": "Assembly-CSharp/ChatLogNode.cs",
+      "before_sha256": "769e4f9c4de173a7bb74c96be18048a67410065a2bf596a852cae7260d34c41f",
+      "after_sha256": "244f610a8cee16ea7667c3d97f02f3e82b5ba65ec87e1fa95be6352fabfa6054",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/CheatsMenu.cs",
+      "before_sha256": "2f296f5c50ad4a03157e00a5e81a1ffe464ed0d3e0589c2e7fb1912d86593036",
+      "after_sha256": "5d229e6359aa81d54196c21951c87932f5a1a5c12e5c0a37e9286ed22a762334",
+      "line_delta": 12
+    },
+    {
+      "file": "Assembly-CSharp/ClientPlayer.cs",
+      "before_sha256": "7f2afe47e26edc3e05819c5a8271c28800dcbfebdb9fd12c0e7b8ff043cd6d69",
+      "after_sha256": "d2b2e87a3c0db17ce7ece2511013a7700f9b808289d9760e386dd1315ebfb21c",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/ClydeDeathCutscene.cs",
+      "before_sha256": "6360e5f44bb40072461c3350faf507c1b1cb21c3dd05cf0e8e75425fe6b18165",
+      "after_sha256": "e5882e74a75a3b256d485b5ffb33a65064671a372b005cc505baa463e3fa718d",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/Computer.cs",
+      "before_sha256": "82466497a7803122638afb435b4dc03a24579c18572a86cfad0bb1b991d964fd",
+      "after_sha256": "f81a6d7859756e2c932c0a36f72b4df0bf001e052db90a16e8cb84bbc8f958ed",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/ConstrictedInteractable.cs",
+      "before_sha256": "0b6304997f6912222dfdd42fda4a3a81d68ec3b62903b1db0d86fd9dab75c1eb",
+      "after_sha256": "138b4767ffd7646b4d6a9c1f4da767e24d61b6af4dc8b69f286269535193ba2b",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/ControlSchemeSwitcher.cs",
+      "before_sha256": "b3334644eafb1de089b6273cfa267427814979e8a0a9494d53057d0cac3b6c04",
+      "after_sha256": "f1b9fe670380feb7bfa0e7961ce08c25c8e1006788a3347df60a97cf7ce3695a",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/Cow.cs",
+      "before_sha256": "80a724f5a7337fde3571b0d38d0772c2bb3e9fa0cbac7ea39c6eb51ff15a08c4",
+      "after_sha256": "6e46b3987acb37502095c26318a9f25ad0b5aca764ef5a8c7eacf48faf3dea7a",
+      "line_delta": -5
+    },
+    {
+      "file": "Assembly-CSharp/CreateLobbySettings.cs",
+      "before_sha256": "f9641faefd3047b8b261dda11bb7b8dfd234d4645de2c87ae4af9ace58477c34",
+      "after_sha256": "f2cc0f75b11ee37194072868e60deaf12434a49b583a0b4d0ad50cad43ef2812",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/CreatingPoster.cs",
+      "before_sha256": "b05befebc00ebe8f3eeea4950f08fcd45563c9f7f007cb46cfe503e6db9398de",
+      "after_sha256": "8f789f8156980d21db1977ee64b08d6be085869eabfe5f18483a63eb70588cad",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/CurrentDayManager.cs",
+      "before_sha256": "9a63c0835c4299dfe5cf9a2ac463dab2e1f607abb5311ebff38049a77a62b697",
+      "after_sha256": "cf42480f3bac09a6f481141cdd1ab46e2d88802cb4bee87e1a18701baebd1801",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/CustomerKillingEntity.cs",
+      "before_sha256": "ef14b6085be717a34c6041cbd76ab39353310ae2f8b72e5b8a705c0a033df525",
+      "after_sha256": "716af54047d7019533cae5374d07a5cedf520012e3a2506ef02394f2ad0d9931",
+      "line_delta": 3
+    },
+    {
+      "file": "Assembly-CSharp/DecorObject.cs",
+      "before_sha256": "0459b07e27dadad55538546bf0e3442e6c8a4b29d8e339f3f196322f8679c6a7",
+      "after_sha256": "b3d2fe38a31b2516f01c59aec68106b502a9fb6f82dc74b6cb1fe7b1969f8217",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/DelayedEventTrigger.cs",
+      "before_sha256": "b2e14c0c62139ca9727a83e387ccd525d9c909c20fc7a87dc2a5361fa6f1cbe2",
+      "after_sha256": "9aadb392bbf0eb413a5eb95455b3a2b728457121a57250106b6f01f506e25881",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/Delete.cs",
+      "before_sha256": "db2d318d805ea28dc6b42ef9a60b7874d1a3289b7447e92d1855c705546b57db",
+      "after_sha256": "5bff10a1ae4cc39b101f1a18f53be74a8378796d4c918f211268a2868f5e994f",
+      "line_delta": -1
+    },
+    {
+      "file": "Assembly-CSharp/DialogueInteractable.cs",
+      "before_sha256": "356f4aa01063b22c3e9c08ae640701ddbc4f3097a0fe0e25647ac56931cb7ba2",
+      "after_sha256": "23f890b17c85cb374c904bca1c8f80ab3ebc127940c51e6e0bf5214811c614d2",
+      "line_delta": -6
+    },
+    {
+      "file": "Assembly-CSharp/DialogueTutorialManager.cs",
+      "before_sha256": "d5a2b7efa6ac3b70406c0f53e8e79a350520d42593f4ca947649f89818cffe59",
+      "after_sha256": "74912ea601365816d3add470dd4f541675ae5bd108cac192c765aaf3bdce28ee",
+      "line_delta": -5
+    },
+    {
+      "file": "Assembly-CSharp/DisableOnDisable.cs",
+      "before_sha256": "e20b29e524244f3cc94f5c0156c1583da5d5bad87a6c736f393af1e21b3e13b0",
+      "after_sha256": "2329fbfd3ffd048ae70105afacb325175417a38c31283d8cb5b5c5bf7ef4b26b",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/DissonanceInputModeDropdown.cs",
+      "before_sha256": "4a35b9d0ce33212ede7d70130a82bca3dcc07db9bf241684a68450f46b9ac2a9",
+      "after_sha256": "99116ae3a45a450db96201e3dc4c74a0963f7eaba3f803002c2ec35861fc0a30",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/DistanceFade2DAudio.cs",
+      "before_sha256": "e88d1e318aef011462d266eb0ee0e632150b62a0c522c7ca7656fea2458af4b1",
+      "after_sha256": "9dcf28234e4134683df909d54620cd4df35175de4ba974b63e3214604c047859",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/DitherFader.cs",
+      "before_sha256": "9861732aa7008769d7e38469ca1142aab182a129a82d5896a47aef3dd7ef853d",
+      "after_sha256": "94dea6fd925679deb94711a5a207476459c741c4b882a9606c0bb3bac2cfd4b9",
+      "line_delta": -5
+    },
+    {
+      "file": "Assembly-CSharp/EggDiffuser.cs",
+      "before_sha256": "57e3d20f156041df07d7c148e34278021263fe4279529fdd85d5edec1a1329c3",
+      "after_sha256": "497c956e4aef85e9d5ff1099264f6d69da496c49516b101e1633631c78d0d9d5",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/EmailManager.cs",
+      "before_sha256": "faf6c1f00d89b1b7ea2acbfcf436f8e44bf60dc8cbe8e07402f7d44c47d8e8f2",
+      "after_sha256": "ae27eb17fa1d6d82b4f3a5eab6d3dd9003e4afd70c899b838c4a2c1a76287418",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/EndMenu.cs",
+      "before_sha256": "e9d8b163e5496edfa5312ee42d47e4e5f3129d680fb70609763bee147ae3d45b",
+      "after_sha256": "b770c46d0d988cdb20951e09b85d0e6bb8d5e8fdf19d763489bcf57465f3f5ef",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/EndOfDayReport.cs",
+      "before_sha256": "61d7846ec5103f99f8e36ba486467057b923d2d8a68291f1d1c7a2db1276f482",
+      "after_sha256": "25741eb22efd97d95910fab5a4df315b85e71831825cff28b442cbb0ed225ff4",
+      "line_delta": -3
+    },
+    {
+      "file": "Assembly-CSharp/EndingScene.cs",
+      "before_sha256": "5f38ae94041525f02fe7c3dd03bce9ab63e4013778101110206a7c301f3cda81",
+      "after_sha256": "49ecf05bdab09d397dc11cb7a929c9611eaf77d21bc32c5d4bd8f77623616555",
+      "line_delta": -4
+    },
+    {
+      "file": "Assembly-CSharp/EndlessGenerationManager.cs",
+      "before_sha256": "1e0a3742baf4bc7b976c1bd937653fa3825466ab0ffa209b15e9eb323122db05",
+      "after_sha256": "554172aba8c8399d9b670b34224f1b774dade6e894a1461e4ab2763421b60361",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/EpilepsyHandler.cs",
+      "before_sha256": "6c2872036063edb38fa2047a88d1c99fdb841cda0914d609d972e75bd3d3af38",
+      "after_sha256": "ad017eedc3500a6649710ec0eaf9aef71fa212db94cfad5d0a19ad3d60ff7456",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/EventManager.cs",
+      "before_sha256": "deba18a81e94a9b8aba2c521359d3a05b8e935e78df1c4176f52cd758cd037ba",
+      "after_sha256": "859831f31d34d7d9549aba91861616149eea47dcee028153eb1cbf52d81e6551",
+      "line_delta": -12
+    },
+    {
+      "file": "Assembly-CSharp/ExtendableGrapplingHook.cs",
+      "before_sha256": "9708b898c962f5d99f1940b1fa155c977e2ed9ce9c70680a5aa4825fcb2f978a",
+      "after_sha256": "deb823d9a5490453fe65b133127ab602ec5fe30b3b30608ca0a7f7dd3332a139",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/FIMSpace/Basics/FAnimationClips.cs",
+      "before_sha256": "0e535136b9656d5721612c90c8bcfca92c7db2fcb8740ca2ca3355896f0a8a29",
+      "after_sha256": "accd64a8b0d911f84bbeb5447a848935bacd39211170ee9e1bcab4a653159b9a",
+      "line_delta": -2
+    },
+    {
+      "file": "Assembly-CSharp/FIMSpace/Basics/FAnimator.cs",
+      "before_sha256": "dc254f14dd481f13a35b01788b632e39417b3d73ff65cc2671111ae2d23b6f21",
+      "after_sha256": "ba4ebf3c69f966cbc1e9232457f4ef0b71b03637e2944eb9dae125a3599eebe8",
+      "line_delta": -2
+    },
+    {
+      "file": "Assembly-CSharp/FIMSpace/FAnimatorMethods.cs",
+      "before_sha256": "954a74993c4096b38c105226f76b55ac9ba04d1ce0e13544d56513383e297274",
+      "after_sha256": "488cd205e0bf394e2e7b2f7ab019aeadaa3e9b03084c0b7171d656a43a0671d8",
+      "line_delta": 10
+    },
+    {
+      "file": "Assembly-CSharp/FIMSpace/FProceduralAnimation/DEMO_LegsAnimScenesSwitches.cs",
+      "before_sha256": "237520231817d41fdbd0b0909003b5579d3b7cf94bf95330780c1a9f84b7161c",
+      "after_sha256": "497101b7b472008f55410c8d1ae4bf0c8250a7a5e1450c246afda05554739fe0",
+      "line_delta": 9
+    },
+    {
+      "file": "Assembly-CSharp/FIMSpace/FProceduralAnimation/LegsAnimator.cs",
+      "before_sha256": "5d1534ec77e0397eb6bcd8558d4b7612fef0099c52ae6fc76046695fa11bf641",
+      "after_sha256": "76746a109399eb32380aa90fad8509e550377e449319c6029360d35b61ea430f",
+      "line_delta": 6
+    },
+    {
+      "file": "Assembly-CSharp/FIMSpace/FTools/UniRotateBone.cs",
+      "before_sha256": "2dc3ce31c79cd0b940ef5daf9cf1e3b3b4b3e8d7e8e29bc3050ee2700f979f48",
+      "after_sha256": "ad9a828bbb3c5a9b40c9d613f8277677cc6587226a21fe51e78a63507f935770",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/FIMSpace/RagdollAnimatorDemo/FBasic_RigidbodyMover.cs",
+      "before_sha256": "3d3fd0577b7a5fe453d07d071e2e945f01f41ca45712517230abada37802b30d",
+      "after_sha256": "84beb8fff49639a8ffd9794e80ec022a88e8357e588d7eac7651f374a653ddbb",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/FPSController.cs",
+      "before_sha256": "ac4fdc0936cef7500f10d1673ee4b4fc14831cd5c28c717a3ecad66413da7e80",
+      "after_sha256": "9391d6a334af83999d1a3104bc517edf2c7ec53f5882fc790a81a6da4ca9fbbe",
+      "line_delta": 6
+    },
+    {
+      "file": "Assembly-CSharp/FadeExample.cs",
+      "before_sha256": "78390cdb1915547a29dc2ca12faffac50d17e5e2c0683be1b71c5c4e5926df47",
+      "after_sha256": "32472683b0258729509d88e6d3f4c98dbfdfb037ac5449f6fa0079c6c77bc357",
+      "line_delta": -9
+    },
+    {
+      "file": "Assembly-CSharp/FinalSequenceManager.cs",
+      "before_sha256": "066811b05299b9beeba9ed4202b2ae31775746477f42ece858e7079f7a353619",
+      "after_sha256": "91099c423b93da95e66544ab165a0607bd1c7ca46d15c1130d569eab20f78b62",
+      "line_delta": -2
+    },
+    {
+      "file": "Assembly-CSharp/FinaleStartCutscene.cs",
+      "before_sha256": "0f29f600cfbd56d9f52383dec2668c842669eba048c22b24723cb02640a07ac6",
+      "after_sha256": "3ff61645930bead276157cc5b6e3b28db175d7dd65a3d801411243c41ba13b36",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/FlashlightVisible.cs",
+      "before_sha256": "cd05f1134a301ba28fef535a74bfd9788fc1c3948e9b4e2e19e9e417b1d05803",
+      "after_sha256": "85e24579e79d0ad77a13d601700cec060c51d11daa0c377644438f2a31edb962",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/FlickeringLightsEvent.cs",
+      "before_sha256": "00eb8ccf9721b5769612b1f001cb5424b0fd3031e7734421661b1878169d624e",
+      "after_sha256": "6c77f6002750376db64929162b9d9e5b4040a5a9f4b192c3f4fe81674f512f1a",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/ForestLimbsEvent.cs",
+      "before_sha256": "d2d7790a09af77e764948b542c19897bf2b290614be2295b5ec79ae3572caa77",
+      "after_sha256": "ed6a2cab39475afe6bf346a8feec4d8b3a0f4497992738e0dfdcf8a9b6489299",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/FusionNetworkManager.cs",
+      "before_sha256": "a12683a8c2e91cb55989c6e12ea91bbf1a6b4ebbcef7f406199eccd36952aae3",
+      "after_sha256": "ac3c366a59110ed1916b382c0674fbd6565c00eb0e9af0f5e76ec1c0392a28b6",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/GrapplingHook.cs",
+      "before_sha256": "a5eebfbc861a3dfabd1a521baa0267a94fefd702f3bcf3d380741f046f3042fc",
+      "after_sha256": "b23a58ba79497b4b1136b367d715d1869027026ffce0dee43371ef8d89901351",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/Hittable.cs",
+      "before_sha256": "0d561e2977dbeea9928d3c316b0ba0b2601c8bfbba594736acaffff8a9acac62",
+      "after_sha256": "9ceeb5042b1040569263d73eed091c52a2603edfc21672d8b1a0ca929579044b",
+      "line_delta": 1
+    },
+    {
+      "file": "Assembly-CSharp/HuntManager.cs",
+      "before_sha256": "3bfbe0910e59790999cec174638bace6a54487d514352a278602951ca0ba8bbd",
+      "after_sha256": "b4365b39132ca2b7f8d5647dab6c76d50d3347a514ebc8e49f437d39adf14147",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/HuntPanel.cs",
+      "before_sha256": "cdcc3417ffab6e1cc9a58985e40995bc1c5bcbe2e077f090d6b11e2e2c0ac0c0",
+      "after_sha256": "eb4aae8482b092119b38c72bc50b0faf05e3c9e79d1ad4d13b659cc4482e4329",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/IDCard.cs",
+      "before_sha256": "01e3028e5800a9fa477e5111234a4fe5f579a6a673fb11a9110b3302f8bfdcea",
+      "after_sha256": "f389cb96cf155e0facf99d5bd0e51668069f99aff897d4b2d747d98e076777c0",
+      "line_delta": -4
+    },
+    {
+      "file": "Assembly-CSharp/InteractManager.cs",
+      "before_sha256": "b8b275f92252cff54fdf4089d147e7aabfff4285a535f19601bb8343ffc5c7c9",
+      "after_sha256": "51fb4fa30ff8fb49cde9c110b5c0b8ca524006427436e074a9ed39eb2ba90c6d",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/Interactable.cs",
+      "before_sha256": "f31a094abd651d4db4dbd5fd0c9bf120111471e9eafe233138d5fb7989be9810",
+      "after_sha256": "789a8be3c7f981ab5e6c61861713defde188174c8372b094c390cb1366ba3164",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/InventoryManager.cs",
+      "before_sha256": "abca8056ff4a9ee8da71e100aeec6fa66ac29183ef2e77cd5ca710ebdfadfd4e",
+      "after_sha256": "004c461b27d9dca766e67488e6efe145e593ac98ae7d61cb35d40abf050def7e",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/JSONAccess.cs",
+      "before_sha256": "ac5be924a2d2247f34632f6cacc16e3ffd0c001857372fc493d860907ee8c466",
+      "after_sha256": "2b5d10336d8a396b7051895dc807ccfbe6ea37b856267f9f7d739af5fd679ec1",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/JackInTheBox.cs",
+      "before_sha256": "f1177b359c57ca142e597acc29c9544e6b14145830cc61839398e4db87a19d34",
+      "after_sha256": "428a9502243f55bfc54a71d066362708c1ee118e801486ec2cd6696cc0892f62",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/JumpscarePlayer.cs",
+      "before_sha256": "10afcf717cac3163223c195e990a734498d5f7fd6c0c3b8cb031ba0efa504efe",
+      "after_sha256": "21f02dd6e86a159d3fbaf98803b3cab832ea8d91fc37df6dbd077700d20bc8db",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/KeybindsManager.cs",
+      "before_sha256": "b61663eecf1e44e6a0472c52ab34cbe508fe01497b1ca2cca3513abdf5d8db25",
+      "after_sha256": "93732d8286e35cfedfd7bc86e6790d8a0fe7f2ee0f91b71bc26592590ece1e54",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/KwaleeEULA.cs",
+      "before_sha256": "9409bacba0d07ab93023468ad7b02600a573d4745d0a313b3f6acc246c20dec8",
+      "after_sha256": "00de1dc3ad045b4d168e34336b9ea9c488b203986810aafe3f6b37de5ba6815f",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/Landmine.cs",
+      "before_sha256": "f27d8e99054a38048e9c2ae4bff5989c8d887cd0f4db51ba9e0b2a202a74f627",
+      "after_sha256": "33967a7ceef7e929851b167c0684bfa14f0175b1e8bbcb924a5804cb2ed1723a",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/LobbyUIManager.cs",
+      "before_sha256": "014b19bbc671293c80404dada8fe02d45afddbaf1c2d3507cd61fe07b7624be8",
+      "after_sha256": "edfe51a91734769586e08c9b2192dfe00590e64ca8a2cf31d9412976abd22e44",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/MainMenu.cs",
+      "before_sha256": "f9439c63d553c26d8c44f051c0138f179b7ae73a265c7942f096efde686fa097",
+      "after_sha256": "1f11e2d2a1db3354657c799345be0b649ee61f20df0a5324cc511f690d61d1fe",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/Marionette.cs",
+      "before_sha256": "ace0c50d98037923f8cbb82b681b138f5756521fcbc75461f23c9c4e9f55f8cd",
+      "after_sha256": "578fe743635bddb7f640ff20a22bfce049a77d121feb246459078941a05bc8b5",
+      "line_delta": 3
+    },
+    {
+      "file": "Assembly-CSharp/MaterialFader.cs",
+      "before_sha256": "c993a073a41cb58f2199943bb9c866c386ae2ecc2837d4faa82c6ce1d7c1f611",
+      "after_sha256": "5c5698c3b738e343937b92f348c1d885bb2a959bdb6215ee8ccd3cf1868eb142",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/MicPickerDropdown.cs",
+      "before_sha256": "6aac12b22b2d4ae19b50411d4b02ae70400113d9239dc7bd4045813293600543",
+      "after_sha256": "3877cf01cc1888934146f2fd6d5447a1831cd0bc59ab61f3b043f241f5510019",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/MultiplayerButton.cs",
+      "before_sha256": "060fedff374934aaad98f18ed63b0f9a5118a6adf4138f02a32f60f38d3955fa",
+      "after_sha256": "938896034e5cc80a37f380a58df648c174493022fbc3f1c7eb8bc396fbe83528",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/NodeSwitch.cs",
+      "before_sha256": "f320e37bdd82273cb53ab852d8545e51e70dcc7e889a239185532326e009e54a",
+      "after_sha256": "09c3da0e75ba4556b14323ceaaa1d56151b938b2202e3a199f005d780ba19be4",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/NuisanceCustomer.cs",
+      "before_sha256": "5460aa0951d4eff8168456b8166728a040cb30f1d457d89d7b34bc0ead63bc9a",
+      "after_sha256": "410d2f76ee94f3456ca0e9b6be41381600e424230f0cd14349204c990c50ac08",
+      "line_delta": 1
+    },
+    {
+      "file": "Assembly-CSharp/Obi/LookAroundCamera.cs",
+      "before_sha256": "d0e2d940ea4bed64c18f25f6f05e0447c676596def1ada7364a99c1c1f5a0669",
+      "after_sha256": "a168eea96d100f16aea17a29042abe5cbb6b2e89590bef970db3bfc4db7714b0",
+      "line_delta": 4
+    },
+    {
+      "file": "Assembly-CSharp/ObjectEnabledFromGhostCamera.cs",
+      "before_sha256": "c853fa0df33b0d1be23fe5712b7ca0ec39145b71e088f1ee0f6582747cf3d775",
+      "after_sha256": "d0491e83a6896836feceda0f999bf710dfcb5ccc5cfa8dc80365dbe6517a1240",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/Outline.cs",
+      "before_sha256": "a2173469ff5cbd4ebdf7312dbbd6dc36161bad1266383bf62372991984bb6740",
+      "after_sha256": "bfb21eb2847749e65b1125f5bb521eafefc857c783ead64e35d39eb66dd7cde9",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/PerPlayerVolumeRow.cs",
+      "before_sha256": "f4b8d163c2640159f224bc952b91ddbc2f5bd665f81be7a628b6a8de5a4c769a",
+      "after_sha256": "2a2c04462cd883bf01df6809ef3ef0b665d4f5a6ea739efca4927e53e27c741f",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/Pet.cs",
+      "before_sha256": "bceefcd8a8ee891b76e6e4d1890151c0515f0a4b0695e7db6dd9df5100091e7d",
+      "after_sha256": "19b585b2f19f40a39535a97d8fd5f0eec67046f74affc8ca4f43b25fc3c74468",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/PetrolTank.cs",
+      "before_sha256": "6c29d10c76641c5ae703aee36ef2be7f1ec239a9e9ac34a7e499d133942df311",
+      "after_sha256": "5f219a5016db56f1dac03617ddff69bd770f825d0ee4546275dcc309e69a6294",
+      "line_delta": 17
+    },
+    {
+      "file": "Assembly-CSharp/PickupObject.cs",
+      "before_sha256": "f7cec706d16ae1ef87dda68754bb3a27d1c531a7f912beb375fe02207e9f5a17",
+      "after_sha256": "fb732c66d0f7cea51a9b860d2da5492f0d984567401eea76d85a648ab88e2fa5",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/PlatformManager.cs",
+      "before_sha256": "1ba78be2e67ee791dc3dcc1672b89f1903a492ee29af952ed4576f70bb85c8fd",
+      "after_sha256": "fdc7d4a35549819da45d9ba0d01022a5769e12af77df67d3bcad3e4ed931464b",
+      "line_delta": -3
+    },
+    {
+      "file": "Assembly-CSharp/PlayerLobbyHandler.cs",
+      "before_sha256": "045562f2f0258eaf32ff34c43075235e6ac719d3a712cfbfd852e9c35f4989a6",
+      "after_sha256": "90e8a817529408d5f8c335db02f45d1943e8c166a007590b88eb4db9e8cb63e8",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/PlayerManager.cs",
+      "before_sha256": "a23cfa58ad5faf63800d120eb048f93c26cf7135c282a8c8add738e029fd9ecf",
+      "after_sha256": "8b05fbeef0d102814fc42aa6002d03685138c5072e343e9584c5ef837f7ab9fc",
+      "line_delta": 17
+    },
+    {
+      "file": "Assembly-CSharp/PurchaseManager.cs",
+      "before_sha256": "0fd79c22dd6d833cbea442394276ee33016a95fdc34fe96da127bb135c1fea1c",
+      "after_sha256": "ab869ec00ef782ec50e75e4944f62e832a33c734b5ffcf957bde81bf3f308bba",
+      "line_delta": 3
+    },
+    {
+      "file": "Assembly-CSharp/PurchaseNode.cs",
+      "before_sha256": "e8becb285ca7716213a52d1a679a4e8dcff1d4be1a50a88e836a26812bb80a7e",
+      "after_sha256": "5e31644d801d26e146bc11fcbf6c0db25319475e5d3e33e5c0054c2ae470f062",
+      "line_delta": 3
+    },
+    {
+      "file": "Assembly-CSharp/QuestionCooldown.cs",
+      "before_sha256": "549e03efca8570ef51dbe26c1048f2224b39ce11fcb5efb0f8ccc88586663c74",
+      "after_sha256": "ea000ced4597a048e04d5af38fd54e0b15baabd03f88b19fbe7607a8de317d7e",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/RatCountdown.cs",
+      "before_sha256": "c88f59d3a32b5336f2363366758a5292afeb45d25f4f836c8b55fcbf10ad41b1",
+      "after_sha256": "79d13e09dd0331e42a32945fa863424e5feb6dba817db21a1a36a3d4fb516f6b",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/RealFireSmoke/RealFireDragMouseOrbit.cs",
+      "before_sha256": "42a36c18e9062b8d082e54edf3d46d20861b89c76613b21a359f0b062cf40715",
+      "after_sha256": "5c0939588b585939bc3823d1e0c2c7bcb681f968d7f4125612439e2e67546be0",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/RealFireSmoke/RealFireSceneSelect.cs",
+      "before_sha256": "797d2e04ef40c2ac5f1b46216ede573f4f49340a7f8fc3266699764b1bc07ca1",
+      "after_sha256": "da6fc7e7aa40687481996a25eb32aa079d9e0d318c0cb2d4ca1d6b9b8b82700d",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/RegularBrowsingNPC.cs",
+      "before_sha256": "70b475861af3a86640871e653828640fbe0c4187f3b0ee543c1ed9bcf2513134",
+      "after_sha256": "80d1dd24de9d91961b6fb1348a6245c7d1cb56ff3aae86c19f940363811e5899",
+      "line_delta": 6
+    },
+    {
+      "file": "Assembly-CSharp/RemoveOnConsole.cs",
+      "before_sha256": "ee3c3ef618136f8e3cd83c7a999bf8b1bc584741b4d20e40dde0f13e492acb95",
+      "after_sha256": "69815eae77bd4e6f390e924a2188a121a94b844293c15f9e7dda32b1eb82e74a",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/RemoveOnSteam.cs",
+      "before_sha256": "45d9dcd88d273e510199a37c4f1fda81e05d1776e1e8f734c728ce8f724b48f1",
+      "after_sha256": "c9c16bee88d07a3bc2929818b84c168c43894524d5e8f0c7542bab823788ad00",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/RestockShelf.cs",
+      "before_sha256": "2aabe395da8d04a7550614dc5c872a22e5f70839ae5d59779957bdd2a1f39681",
+      "after_sha256": "649baef388bdc4ae6ff962d87779bd6262b4cc042982297544eebaaadc5a201d",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/RevealText.cs",
+      "before_sha256": "e2219e12dc9c902ee90b163ea9c98e3bf2447122b1cb3cec1ca910aaa12e87cb",
+      "after_sha256": "c00b2c1b954af17a8817d2dca433b801b5c73f3e68a85cd199f38b478c246fe2",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/ReviewsManager.cs",
+      "before_sha256": "bfc78ba8cdd47761e4e392b42e48588bcb9eef5d07339d43e02d5658ec7f4e01",
+      "after_sha256": "7792c01cfabdedc23d9a47c8de7912d769c3c694837929e233762cfb68405949",
+      "line_delta": 3
+    },
+    {
+      "file": "Assembly-CSharp/RoachCountdown.cs",
+      "before_sha256": "85ef90d9fec1290a1f084f420dab93cfb2685424d7262434386aec92d65c7037",
+      "after_sha256": "b40091beb5b45800f16073bef9b3d19d3e5f8b960bfa4d281e5c90bb1a3e1a62",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/RopeNet.cs",
+      "before_sha256": "e50482d2a5c7ffa1485b906dffe8a1444309dd1c7a5947a299699300145f6063",
+      "after_sha256": "490d332bf8bb962e6a2bb3087af9e4cecb4fc549fc2ad2c67a8fff8bf44ea5e4",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/RopeSweepCut.cs",
+      "before_sha256": "2beb5b387c108ffb2ba7a7da397264d1c1791603022eee61514db0d2b69ac45c",
+      "after_sha256": "9c28129c8e1f63e72b3107bc34de6463f905ebdbd322fa6912f95cd0f3e5898e",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/RuntimePathVisualizer.cs",
+      "before_sha256": "5ee70e85e4597b930192218e97d81ba422bce1d7c05eabc5926fb9e767f1f20d",
+      "after_sha256": "c385a1dda8bc58b9d127cbb65e03e7f0bc72f184f0091884d62aaf1b58c6c044",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/SaveManager.cs",
+      "before_sha256": "e7b65fc488b705799d7df5c7fe527985a927d3a105db6bc17e3920c4041acf76",
+      "after_sha256": "18ea21d204a60a872c58d92ae84cc667b24340ed23d9e4e85e824ca7649a3d73",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/ScanOnlyObject.cs",
+      "before_sha256": "c1b576b46c323127bb8ff6d568d987ad768d272813ba8a59df35ae284dd8d6b0",
+      "after_sha256": "9f1ede90f704066953f0a550d6049e68d4bc0bf3401d9d83e518803ab314f075",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/ScaryVentGirl.cs",
+      "before_sha256": "76a2f4bc1b0513ede7226162509c0f23d4a658ec03a536a8b73b1e4242444925",
+      "after_sha256": "e4acb4496bd3e68f218b8b411962569bd7039ac5e06e96eab55d610408fa2ed0",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/ScrollRectControllerFocus.cs",
+      "before_sha256": "5a23e20f6aaa4a0cdbad1f99b3f8fbc444d03383082d879654d6e87083b68bd4",
+      "after_sha256": "3408b0dd574c509b08b6ec50350f3c65a818c578f3344cfa6fe06e2af2357929",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/ScrollRectControllerSupport.cs",
+      "before_sha256": "c8081c4e040820d604add8e0e3f925b57e996ca53adcdc04e4702b015d833811",
+      "after_sha256": "61cc48291bdbb5fbe09937a3a66d2f16fa9fbe4d6e3e3063c1f9bb2fbd4e6093",
+      "line_delta": 1
+    },
+    {
+      "file": "Assembly-CSharp/ServerBrowserManager.cs",
+      "before_sha256": "6833b22a51726b5b54df8d5826d4f2933d4ac8d8d263b5aee1cde9a9f2f19553",
+      "after_sha256": "c7fc9ea1f7de9d621156b6e340553edcc45833073935a684fc2b9d886c892da1",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/ShelfItemManager.cs",
+      "before_sha256": "626837c7b04ff296857b81e84a31f000b61f5c20266271107337f984db849a55",
+      "after_sha256": "de92c81afa26e1e2300e6e07d339a2fc86fc693ee1896e481c08144580067ad0",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/Shrine.cs",
+      "before_sha256": "452164fec9e7cdd15bef3d1793a79ae1e6f23b306855286a295c04de64323a0f",
+      "after_sha256": "3e1383995afbc9b490db823c4f09320eca50b5d4614fd5562a53cee285575a5d",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/ShrineEvent.cs",
+      "before_sha256": "f61c13f6527db33e8d51c5c142a432d98d4666b1c2cf46eb014fecead0e89744",
+      "after_sha256": "9f38989ecbc15a31d187aabe3f21276493d908e3a5b8efc6f08bd54b285f4525",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/SlowmoToggler.cs",
+      "before_sha256": "8bbd2d81a4616eeb178bbba33142adc20ed59dcae983df491a089b72dba5abc8",
+      "after_sha256": "d0f2f0ed87b228a65e4f84510945bf266f522750db6e355daaad9e882e03f315",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/SmoothScrollRect.cs",
+      "before_sha256": "f44bb4fb98b34765f638860b3446d26f578a4f2a35017c357ef08c4573e83a13",
+      "after_sha256": "813f0fa0a2a5bd1ff68ce8a4a004bb59820adcb607361fe4d1c1c78ac04df716",
+      "line_delta": 2
+    },
+    {
+      "file": "Assembly-CSharp/SpeakingManager.cs",
+      "before_sha256": "996df23339801449169c75c479956a094911d5da89e085fc76d4af5e64047cf4",
+      "after_sha256": "a78ae7348056119498c5034c75aac39d5ad302d4a1fea426b115bbc059b26388",
+      "line_delta": -14
+    },
+    {
+      "file": "Assembly-CSharp/Spider.cs",
+      "before_sha256": "035a9342c719d1b30afd24212c646ebe5859615b478996bc8efbc3364168a29f",
+      "after_sha256": "5cccde395dfaaf4b120d6b9a7960bfefc810496cf79f5a225c7f4d37931bcb08",
+      "line_delta": 3
+    },
+    {
+      "file": "Assembly-CSharp/SpillWarning.cs",
+      "before_sha256": "d2fa6e5d143619541f7300755d536145f06030fce7b674d188ee24ed0aa695d8",
+      "after_sha256": "76c1e339a752f362ac1b77eb9f7324254e519cb51aac9809ef65f067a9b0f009",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/SpinWheelManager.cs",
+      "before_sha256": "7d334ef5d3c4550d21cfd21715130b40a9d3993aaeb12e949baa1c28212a8590",
+      "after_sha256": "f069953bacb1927be5e2b885bccf1efd36641368a850b654237c35414ff0dbdf",
+      "line_delta": 5
+    },
+    {
+      "file": "Assembly-CSharp/SplashScreenScene.cs",
+      "before_sha256": "fc66cac21597a479cd3656cb7c1bff0ba74d735cef6294d869464fc42f280005",
+      "after_sha256": "f56967ce03a80b1e64af58ba8fc15774050f7863c6c909f0e4e2938280898380",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/StartCutscene.cs",
+      "before_sha256": "b59bd8c66ea8c090d0e9635268330945975a425e9c09005e0ee1128bba180dde",
+      "after_sha256": "c434126edd95c7197e0b7ab5dfd76a12b14f4917fa683f933a90ec88b3213ea6",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/StoreBrowseBehaviour.cs",
+      "before_sha256": "eb2fc044fbda3d76a82865a66c18c46b790a4884857ab0ccb1094cd197b075f7",
+      "after_sha256": "0e9ce2ab5fc1b9a28aa73206ec17c96900056471b69ad8734c83d871d2ab1018",
+      "line_delta": 9
+    },
+    {
+      "file": "Assembly-CSharp/StoreManager.cs",
+      "before_sha256": "0b5164547d0255c7b05d82ca8c445e4aa2c0fca77f3ab96eb6101e2d0433f9dd",
+      "after_sha256": "0979a19517f5ed6682db70e8af96a3283b78a321e9c80547c2a21eafdf6575c9",
+      "line_delta": -10
+    },
+    {
+      "file": "Assembly-CSharp/StoryScene.cs",
+      "before_sha256": "9de7edda09491e0adce2dc24df7bef230b6ece2724e9e9e1b5bbeb99eb344363",
+      "after_sha256": "63b059d20226bfb59aed78bfed2fbdf15d50369943ad79f24caf17f65f5a5d8c",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/StorySpinWheel.cs",
+      "before_sha256": "8b5c867ee4d57d116c6d3568b2c46c3ed352d90ddbd5f28c2be4191b52e9b3db",
+      "after_sha256": "e5db2582032f43b913eebcbf3cd18fa0123a8e148d770c8ad0c82e518507e2c6",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/StunMine.cs",
+      "before_sha256": "d17bb91864db1511e8c4ef393a5cba7025000e6b572fb79c67dfa395d98fffc9",
+      "after_sha256": "9fb0ee905895ec996b9542d2fa2703d32a214dd52b17f664001bf3b4dbc81f30",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/TMPForceSingleLine.cs",
+      "before_sha256": "740eaa57e97cbbbae1cab43c50e2e4f5fd7d9f9abb536127e5e17ff959e393f1",
+      "after_sha256": "aa17e1ed6f7432abed3d036cefab2b02cc86776a3cd987692a351f8c3de53459",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/Telephone.cs",
+      "before_sha256": "b36b58fa8ca35ec33a16eb2d4a63b96aad5d8ab9a5f863a76b4c073fb1f6a061",
+      "after_sha256": "6cb94c7a7b855488bfa0fa4909712d817bcef433d9ce1e5496eb75072b389a63",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/ThirdPersonManager.cs",
+      "before_sha256": "327889f7d841276b36fe14450368b824c068bb11dc042d577d197ccd06324cc7",
+      "after_sha256": "b44fa30032fa864717988014fc43a687fbf4146174ca8b5844819535cdbe78c4",
+      "line_delta": 7
+    },
+    {
+      "file": "Assembly-CSharp/ThrobbingAnimation.cs",
+      "before_sha256": "b7be0223004cb9af853c17747396e339f37301298b756c993c12fc670f163918",
+      "after_sha256": "dc2e95012b7e0d4ffd435d91aa6cc4da4586d5b4f4198591a481152d42f0bd22",
+      "line_delta": 2
+    },
+    {
+      "file": "Assembly-CSharp/ThrownObject.cs",
+      "before_sha256": "e243b9bfafeff6e98e5c0f405221a0000f4d4212ac5946f3dade17d9e9be8a61",
+      "after_sha256": "829c573237c4ab6b7b52a389ea39daaa5877987cb037646f9139f4e9025a66a4",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/ToggleInMultiplayer.cs",
+      "before_sha256": "6e099b215808ed10adaa191830e0d019b85bd9854e299edd1079808b30df55a9",
+      "after_sha256": "d3cf373c1c0bca247939b10f8a4e3812d2bd5b8a7cba95ed52182e0fb89b51f9",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/TransactionManager.cs",
+      "before_sha256": "a7f87753442cc7a027836ab815d7ea9aaf575a31268c77b238dcedafc5399d2e",
+      "after_sha256": "733e7e530e427d7f74da2a0a5501f41a29be4b9266c096c0333a31aaa6f0aaa2",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/TruckManager.cs",
+      "before_sha256": "a2c0c86081471443eb9175be9ad77f2b05458801f8def907da2d94ffb8853d89",
+      "after_sha256": "f28ac2c8b1a3140ce0b1c25f393a1ff57a711f551d3b81c50643f1f28a1367ea",
+      "line_delta": 1
+    },
+    {
+      "file": "Assembly-CSharp/TurnOffIfEnglish.cs",
+      "before_sha256": "0f0d6c7f2c2168b6dc19675b480f3c3bf255f343fac385b3c97053325d4f8d29",
+      "after_sha256": "c2d5dc9d88794f36ee84358df8a98ae46fb79a7fc7c4a901c928b8c772489a2e",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/VFXTools/ChangeFX.cs",
+      "before_sha256": "83b68852e613250f22eab57f58ab668fa870c0f72368edbc9392d21c66256afe",
+      "after_sha256": "e5e27a6ec1dd7d1cd2a80ca4a139782c7e8d6f718a4a2a842e66f3240f2c698f",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/VFXTools/ChangeFX2.cs",
+      "before_sha256": "e19b47c3bb97ba716f54821c30b7ef9b7e0802368aeaaa02d7066d4cc99ba1aa",
+      "after_sha256": "f7a90c1e2448480b9952d2068f616ab71ba2fdd71d8e3d3bb656439337421bed",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/VFXTools/ChangeFXParameter.cs",
+      "before_sha256": "f701aef268ff403de3ae7b928f5a7bc6d042e7ead84f16172b21cba37f18590d",
+      "after_sha256": "4685dc6d852a75d8e7fca15aa55b3bfb02007b9feeb4aa4820ff6b1ce4b865b8",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/VFXTools/CheckMSAA.cs",
+      "before_sha256": "d7b0ca497e1bf6607b2d329554defb8e6957aa9e9ec9c1b1f108aae33eb5a0ac",
+      "after_sha256": "da48857a9b45818a35bc66cea5c6cedde8069cac99aad00b1ebe5f1219e8cdfe",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/Vent.cs",
+      "before_sha256": "260a13d550828473f3d7a3d6774850a7486d6e8be6a0229840b2b88daec2badd",
+      "after_sha256": "590debadb473b4e4251e05a875ff4230b9df56d67d3a5e8adf48707deb79627b",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/WanderAroundAimlessly.cs",
+      "before_sha256": "254b314839762aa8303ca603f4358f91b2fc4d9b116c9a892adbc9ea0d108105",
+      "after_sha256": "d793b8704989973ff68e1dd35dc620ff6f4ffe1e90e31bb2a6889a76702c40d1",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/WeaponNodeFlashing.cs",
+      "before_sha256": "b6fa8976cb0df37fd21b2672f1b8a0ec567b795c5dfc08b09cccc014a527a5d8",
+      "after_sha256": "06f31f16ed153bd3e98b5e0f6c3dabd74615e222d5b92b57dc83964b8749d8dc",
+      "line_delta": 0
+    },
+    {
+      "file": "Assembly-CSharp/WeepingAngel.cs",
+      "before_sha256": "ada8b46808bdd29e190693ab6c65b485397b5be180a9c9718ae3a6f19a4cf7b0",
+      "after_sha256": "30e2ad3910063088e2f408894e621c5084432b126689203d82e717ec9d0468f9",
+      "line_delta": 3
+    },
+    {
+      "file": "AstarPathfindingProject/AstarPath.cs",
+      "before_sha256": "51cbb3951eaf396034246b253c9c7c5f393439708c1610fde2c007ac79f93c72",
+      "after_sha256": "6e1d8aedefa711c067cd31cd371a22f242e013717f9666e3ed51881c757fb6cf",
+      "line_delta": 0
+    },
+    {
+      "file": "AstarPathfindingProject/Pathfinding/AIBase.cs",
+      "before_sha256": "e66073375c5b7fee58da6360a49a2040f6b3356a9ed2bce7280d36a6e9038af3",
+      "after_sha256": "e607ca57245776d8b2e331b166d55b8b312af32573dd62ed2b4b9127c357ca2f",
+      "line_delta": 0
+    },
+    {
+      "file": "AstarPathfindingProject/Pathfinding/AILerp.cs",
+      "before_sha256": "7bb42a565eb3f9489f8262799e07c35b641e501a8717446a90f9ea0ec8ae83c9",
+      "after_sha256": "4b295892dab30619870a3eaa738517f86359a195f65135abda54afeb808c377e",
+      "line_delta": 0
+    },
+    {
+      "file": "AstarPathfindingProject/Pathfinding/DynamicGridObstacle.cs",
+      "before_sha256": "e2b7578baadbd0b5ef796efa1824928a10bf9edcb07b29390271e7e96d9df32d",
+      "after_sha256": "8c684905243d4d17d2b67da5d7ad8deacb43fd76f646c492637d87948c61c42c",
+      "line_delta": 0
+    },
+    {
+      "file": "AstarPathfindingProject/Pathfinding/Examples/MineBotAnimation.cs",
+      "before_sha256": "733022be4a4cce23237e90c90eade731cdae2445231ede4817e23b83d3ad1f6d",
+      "after_sha256": "19e76ea33a4fc5515e2af5767c480b99e9d689adace2d765f94204185aebb002",
+      "line_delta": 1
+    },
+    {
+      "file": "AstarPathfindingProject/Pathfinding/GraphUpdateObject.cs",
+      "before_sha256": "8d90050982db82bc1a375448d4fd7782ea1e5611495a642356776e0a58d820f3",
+      "after_sha256": "f4b5b34d4ab4d30cf745968da5964ca1259b6193f9e2200b085047bb04e3c7de",
+      "line_delta": 0
+    },
+    {
+      "file": "AstarPathfindingProject/Pathfinding/GraphUpdateScene.cs",
+      "before_sha256": "c81fbeafbf75482e332dfd273fd4e1cf701b0d4523694bd69c41f272de1b9e7a",
+      "after_sha256": "0b4f62f4de9c21561c5a41112f33b89fa96ac1ea4b64328aa56a895deb45f27f",
+      "line_delta": 0
+    },
+    {
+      "file": "AstarPathfindingProject/Pathfinding/Legacy/LegacyAIPath.cs",
+      "before_sha256": "ba6220d8d65dd2975323d34f28c33880a887d49249e77b651963975cfb65b06b",
+      "after_sha256": "d218fe52ae6bbd5b25610ade5ad7537e6c1edd34ff3ea719932f26154c52945d",
+      "line_delta": 0
+    },
+    {
+      "file": "AstarPathfindingProject/Pathfinding/NodeLink2.cs",
+      "before_sha256": "415e26a23ec0e3e0a47f89b5fedb3f338017ddaa43526f805936583dfd587c14",
+      "after_sha256": "d913ef41917655e5fe96c3ab920cfc9fdc107ea4f4c453b9e7446b867d551c84",
+      "line_delta": 0
+    },
+    {
+      "file": "AstarPathfindingProject/Pathfinding/NodeLink3.cs",
+      "before_sha256": "d4e5a42269527774bd9b17c8f8f8f32081af6386b7735cc678faf883926a6f2f",
+      "after_sha256": "d7038ad7c6cc6d15e2f51da027ecafa51be287be97966e09af6a5030a39c4c82",
+      "line_delta": 0
+    },
+    {
+      "file": "AstarPathfindingProject/Pathfinding/Path.cs",
+      "before_sha256": "4c2f7d7917d8c6b50e6f8013045883b39d90f9227f15a36cb2fa4ee587db10fc",
+      "after_sha256": "3ebcaac50de77c0a097edc0bc68248e42a7cf5fb8c84c3652fe02589b75d4119",
+      "line_delta": 0
+    },
+    {
+      "file": "AstarPathfindingProject/Pathfinding/Seeker.cs",
+      "before_sha256": "cece39d862c06a1c0f0f8e160cadb14f75d7f61d22175365e0125e1520a11780",
+      "after_sha256": "6e931c74cc660bb19c78c2902ba91117e1a9380f8224fccf9e25e0d8a83b6b2c",
+      "line_delta": 0
+    },
+    {
+      "file": "AstarPathfindingProject/Pathfinding/Serialization/TinyJsonSerializer.cs",
+      "before_sha256": "fd2b7fac371c8573d4064a11fe0ac3251135e1b39ac72392754254637841325b",
+      "after_sha256": "d7e24feff15022101efb2ad56ac4f2ce89fca036e4f451a01c68cbf3fcff5861",
+      "line_delta": 0
+    },
+    {
+      "file": "AstarPathfindingProject/Pathfinding/TargetMover.cs",
+      "before_sha256": "229a8400adca4f300e3c0201ab32a3ec60a0b13f10d35aa9aa685cf0320a1af7",
+      "after_sha256": "5db812563ee62d927db9f0c16e117b8f6ce17c1d143b064e059bf7e5568dac14",
+      "line_delta": 0
+    },
+    {
+      "file": "AstarPathfindingProject/Pathfinding/Util/GraphGizmoHelper.cs",
+      "before_sha256": "39ac301b2a0532c73766bde84410f7ff67766492ac023763089a01c8280e45f4",
+      "after_sha256": "71ae6857ae1bbe103b525a9b59a80eba5c1419398350a46198a31c1aeb27441d",
+      "line_delta": 0
+    },
+    {
+      "file": "AstarPathfindingProject/Pathfinding/Util/PathInterpolator.cs",
+      "before_sha256": "254398f44a59741182b1e08807ee0a9ce635d2f8fd6cfbe7b3c50c37da6af0ff",
+      "after_sha256": "e36a2de36e38b2487800705a92f87de731190cabeebb61111f6f6a135b2314ab",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Common/Fusion/BinaryDataAttribute.cs",
+      "before_sha256": "23ca9791dbd31c9a4d66561dbaded98b194409d9dffc39b8108cea48b025e01a",
+      "after_sha256": "2989622f6aab8a200f78887f1b56d43b90ad286b576b17b386a001988c963ab8",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Common/Fusion/LayerMatrixAttribute.cs",
+      "before_sha256": "8c70813aa879a67a5896afd0ad1c7b0cc4604bcdc7413cda3ee8f51745f5eaa0",
+      "after_sha256": "292af3d7f6d73d06f488d86b30b29d8fb18b208079ade486e0850358fc4bba3c",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Common/Fusion/Native.cs",
+      "before_sha256": "8032cc2d1a40549d29fd70c6e29dd704986b63ad138db58e279a5c1b73f1de02",
+      "after_sha256": "d826e590acb9cb9a86d6ca6e6c13fa26cea87664efd493f62cb8ca3274edf3bc",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Common/Fusion/TimerDelta.cs",
+      "before_sha256": "0396b62cebae884fd9889059e0447ac014ff3d8b51709cf85b012fdeb68023ea",
+      "after_sha256": "59927540e509d56a90266dfcdbde3ef380e7c86d4ef870381f473d24db076e02",
+      "line_delta": -3
+    },
+    {
+      "file": "Fusion.Realtime/Fusion/Photon/Realtime/Async/OperationHandler.cs",
+      "before_sha256": "22c985e7cf89e9b7ee3be507c27ff752f7fc0506199ad8f61d1cbe78aa6f256e",
+      "after_sha256": "e5a22aefa33c47cbcb1d0cb1c04d677a297d7cb15a713d2d78e8c40256d20787",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Realtime/Fusion/Photon/Realtime/ConnectionHandler.cs",
+      "before_sha256": "7a27ca33d91d74ddd07246cd5ab3dd014709631583e1d0a3b2f6ba8a83fda131",
+      "after_sha256": "cfc1be8345646c3e4baaf46bd813dd88b5b09abf1585f4904e75657bb8522813",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Realtime/Fusion/Photon/Realtime/Extensions.cs",
+      "before_sha256": "6c1ed9294a6dc41d16cf2a08ebad054bfafdf20be489e422a2cfd591b6b8334a",
+      "after_sha256": "e5f256e3f171aabd9f85cd2af9215806071b83f4b11decc33e94d00f7c737174",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Realtime/Fusion/Photon/Realtime/Region.cs",
+      "before_sha256": "8faf5587a83c2f1f270104c7854e06dfe9a117400ace387d2f9b25ea460fa9e0",
+      "after_sha256": "b2d5d91a571a29442a8cfbcd102a675197b777c5fbf3f5db5b038f2cf4dba50f",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/Allocator.cs",
+      "before_sha256": "c6ba91008ed2d23b04bd4a699492b0d39faf4282438b2a674c18d4b9e1f963d7",
+      "after_sha256": "4c54df265017abc4460687e570a631e64aca581d5bc7a7d63f9bf560413174a7",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/ClientTimeProvider.cs",
+      "before_sha256": "507ee81240b6cc341d9bd0c07f1e868d9cae9e36880b1c4571bc16bf45e325e7",
+      "after_sha256": "5663eda738619feaf60f41a1402fabf5064d7626123001b96cf0c571a48616e3",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/CloudServices.cs",
+      "before_sha256": "6f23efbbf602c75f160204819445466e9f6a62a2fe0b1b947f26b9712ad00259",
+      "after_sha256": "e3e0254a004e69575057f5c38f0b22e78e72f6b4f5c78f977dd7eb5411e8c1eb",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/DynamicHeap.cs",
+      "before_sha256": "d5ead27f0cce11bf531f3801777d598ac7b412df993ff7820e954cdeb834b791",
+      "after_sha256": "93d3f8063b1777408d51dfa47c3988a92b72f7b63304ab0fca9acb320eebd547",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/DynamicHeapInstance.cs",
+      "before_sha256": "ab0fd4755c203055ddbdb3b3d35bb8bc65cdc266840a96765b99556399166151",
+      "after_sha256": "b4b986b20be5aaf1bc9f747c22993af4c4e15596452a889d3dd4bc764243e89b",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/Histogram.cs",
+      "before_sha256": "3442f3f5cff6c4cd28f391e996b51deb224c9c7ee471855ca03545507a2d5e7d",
+      "after_sha256": "9eebded92e6889304d570e61992ad5b2fc7a6e29ee03c69cdd36d62ef39d0574",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/HitboxManager.cs",
+      "before_sha256": "6c11592655494f4bc2f473f5d75f3165f064688a929fb51c9724ea57b519b15c",
+      "after_sha256": "4df9ff238bdaf008103d312c0458376c83eca6543dead3535f1389a9b31579d2",
+      "line_delta": 2
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/LagCompensation/BVH.cs",
+      "before_sha256": "4cb5c5674ba517ae4b2680c0ee26dc29fa21b6d3cf8ff3ba4516db23fa2fe228",
+      "after_sha256": "6883ae6ef08a322b636f3fa152e4a364f256b1a2c818720257f81289b9021b91",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/LagCompensation/BVHNode.cs",
+      "before_sha256": "5f3e1a18b0a47d89fdc1bb94883e33ab8411ade2d18ed0cb2702438ba4abe518",
+      "after_sha256": "0b7a6f718774c6bcffd97c44890821d0e64de0c51a35b5caddc209e6389d7397",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/NetworkObject.cs",
+      "before_sha256": "1ad5f4e61d0cf206c00264ce49a42a0d6105fd08ccca6cd2c932b6b7702a1037",
+      "after_sha256": "ce928591bb4a1c8bb9b242960ca9d2dcb00c21eae0cd128100436d2d425bf406",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/NetworkObjectHeaderSnapshot.cs",
+      "before_sha256": "0c5314b48b61ce4fe6eca76584b7950e3e2f33ae270658f18115bf33e64739f5",
+      "after_sha256": "eb13c2abed8142f59aaf087f822eb9da0b728485470a24e9b7cf18e782e669af",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/NetworkObjectHeaderSnapshotList.cs",
+      "before_sha256": "4cf9f08be4af4de3fb0eaa99066aaedcd29e8daafbabd1aaa96f67ce703f9247",
+      "after_sha256": "74d19e0d8b36bc272996c6d808ca712dbd40c52ed1dc397e18ca1f864e6a73c9",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/NetworkObjectHeaderSnapshotRef.cs",
+      "before_sha256": "bcbf67ce47b1d311909f6cacd3c6368e8221c92d80e2c11b28678b77380e352f",
+      "after_sha256": "1e0cc9b3c2bc111f9c466460e8af09dc34f24b5fd2337f9293dd888d59e284e0",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/NetworkObjectMeta.cs",
+      "before_sha256": "3ac1cc935c340ec81e0fe1c3c47c91964315df6ed48b9f461606c07b3208d112",
+      "after_sha256": "1deb536e636fcf86428e595b88af97d95b41d5b1cd65b03bf82d6cb02c86a98f",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/NetworkPrefabId.cs",
+      "before_sha256": "fd3627a98bc18f5b10310b3502dab2bcdab9c341f02eeb7db130ddc72689a538",
+      "after_sha256": "1e9815e31f88279201e5c5d3c21eb339e3ec0c9bad1e53246437e4fd3237e278",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/NetworkProjectConfigAsset.cs",
+      "before_sha256": "644721c3b4ee1bd18c20f710e04553f1335a285d4858a4225f6291772baf1373",
+      "after_sha256": "09309da817089cf12d2defbb27edda9e561ebf8b92c506adc0d00f4bb5c19d03",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/NetworkRunner.cs",
+      "before_sha256": "9daebc2b07c4d8d7fa7fb0e47bace79bfd9b2ffea3ec956c00c080eb1ddc0c50",
+      "after_sha256": "b30002e3dcdfe67ab7c0fd46f1b3e2f1212d9d24dc260ef12efe1afce1952ab3",
+      "line_delta": -7
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/SceneRef.cs",
+      "before_sha256": "de73e7bdd9fc690b13a10e2ffb01bf3ccf79ed023f3b76f34121f244b0e22347",
+      "after_sha256": "50953895da1c598b7a1eb57e2803aaadd75a17a6f785328699705d1c2493c295",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/Simulation.cs",
+      "before_sha256": "0ae74b7dc934ab91de2de646e1a0599e7c5359b239ff364eb11196fb4098b195",
+      "after_sha256": "fd15c503b08329a988e9b80aa4e74ea996cea61b0cabebe9286bc5d18595e00c",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/SimulationBehaviourUpdater.cs",
+      "before_sha256": "b3dadf971e649a346840b13fd794f9c464ee625818b7fe68f3e26d759da3bd2e",
+      "after_sha256": "c86b89022df48e1cf3e6d3e3676309e7a90fb1c41e581280e1066f80544df933",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/SimulationConnection.cs",
+      "before_sha256": "c504ee1bfae1a73a5e03b0e5059cb6b4d64384a285823f1bef13ea8f509663f6",
+      "after_sha256": "e58a88091bcd804d7c308a21f6850c4825312d3e7bd46bc14870d10e59132ec3",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/SimulationMessage.cs",
+      "before_sha256": "3d01d628a6f654ff100b2bc67d8589708438838c8a6388a537c963de471154ee",
+      "after_sha256": "b562c4933007270bf869070f984c5e3f26f16626315b0f252de1122631324429",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/SimulationPacketEnvelope.cs",
+      "before_sha256": "3b4fb566bfcf321aea9dd13c04ca9aee70f79e487c4789cbab543cd9d877b165",
+      "after_sha256": "220ff154d9fa47b6373e45a45ca5403fab11d56a39054112dc6322ea4b307c6d",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/TimeSeries.cs",
+      "before_sha256": "b6fa44fda4530255f037489ed49f5bd76f20f11ee8b40704e7f061d7ac8ca548",
+      "after_sha256": "84d6f183b240129cf9b959885409b76127f314209e0a027d0672f7105d3312b1",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Runtime/Fusion/TimeSyncConfiguration.cs",
+      "before_sha256": "92081d4a0c89fbd5a23e70fcdf99b6202003601f8282ccaf986ca649d4d8e338",
+      "after_sha256": "3e8ce0afc5bc3dfeb2f56825ea8cd74e4e98e9a4980fc2084cea81516ee60581",
+      "line_delta": -16
+    },
+    {
+      "file": "Fusion.Sockets/Fusion/Protocol/PlayerRefMapping.cs",
+      "before_sha256": "7208057c87e2a3c728d10cd85f87c19cce593dd6ca77abb5d311aa98c946b0e2",
+      "after_sha256": "afa4eddb6b88eb1e3aca2a03129d76b6a5c10de5c84cafb66dfb387b679016f7",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Sockets/Fusion/Sockets/NetBitBuffer.cs",
+      "before_sha256": "549d6b160660df81689a75a07d54a24fd9680c983da5a9cfade81ad91d439528",
+      "after_sha256": "312814b67fa37b591943a1c52e4c592740e240ad3046a8a8f3b10f34576f9f75",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Sockets/Fusion/Sockets/NetSocketHybrid.cs",
+      "before_sha256": "4be751d375aceab7006a0de8cfa3df80abc9d795a347178ceb189a0b58aa72cb",
+      "after_sha256": "af1374258976c7e904a7adb8519ab19e29c8806ad231395c2213dda018d02463",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Sockets/Fusion/Sockets/NetSocketNative.cs",
+      "before_sha256": "9a7018d1420013177d3bc1069ade680af2acd7e10af5f75b5e4fc91d47beb91b",
+      "after_sha256": "d16103e90f1a7e2dd49eb41722c589996ca37a295730c8a99573ac0def3430b7",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Sockets/Fusion/Sockets/ReliableList.cs",
+      "before_sha256": "1b2eafb7fefe10bc5d344ae309c7138da12a6dcba4fbe7211e71ebeed57d9c5d",
+      "after_sha256": "b6a2796278a7f8d2aa5ee80da5ebff76b3a16881457040f76e47089b2565881a",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Unity/Fusion/NetworkCharacterController.cs",
+      "before_sha256": "78fe984aafc6e44da1d8097b20a74ac5e143c28cb160e4640207692ca409de36",
+      "after_sha256": "3eaf242108d298a18bdc9e6e98f1ddf0bb17a80db3f4722558918e7e8b4f8c91",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Unity/Fusion/NetworkObjectProviderDefault.cs",
+      "before_sha256": "f9e52c125a29cc162e4bb3af3ce0155b2bcc1a44c773f424e0792ee2bfb3a593",
+      "after_sha256": "cb520ea67162baa7f34b57320560cfef74d5b6c0a1b14a94e633ec35c43bea2d",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Unity/Fusion/NetworkRunnerVisibilityExtensions.cs",
+      "before_sha256": "305307a9c50184402802ab2dd51dae0b2859be01c24c8e785d37af5d91983364",
+      "after_sha256": "a884fb06a70f8fe2d5c28decdbd9f859869b851a20af8126b9bfb1b27c838610",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Unity/Fusion/NetworkSceneManagerDefault.cs",
+      "before_sha256": "5a432550fecaf64e7935021d3fb73a229edbe9ed1d6686e091f8d2889c6ba0ca",
+      "after_sha256": "eb10839ce26004a91297f203b35ef5513f536887f86d738fc35ee1497e715f5a",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Unity/Fusion/RunnerVisibilityLink.cs",
+      "before_sha256": "528fb11ed6913941a253ec413760eb05690995b8bb42c0e04c4ae77adff2b468",
+      "after_sha256": "ba865c03d4851822804730042cdb27978768eaacf30fc59e5edc1b482a0bb114",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Unity/Fusion/Statistics/FusionNetworkObjectStatistics.cs",
+      "before_sha256": "2de3650f0ccea4687c4d4afd1cf79dbeb61c12a95c078dc6e09bb575d0eb1e09",
+      "after_sha256": "50271818252f09e2e364f47689cd2f56ea49b5642bddfb0423de13fead719763",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Unity/Fusion/Statistics/FusionNetworkObjectStatsGraphCombine.cs",
+      "before_sha256": "6b11909b0c5e33bf300380bb38111fb241ae48bb3a51e7eb6d3aab56d6fde8a7",
+      "after_sha256": "8a9b80ff52e2bdcd28c576afd8725e5f5e162c627f855c6a2b55f85392148e52",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Unity/Fusion/Statistics/FusionStatsCanvas.cs",
+      "before_sha256": "49a0a671505d12823809b9660e7c6a8549ea167e3a63551a17231f3b4dff3e32",
+      "after_sha256": "66edc569b7697517a189ac12d85ac2ef2ea2762a735663a87443c54a9ae6e3be",
+      "line_delta": 0
+    },
+    {
+      "file": "Fusion.Unity/Fusion/Statistics/FusionStatsGraphBase.cs",
+      "before_sha256": "4ef739d22f059648eaa009aab23811287252b17726ea634e91207fc77c9c0ba9",
+      "after_sha256": "9c6eedbe5cd44646e0503418fc970008425422c533048632febde00c59dc8fee",
+      "line_delta": 1
+    },
+    {
+      "file": "Fusion.Unity/Fusion/Statistics/FusionStatsWorldAnchor.cs",
+      "before_sha256": "3bda2d1835bcae5e46bf44f8e8269a253e978c100e95ee27f8dd910136a410c8",
+      "after_sha256": "c91c2c1f911b10f23de0ccd34667164fe9c360fefe8d9f75bed4a38ae72f5d6d",
+      "line_delta": 0
+    },
+    {
+      "file": "HLG.Runtime/HLG/Runtime/AgeRatingData.cs",
+      "before_sha256": "7e6b33f039eb02284ec9f5cbbaa29a707eb49493f3b5b08e4897dfc3805353ca",
+      "after_sha256": "4a23f0223c1b5d859f87f407f2178ecde3b0a4aadb5f9cc63be44ba66c1355fe",
+      "line_delta": 0
+    },
+    {
+      "file": "IngameDebugConsole.Runtime/IngameDebugConsole/DebugLogItem.cs",
+      "before_sha256": "2957791d02aec85b3a2455e3906071bc4c970946677af84cc34b890a86551c66",
+      "after_sha256": "379c1c902a5434e17d44bebfb71f3a43161d68ecc519e69eeb8a84a725eea76f",
+      "line_delta": 0
+    },
+    {
+      "file": "IngameDebugConsole.Runtime/IngameDebugConsole/DebugLogManager.cs",
+      "before_sha256": "2e8507a808007ea9f5cf86ef3869a54388f333e2a913c3ce3f3f32523bc499fc",
+      "after_sha256": "f50e9dbe0305c899aea9aae8e73a5a4a172adac9a2b7d9ec8842ffcf0d325033",
+      "line_delta": 0
+    },
+    {
+      "file": "IngameDebugConsole.Runtime/IngameDebugConsole/DebugLogPopup.cs",
+      "before_sha256": "5f6f7524b11f8ec5b2f7a8cdc792fe3bc8150769016b7700c7ef6effc945629f",
+      "after_sha256": "23a522bf4b0d369a2c6572cf396a70ee8f42702be44cd35701a953a53d0d317f",
+      "line_delta": 0
+    },
+    {
+      "file": "IngameDebugConsole.Runtime/IngameDebugConsole/DebugLogRecycledListView.cs",
+      "before_sha256": "fdfa9667b72fabcc41f2f3607336e83e678d044e34c8eb75ef0fd0e726ed60ab",
+      "after_sha256": "ac39881e5d107c041dbfffe59944fd46447b0336a200f05b70223f2bcdd8beee",
+      "line_delta": 0
+    },
+    {
+      "file": "Mono.Security/Mono/Security/Protocol/Ntlm/ChallengeResponse2.cs",
+      "before_sha256": "2c4b40286b737d8a80cacac9f023f12b1e08e1b96ba6627234708c53cb1fb6da",
+      "after_sha256": "3dcb8cba1928dfed65c4b84174524e32316531ed82453552a240b7a89a8c0eb4",
+      "line_delta": 0
+    },
+    {
+      "file": "Mono.Security/Mono/Security/X509/PKCS12.cs",
+      "before_sha256": "3df6e0cc8eb820c292c524886fa7e3bf4baf96830e2ceb66760abfa910a05fae",
+      "after_sha256": "7b6d2f9dd19a9efecc7552589bca99da7e02126abb5a0b4e30deab97236ba9e6",
+      "line_delta": 0
+    },
+    {
+      "file": "Newtonsoft.Json/Newtonsoft/Json/Bson/BsonWriter.cs",
+      "before_sha256": "bbce1f9057d89a9ed84f23539fd202a06f859b6803708845c510eb7a0352c7b7",
+      "after_sha256": "c703d130c4d7cafd6c401f3f82db95062e9f5755a7e87a54b6e40af6acd79adc",
+      "line_delta": 0
+    },
+    {
+      "file": "Newtonsoft.Json/Newtonsoft/Json/Converters/EntityKeyMemberConverter.cs",
+      "before_sha256": "528f3f6a62dcb2d03a90341c5c362f578c5c81be2c6b36966a506e3c498c0216",
+      "after_sha256": "e7df7079d2fa8c318dc0061c165af028e4b55e6309f9131408e9de69c7770729",
+      "line_delta": 0
+    },
+    {
+      "file": "Newtonsoft.Json/Newtonsoft/Json/Converters/XmlNodeConverter.cs",
+      "before_sha256": "fecf69241b14a39db8efcbca4fe13540f643f060e0f7bc17ffaf4a08384a3a3e",
+      "after_sha256": "9ad435360bebeaa0149a52ca45b36f518009e84ff71ec720d7927f2562dc33f6",
+      "line_delta": 0
+    },
+    {
+      "file": "Newtonsoft.Json/Newtonsoft/Json/Converters/XmlNodeWrapper.cs",
+      "before_sha256": "64b5925db5d7f098b9ec47a2d65931ddd5922b6a2836d4a85666ca8210908888",
+      "after_sha256": "eb08330fb5cf0af420a4799f4fd560cff5e7daf0869ae3215800d8a7e0db818c",
+      "line_delta": 0
+    },
+    {
+      "file": "Newtonsoft.Json/Newtonsoft/Json/JsonConvert.cs",
+      "before_sha256": "1eebaabdda21cc3eae3ea598c9a5ec4c896fac414b7267c9632f0ec57955c056",
+      "after_sha256": "bb967d9a6da554b764e419c310859b19ded06fa76c3df322b3793851d1989872",
+      "line_delta": 0
+    },
+    {
+      "file": "Newtonsoft.Json/Newtonsoft/Json/JsonTextWriter.cs",
+      "before_sha256": "989c24cb096460e69148443399d31d06632adbdce9319325f92f8f7e91ff2183",
+      "after_sha256": "81a9da01e98ea49f29ec291ec07a4b9a98667d8420660b592ec2d4ec2e176f40",
+      "line_delta": 0
+    },
+    {
+      "file": "Newtonsoft.Json/Newtonsoft/Json/Linq/JObject.cs",
+      "before_sha256": "ede8a6c2b39310854a22f9ce078f08a927187b690edd702b83c59c50b69d1792",
+      "after_sha256": "9050b363fb8a018d59297226d43b5aa65a2a2f7eda7a3d2c0d647ed6c218be45",
+      "line_delta": 0
+    },
+    {
+      "file": "Newtonsoft.Json/Newtonsoft/Json/Linq/JProperty.cs",
+      "before_sha256": "0d69671434155df888e3f75cd498f2d24b3a7fa410e201856c6a4e2dbc0306b4",
+      "after_sha256": "b365025ebb039b1713cab03cc7e8a707d2ac2a793d9720ef82db8f16cec81cd0",
+      "line_delta": 0
+    },
+    {
+      "file": "Newtonsoft.Json/Newtonsoft/Json/Linq/JToken.cs",
+      "before_sha256": "2101219d2d8acad8121c51a9f1c50dfae7eb24e09cec5a2db1de35047b88cb0d",
+      "after_sha256": "aad74cb6b44ed8e2fbc52d8143947bebbb0d39cef9a13d5094bdadd21a16e5eb",
+      "line_delta": 0
+    },
+    {
+      "file": "Newtonsoft.Json/Newtonsoft/Json/Linq/JTokenWriter.cs",
+      "before_sha256": "762e23a75e1a489ac86ad0cf682f435f6c0de0a5577ece77f2533e8fd3520363",
+      "after_sha256": "23844ac2668b4cface0acc37745bd4000158d8d642d69d5d8a4ae33b5b6aebfd",
+      "line_delta": 0
+    },
+    {
+      "file": "Newtonsoft.Json/Newtonsoft/Json/Schema/JsonSchemaGenerator.cs",
+      "before_sha256": "0aee7c8b7798a5b785f63e097e5436c07f06111f6179ce324098071fe716ae63",
+      "after_sha256": "73a5d682df8270542af5e8e3eeb9f3095b40da584e177cab238d1b3f78e87230",
+      "line_delta": 0
+    },
+    {
+      "file": "Newtonsoft.Json/Newtonsoft/Json/Utilities/DateTimeUtils.cs",
+      "before_sha256": "3866e2182510721f1c106e319d86befd3101c729a4df11b3a111d1b6f38a216c",
+      "after_sha256": "5d3716f3f92123fe427858b8d118704d956e39ee0d66762f68486e5071b357f5",
+      "line_delta": 0
+    },
+    {
+      "file": "Newtonsoft.Json/Newtonsoft/Json/Utilities/MiscellaneousUtils.cs",
+      "before_sha256": "eaeb23004048e746c37b1965cac6a6bd5ce4415e33b5bf3312c0043b0f01befc",
+      "after_sha256": "5a2887f5e7b34fc3757d9ecf5f05897d50047427de16fdb7f11f1279d165a0fb",
+      "line_delta": 0
+    },
+    {
+      "file": "Newtonsoft.Json/Newtonsoft/Json/Utilities/ReflectionUtils.cs",
+      "before_sha256": "575e334aa109628cd0b595e100dae1d8d648c78ce906cd8b7f0f84db6484957c",
+      "after_sha256": "4333e42edb5969e71d8092865128203f6dac17f6e9dca77804ec78587419e92b",
+      "line_delta": 0
+    },
+    {
+      "file": "Obi/Obi/BurstDensityConstraintsBatch.cs",
+      "before_sha256": "1f53acbb2d658b98741c6d77d3f06cf2ce423d66467684a7bd53c1cac9030f8b",
+      "after_sha256": "3d7e5058d2c209a23489ab05e2e67e1379fda5c910efc6a68e092a34356e38e7",
+      "line_delta": 0
+    },
+    {
+      "file": "Obi/Obi/BurstMath.cs",
+      "before_sha256": "6a120bd31b40b2c17ae0ba748ffd1d2d7e8143a25b14e858d20e3444370cfb5e",
+      "after_sha256": "ed9ef17c8960dc5e5f4e91c579722b1ac6f99813d99f96f41779352f60796406",
+      "line_delta": -3
+    },
+    {
+      "file": "Obi/Obi/ComputeSolverImpl.cs",
+      "before_sha256": "3b8c621f789d00ca5d0c02923ffda3f491e5de288ecddce935910105b2c765bd",
+      "after_sha256": "7b493939cbae9e14186df64b19f4f36cb4847fcbdc0377116f94ce05f997bc98",
+      "line_delta": 0
+    },
+    {
+      "file": "Obi/Obi/ObiParticleAttachment.cs",
+      "before_sha256": "a081e5c95d3237d25b83dfc5cd282bc51dae263b2f42183ec689137d5c15e0e3",
+      "after_sha256": "5f3a311ad101dd3605a75269377cf75babc1c4d239fccb6817646685b622dd81",
+      "line_delta": 0
+    },
+    {
+      "file": "Obi/Obi/ObiRope.cs",
+      "before_sha256": "4b2e84b7bff0fd303134e26a70650c1de94ba08e8113143aa176753b924ee3d4",
+      "after_sha256": "e7ea826d1b9a8eb7e64738f93e7ce1d63aa673a2486ed8aaf4022e04bebdabd9",
+      "line_delta": 0
+    },
+    {
+      "file": "Obi/Obi/ObiRopeBlueprintBase.cs",
+      "before_sha256": "fee0fe037f9a3ff1f1f49bee5f0cbe6c3794fda97b0a9de585f85d042cb2b455",
+      "after_sha256": "c81b94e314d930954624b623b597594e58b5633b8f190b160aada706ac1dfca0",
+      "line_delta": 0
+    },
+    {
+      "file": "Pathfinding.Ionic.Zip.Reduced/Pathfinding/Ionic/BZip2/ParallelBZip2OutputStream.cs",
+      "before_sha256": "aa6a493f45e36ec3f6b4274d826f807bfd3e1db61c4375db47eb96d697058a36",
+      "after_sha256": "3505c6b972717e55ff2d5270550185aeddf709bb4d1d46215d7991a8edf13a0f",
+      "line_delta": 0
+    },
+    {
+      "file": "Pathfinding.Ionic.Zip.Reduced/Pathfinding/Ionic/Zip/ComHelper.cs",
+      "before_sha256": "8ab0de77f81925e6f1ecaef267079776866b7edbbc666d117899a2c82aab9d56",
+      "after_sha256": "94c6d840273d76adb66b34fda7a79a9e4e3de8ea7c33f4986e510738cfa42f4e",
+      "line_delta": 0
+    },
+    {
+      "file": "Pathfinding.Ionic.Zip.Reduced/Pathfinding/Ionic/Zip/ZipFile.cs",
+      "before_sha256": "91793ad6e9830a3da937821c778d7a19613f50aec9e4b9c2b8b02f8f3706cc27",
+      "after_sha256": "24cdb855a480dff0250173a824b0e340db3f17fcadddf5f7049532d2bd5e9ab5",
+      "line_delta": 0
+    },
+    {
+      "file": "Pathfinding.Ionic.Zip.Reduced/Pathfinding/Ionic/Zlib/ZlibCodec.cs",
+      "before_sha256": "54feb42b764ce4c75fa42bdb1b0bf509717353a7aac30533ca1b7123cbc1565b",
+      "after_sha256": "5f152c6b769e1c90903a369bfc40a47661c71fccb65d77717a5fd2ff88fe6b13",
+      "line_delta": 0
+    },
+    {
+      "file": "Photon3Unity3D/ExitGames/Client/Photon/ParameterDictionary.cs",
+      "before_sha256": "d0dc409670a779c1c28c64a71f55ccede203e6286ce397dbc1ee0ae5c00ea987",
+      "after_sha256": "67d8af474cb4231f731923b260ae8495340195400c11576ea408c24eff9ba7d2",
+      "line_delta": 0
+    },
+    {
+      "file": "Photon3Unity3D/ExitGames/Client/Photon/Protocol16.cs",
+      "before_sha256": "ca2d7f24e907df8ab840d1868f17bd4a861e54b78ba1b5cba40026fef92c41f8",
+      "after_sha256": "c6129a4f6a2a10ec58f2d4f967771475f58813676d839e753fa4115d40688190",
+      "line_delta": 0
+    },
+    {
+      "file": "Photon3Unity3D/ExitGames/Client/Photon/SupportClass.cs",
+      "before_sha256": "1de90c82192995bf440908f4a502a2f4b377053517ec29c796a8ef84ffab33c3",
+      "after_sha256": "22455d8a2fa03e19df2d25f5255a5b362cecc2e52f4b61f14b959305df520f4f",
+      "line_delta": 0
+    },
+    {
+      "file": "PhotonRealtime/Photon/Realtime/ConnectionHandler.cs",
+      "before_sha256": "a50799263402fd530b37a53181277974af0e6b15cd30289a08a74d2890ee13dc",
+      "after_sha256": "2e9dce8ccc9d06102402bc3555670d155a4e61758492e03eb8c780220c8c0a12",
+      "line_delta": 0
+    },
+    {
+      "file": "PhotonRealtime/Photon/Realtime/Extensions.cs",
+      "before_sha256": "123e6cd896a8a32a87827e92cc100c9e07ffc4dacbb0468a5e94118b538a7bca",
+      "after_sha256": "ba08c45465c09f37e605358953f668a03320542a543caa06fa8a7375ec06bf7b",
+      "line_delta": 0
+    },
+    {
+      "file": "PhotonRealtime/Photon/Realtime/Region.cs",
+      "before_sha256": "fb6bdf774facbaedb12a3ceffa0cc74c9acf38441a1a3c443040a8364bb5a984",
+      "after_sha256": "ce07ad3de587276b14c8b57844266e06ccd840cc0727e9503595f3f16834eb50",
+      "line_delta": 0
+    },
+    {
+      "file": "PhotonVoice.API/Photon/Voice/LoadBalancingTransport2.cs",
+      "before_sha256": "b5b20acb2ba8b33edfcfdbdd285c6381fe97b845afedb07fb495a955f39ae125",
+      "after_sha256": "5889cfb1c5c67aa276dcac9e82b6f4ddc0e9a39dd30542b3d962f85e0fae0b31",
+      "line_delta": 0
+    },
+    {
+      "file": "PhotonVoice.API/Photon/Voice/LocalVoice.cs",
+      "before_sha256": "78f0fdaa94254fd6dce16ed858e70a73d0415ef59ba44a6a7f605fbef7ecd407",
+      "after_sha256": "155e017715a544e3e140442f42f9f1feb3d6c45f8dc0e65824a5e071c880f8a2",
+      "line_delta": 0
+    },
+    {
+      "file": "PhotonVoice/Photon/Voice/Unity/UnityVoiceClient.cs",
+      "before_sha256": "133047c445ff4d003483aca1a92124ba459cf7438df260c0e24615e76036ca6b",
+      "after_sha256": "b308cd5c0c92f81baa6506723a6efeb80945ad0d9f06955e43563047ddb440c0",
+      "line_delta": 0
+    },
+    {
+      "file": "PhotonVoice/Photon/Voice/Unity/UtilityScripts/MicrophonePermission.cs",
+      "before_sha256": "62b8997e08f8d91fa50d8c29d99f546d78069903ee51028f5f9808ed0686dd24",
+      "after_sha256": "b24b64fd1a01db5b56d863f2e87d071ef9c240dcae93a62b3247ff7d22d474b1",
+      "line_delta": 0
+    },
+    {
+      "file": "PhotonVoice/Photon/Voice/Unity/UtilityScripts/PhotonVoiceLagSimulationGui.cs",
+      "before_sha256": "0c4af9fb9eaf9ff2e8106143c06f986f36daf861a24e13330459fe207af22f36",
+      "after_sha256": "08adf242925d5b7ffba3e9951f458cdffd170335e2d97d546566cee2d9719548",
+      "line_delta": 0
+    },
+    {
+      "file": "PhotonVoice/Photon/Voice/Unity/UtilityScripts/PhotonVoiceStatsGui.cs",
+      "before_sha256": "e2213334744b44632ccf0322f4bda9bc4fb7a5148da52ee2c1f6b1a271058067",
+      "after_sha256": "412420085ca5c530596af2b6776a25f6ebe484efe1b299f40fd0d6a7b72500e7",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Core/System/Dynamic/BindingRestrictions.cs",
+      "before_sha256": "f1fc7378a0eae78411322b253e9f122c140893913d6f660c4cf850aa2e9335f4",
+      "after_sha256": "061099101a80e58a6d3f61978195f3509c1627d2d58ba6c6dd4e52aeac54feb6",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Core/System/Dynamic/ExpandoObject.cs",
+      "before_sha256": "50e3adedfaf31c75cc465eaea16af97fd1070d4f71231aec46c782350d7fa5c4",
+      "after_sha256": "27adab7b017835c242c364bb947157d7b5faad39e261dbed8e2805a12db87729",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Core/System/Linq/Expressions/BinaryExpression.cs",
+      "before_sha256": "a8aa5d8139f2719943d7a244da42b05fe621dcf7ca266f4268055d5db838c9d7",
+      "after_sha256": "738eef33d0758b32814724eb17ed8cc417dcefee87ad1f6b28081a49aec15899",
+      "line_delta": -1
+    },
+    {
+      "file": "System.Core/System/Linq/Expressions/Expression.cs",
+      "before_sha256": "ffa0abdf8333d0bf7e689a3d13850c3dc6847247c7490d648291d1fe1d394c67",
+      "after_sha256": "89bd220443c14a9aa4aefd6c0c43e5961598fcfff47787d926a319ab8328c460",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Core/System/Linq/Expressions/Interpreter/InstructionList.cs",
+      "before_sha256": "a02a385f43da1c33e00b498598f7c172c1db3a213e113eadd7cbd9b04af7a417",
+      "after_sha256": "1371b25c77551155a4ab20551561ae6897ff5dcf9f808e6dff5c534fa2cc0d28",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Core/System/Linq/Expressions/Interpreter/LightCompiler.cs",
+      "before_sha256": "46f9dd56c90206a5d4fe28a393523e3186d606e386c3034f21130d094b0331be",
+      "after_sha256": "f369b54bec4f15ae577525d3520d6c6da216fbe0f83c75ce98ad417437477dd6",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Core/System/Linq/Expressions/Interpreter/NumericConvertInstruction.cs",
+      "before_sha256": "63e937334bf83fe6ac746c5c027acfe9a9df01c66e7a787d20fabd940d6b2356",
+      "after_sha256": "9bd22b5582f4d643c722c574e15e48478fcf78f8bbf726c9eaa0006b8e94a093",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Core/System/Linq/Expressions/UnaryExpression.cs",
+      "before_sha256": "b0419ffbfa840a3d9010294958950e4384e964b348b9472af9016973ce76c37c",
+      "after_sha256": "f3332f6af982c468dfbd5a8e520ffe89ee75438c376f67eb8ccbe5fe650665b1",
+      "line_delta": -1
+    },
+    {
+      "file": "System.Core/System/Threading/ReaderWriterLockSlim.cs",
+      "before_sha256": "7abefd34b66221b03020a5279aa9714f731baf2c3b9380fa96d37c1c32928927",
+      "after_sha256": "76c5a97de7da69d732632394b6450e3e98ed812558ea5f8da4a2e9488026d5f2",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/Common/BigIntegerStorage.cs",
+      "before_sha256": "1300e902a5687aabdcf7c19ec2ef2acb16c2988a89fa292f26188de2faae674f",
+      "after_sha256": "96f0e5b75d96970af91f2725b65ac7fa4174aac1c36ef6d3c67ceb4219e81675",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/Common/BooleanStorage.cs",
+      "before_sha256": "b7db41eaf8f27bc23340f54fc075ed8e853f65c952a893f391c635a2568f2a0f",
+      "after_sha256": "d1bf06bdf31de7416031ce1db664ffcfecbada1a3dd8bd199a7b17ba2ad9fee8",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/Common/ByteStorage.cs",
+      "before_sha256": "df9e76c411c70507835ca1a764cd76b37454bce9e844f1d4ea5a4c9f18cd1572",
+      "after_sha256": "0f76c8a108a73737c78d754cb2733e4acc373375457399bf403c83b8b649373c",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/Common/CharStorage.cs",
+      "before_sha256": "95fa8274c2330328c98d03a846a668be776cb138773f6219c2cb62ebba866a9d",
+      "after_sha256": "5568e1cbd5e3f609197343d8722415584ff53f4f02ed44a5eee1c146219724bc",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/Common/DateTimeOffsetStorage.cs",
+      "before_sha256": "6c2189b7c960f4391247b54450bfc0d26123ca9c3c47b697e1bb19ef00f840ab",
+      "after_sha256": "bf821675019118360619823b0f4b85d472a0eda79228fb25df0b519fd4c9f4ef",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/Common/DecimalStorage.cs",
+      "before_sha256": "83c5b4284c76402d28088e77084eeb30706fff33480c33206793e02524acfd9d",
+      "after_sha256": "bcd7a70d18106dd019e61338987cb14b6cd1a8122281f57ed5cf03173f332ccf",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/Common/DoubleStorage.cs",
+      "before_sha256": "0c38fca9021463b2fba5a188c293e8e27308e7615cf445dc356722764d4c8f6e",
+      "after_sha256": "b1794e7a2459225c69e9ffa93b1a5f90f6dd9781b42bb32b7e03e12be7462a9b",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/Common/Int16Storage.cs",
+      "before_sha256": "050323d8a28fc7c50a5860fe6dfe37becea8d1e9919588e888d10df5c5442c3f",
+      "after_sha256": "13a6feb2875f39f63517a7d27af67b7bff57b0f0a87df7d038125936572c3de4",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/Common/Int32Storage.cs",
+      "before_sha256": "82eb3eddb0b09debff6c07aeac6ba8107982e95dcf32a190f68e7bc9d28e6214",
+      "after_sha256": "c7e0921c553dce4e31d13c01a607da7b77893be1833efc5f43d819b125e4e133",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/Common/Int64Storage.cs",
+      "before_sha256": "5766b9ddafb71f4e1f6c6013156ea4dce1b060be0beb4434481695056e892afb",
+      "after_sha256": "e616ecf647e8032b8733d7779cb9ac7b2850fd81ef58f58cdf1ad58eb73df623",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/Common/SByteStorage.cs",
+      "before_sha256": "f6849a3cbb999c51b9c577082eda9dc5dde11f4a3504e4625b3c2d3c445f6a1b",
+      "after_sha256": "e543c013e2bdefe5871cf9bd2c68fb4d697eb216b1f84024a66fb9c62fd8b9b4",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/Common/SingleStorage.cs",
+      "before_sha256": "1faacfa2abc78cb56a2fb4d9a8bc12d7394af88310e089feaac60ce6724e2e45",
+      "after_sha256": "1e114cdaebd2ff6dceadef94c47f925fd6e57250e1b8537436fe714ae2c47dd9",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/Common/SqlConvert.cs",
+      "before_sha256": "3d4f933ff637a6973da53060c732a3037910348fa238d0bf5b19797f301f3f0d",
+      "after_sha256": "d62e845ec44f4e9ca715c21d4b119e3ac8369d916e94979e97ed8ccbb18bdce0",
+      "line_delta": -3
+    },
+    {
+      "file": "System.Data/System/Data/Common/SqlUdtStorage.cs",
+      "before_sha256": "e675c0373c9d671fd170f8ed3d4b4dc24a5b17d6d89b72c1403f903c3c93b2c2",
+      "after_sha256": "60b564627cd64aaa4f44002d38b0b5361db52d86b7b9a0784350b7b589b05a53",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/Common/TimeSpanStorage.cs",
+      "before_sha256": "010d39d6d23932d8b7857f7fdf42b72b6d0e8f9bcdfae3d5506459efea4cf971",
+      "after_sha256": "785807f83fa609c31dcfd725c8ec345f475172206e2c3b0b0de4c96e654bac40",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/Common/UInt16Storage.cs",
+      "before_sha256": "bfd82c7e5a55b581e97cd7eb6a741699672fdcac3467d129c34495b1fb413169",
+      "after_sha256": "4aa1abe93eca1bab3b26784dd84647cace5fd65da3f761ff1864279fdba04bdc",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/Common/UInt32Storage.cs",
+      "before_sha256": "63dad06be4a96474b7d630b8e86ad4a20b6a9e8136ea462398e6d931be87a66a",
+      "after_sha256": "9d1619f937ec7f6b3802600db470aa5144bc460469ec8c4f14b152585de0ba66",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/Common/UInt64Storage.cs",
+      "before_sha256": "7f868b452dab5ea965b273803dc19d59c4ee246b84a2e79c8f744ac15f4c51c0",
+      "after_sha256": "ef5aa754647782971523abed2a421a7d9f639c9b1efeaba348aff6b0d437568f",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/ConstraintCollection.cs",
+      "before_sha256": "043faec8e9ec55862e94fffad20ce430eec22a3e83f2bb2c8a0141a5b7470407",
+      "after_sha256": "e2d823b1db811b2bc97706d866fcee82b38c8f7ecb3cc03938061d83699a15e2",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/DataRelationPropertyDescriptor.cs",
+      "before_sha256": "f089484c7af8819e65cc11ba28d22ea13a9d7cf81ee81b77df6a3cf8812ff353",
+      "after_sha256": "05ebcba99d3716de6a5d1472da339e61084614ba06269b291f34928e660c5f0a",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/DataRowView.cs",
+      "before_sha256": "518c0b792faa3ffc1a410272dad9dca5413c41663c6a17e3a188d47227f40727",
+      "after_sha256": "ff0e93420f7598c8b6e2380d3a0adb3bcb0efafb667f5f11be4bf63b5413b87e",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/DataSet.cs",
+      "before_sha256": "ac74de14930ce2c33671dbeaa18225662d8c0f9797c42c2186a856df6de4ca9c",
+      "after_sha256": "0a85aef17957f97e14a4c4aea5c7689c0ac1e9005f515a793fc066444b690de5",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/DataTable.cs",
+      "before_sha256": "c176ac34d40ee293faedd01ec8acba3375fccb6746ad0f3a59f4d33d95ef8244",
+      "after_sha256": "39d362a9461cbfb7235f0f2fba0d7dd3fc05653804f01068da0eede94711559b",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/DataView.cs",
+      "before_sha256": "d5d6e85cc8ded01d7107ec32d11faea08519629b106b6cf55c0e5c5c0e880bbc",
+      "after_sha256": "68d1b375941bb6ac3e7f59ba46e78ccd3d76f91f508bc2a3fbcd8f20561759ef",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/DataViewListener.cs",
+      "before_sha256": "d92a9834ef1a08084551d7fdb2d9f95bc06196729ca2d23822b4d6c393644872",
+      "after_sha256": "972f0d37c6afe06d84590519876d58f5ffddcf78febabba89e2e6f51a82fe227",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/ExceptionBuilder.cs",
+      "before_sha256": "544c616d2c4ccbf32ab91cbfefc0402b6670a9c5fae9b8f1e760cc674c0a57a9",
+      "after_sha256": "4ec0e882a08858bec01ea76e6c43dfd0d79f32640aaba8039bf6a5687ba8bfd5",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/Index.cs",
+      "before_sha256": "020bf6dd4e363accd32239edd046f43a7a9072096daad9ee9a25abf0cb5eba73",
+      "after_sha256": "61d3cf882e98a4506b67208117b5af8bcb0da7487d8036db412339a2adadf6ac",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/XSDSchema.cs",
+      "before_sha256": "a8fdf0369cccc5452f9a0eb2395a35cd43eb928cb11da8f4bec6a4dc3776e20a",
+      "after_sha256": "84815e255624c4d7678412de97b47f9e82d87d2fccccc6c3e77f98535f91ff81",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Data/System/Data/XmlTreeGen.cs",
+      "before_sha256": "32037d61fc5798d70a0a3120e5b678429caaaba33c319bcb56a64da74ce8d474",
+      "after_sha256": "a1892d0a6afe14614c1a6f292e0e3297f410d2c2d2e42d8cac2c3c3c941c8929",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Numerics/System/Globalization/FormatProvider.cs",
+      "before_sha256": "8d315673317d733bf0b946b74ef8e8876299c90f670cbf0d60be0c0e6878dd34",
+      "after_sha256": "ea2c471ef14725e2e4adeca8968d90313e4b67ed68b9a18dc6a11ffb0cf3332d",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Numerics/System/Numerics/BigInteger.cs",
+      "before_sha256": "872302f027ce5f0e87214c8a1f91f0805bfb0bf45f243830efecd46d699e4a86",
+      "after_sha256": "89f2dfa40e80005e629b88847190054f59ae4dd51d83fcb02c19f0306cc17547",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml.Linq/System/Xml/Linq/XContainer.cs",
+      "before_sha256": "3e3473320dcdc58a9deb4cdf076601bb15b77ee5c03ded6f9412b3ef284383ce",
+      "after_sha256": "cdbd69405b7c54df7c73d5072f663ce8ec08a4efaa5f00bf7a5ed068f2abce88",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml.Linq/System/Xml/Linq/XElement.cs",
+      "before_sha256": "35f4db1de06aada16c8855a0e8dd27286c228a53c0c1877d4697b409fc0b9eff",
+      "after_sha256": "3ee40827c08cb9374721d0a7b1f1e698d1e50b6af10cb2201306e50717499768",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml.Linq/System/Xml/Linq/XObject.cs",
+      "before_sha256": "18e7b456c5d8aeda22bf5266e7a6995d1d778e1ded8bf563e40bd636e0fca168",
+      "after_sha256": "cbe1cef1f66fe4949ec05daf6015716836f325e387c4ae4e488ff1e77399cd4e",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/DtdParser.cs",
+      "before_sha256": "a14ead3e1a7370664b666fd0c0d29a13cb82fc08937d6a6c0f53c904f280aa57",
+      "after_sha256": "b0fa2c6e2f9786a98ca0222979c3dadce6a2e5d3812a9286a1cb1ecd37294fc8",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/HtmlEncodedRawTextWriter.cs",
+      "before_sha256": "382296af3d6305b535a36d92fccbc8ee91b59d48d3a16cc9c627303b54d5791d",
+      "after_sha256": "b6c92f0de2a0ec624d9771a5a5d2b2031a5ca4093b7568653c5862c3db7311c6",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/HtmlUtf8RawTextWriter.cs",
+      "before_sha256": "5c05f54a276a2ef5372e2e1838d98f6575da90461cbe946e0ef73fefd4beeeff",
+      "after_sha256": "21c118cfa51a3b3429d0ca45530a05756d4da00c8ff1542c9c7a5bee0cfd79f5",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/Schema/Datatype_anySimpleType.cs",
+      "before_sha256": "27a753cdf6da8a201ad055dc7c18ce477534cca43846522873ee3ae48ecb2f1d",
+      "after_sha256": "190cc3aa3352d9af4f2107e5011daab34c6e96f091fb0fa6e2706df74dc071aa",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/Schema/DateTimeFacetsChecker.cs",
+      "before_sha256": "5f0f142d3afac8f76e549616bf23f8480bd8bb9c5ecda857844f4be68ca2d884",
+      "after_sha256": "cee50da088af62b3a200cd601c88bfd8befa6939063f08e25c88a19badf4c611",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/Schema/ParticleContentValidator.cs",
+      "before_sha256": "f9d615e4353d6b82d26461e824856f799a8c97ccb43f8ebf766e97b90adb94d5",
+      "after_sha256": "cd6830e43f5c76ebd3bfb75862dcbf51ab23963833cd1ae24ec8147b5aa0eada",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/Schema/XdrBuilder.cs",
+      "before_sha256": "ec4bfd3ac10f3cc5ca9afc4531b6dec6e79bd61d90c0f448ff2fa46eef0bb31f",
+      "after_sha256": "c9a48a956a2d38bd661cb3a6436267410021fe4dcfb0c35d0fee0ad9abea9850",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/Schema/XmlBaseConverter.cs",
+      "before_sha256": "22dfc67d068ff78c563ff444f64de7c20aeff5b7e2c322ab66e96ddea620175f",
+      "after_sha256": "42e160d4389cec804ec5c70afe7c80eb13f24cecab0003b658dc72f43fef58ab",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/Schema/XmlNumeric2Converter.cs",
+      "before_sha256": "97ca2dbd1fefb66f59b58afcba2e079ac713699ab63e832b658e759282941aee",
+      "after_sha256": "64cb8ee73102b8201a87c1d2583ea88044e029ad3246ac28e9aac6e38133fa10",
+      "line_delta": -10
+    },
+    {
+      "file": "System.Xml/System/Xml/Schema/XmlSchemaSet.cs",
+      "before_sha256": "c953656ee1c82deeb83e5e5bab4b38cfc38116e08863d3873887670e659fd5a8",
+      "after_sha256": "f32a43cb6e3946c8cf3f9cd6802eb07d11e6aedd198a00387d312b2ed3c6b941",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/Schema/XmlSchemaValidator.cs",
+      "before_sha256": "edfff851048666bb72c342e929217a0b662798063251d0cbdbec12bd4e2a4767",
+      "after_sha256": "486a290bf47a7350c6b35a94d373348c7edc09d83bb45f0464d1d954ff71fd0c",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/Schema/XmlUntypedConverter.cs",
+      "before_sha256": "5f380120fe4887c315c33c25b933d302d57121d54f04f214e0dfe92394adc461",
+      "after_sha256": "00fb4ab96db8f04c3cf8e6c40d929572bb99e1864473644b8a56e0b4eb773a5f",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/Schema/XsdBuilder.cs",
+      "before_sha256": "0f6823833a0216be3e98f79ef678a6f640dad9f6674c68c538ec23b9502310b3",
+      "after_sha256": "e3f14d1358f73e07898fef6c8416bad63a1fe8bf42287a2a4fb592cf43bd3144",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/Serialization/TypeTranslator.cs",
+      "before_sha256": "13df7b68ed5cbf358af8e33886858b66dbffc7e5589013bf5b172ab6f18a62c9",
+      "after_sha256": "da89771f7b6d7546a59103ca2a04234aa451c25d9659a165dbf25b12797dba49",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/Serialization/XmlSerializationReader.cs",
+      "before_sha256": "0ca7c5f1a0f28724a4b0632eae8a372ed17f47dd9bb9e473398fc20e8e2b0b32",
+      "after_sha256": "d573cf3dd0c44b54a9cca327ad49a7ef0e6f16d77c653d161f56ae85afd2fb09",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/Serialization/XmlSerializationReaderInterpreter.cs",
+      "before_sha256": "1b670a736ccb31cdc429f4ae4baf96c461ac3ebd013c55c64e3a6de7a91cd8d9",
+      "after_sha256": "d19b46728624f9ede68b081fa7760b6c83e1019c6ab38112ef5aeaa13ad8adb9",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/XmlAttributeCollection.cs",
+      "before_sha256": "a36a30aa2463afee6c66d4378ab141c5663c187f3e37ededb68c24fdf7727ddf",
+      "after_sha256": "599ee5b6b0b8f46c76a85696bfbffe77d0e08804bab3cb0418f282846caf2317",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/XmlConvert.cs",
+      "before_sha256": "a03a46de4375335873f11d30ac93a6531680a1259553c24d10226dc6adcf3b46",
+      "after_sha256": "d27e03f46550c26bd680cb85f5fd7941610455581c1cf6bba213bd7c061f03db",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/XmlEncodedRawTextWriter.cs",
+      "before_sha256": "8401648a739bf5ada785fd22903253cc2b5be29fa82aafed23d7d2b6d8b85a4b",
+      "after_sha256": "16687909223badc879570b93e81dddfafc9edcbafe4c4e151ece8b40b185a653",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/XmlEncodedRawTextWriterIndent.cs",
+      "before_sha256": "b82d1357310dae1d4d46f37a71b30753c5fac06342238fb56bed262dfcb1e778",
+      "after_sha256": "7e87935e2e58fef83889f79bea77dfa45048c701843428e5535cb9285150b87b",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/XmlLoader.cs",
+      "before_sha256": "641db0e98eac56348699931d51adde6871111a42ba5184bc4876053550154ac3",
+      "after_sha256": "cda3fcc213b3d27dcd35691cb6ddcc524c547fc9727cc0ef9b9aed88c84b8d4a",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/XmlNodeReader.cs",
+      "before_sha256": "71f8a27b1584d6a30baf8db295a79bcacef4b8473aba5a5adc2cc59d18f675b7",
+      "after_sha256": "e4306a13dd2945d2d08d7c1e9a161f2b4a4a67363dc3004a65f327e18533c19f",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/XmlTextReaderImpl.cs",
+      "before_sha256": "e26ce2c7f6d0e786b633b22c8334177dd01d49e82119f57de090d489d8f38690",
+      "after_sha256": "b3133fd4ded7fa5db34cf3619d9606e1a41bd8a36af7247a1b766eeea80c8ff4",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/XmlTextWriter.cs",
+      "before_sha256": "1c9721dafefe4d8e0358ba4d6cd6ad4b2b75bd0359d2aa0ee32c9644579e0352",
+      "after_sha256": "3baaa3e39a411a9763aea4a2236590305f69e6f138a66f4f41457dd5e5d21424",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/XmlUtf8RawTextWriter.cs",
+      "before_sha256": "09dd8d0e2946b556c10046468d1940d2f6491953522b806fdb25e9f3d1879920",
+      "after_sha256": "2cb1aec864eb6f03fe5e09157bdc9770d65207127316aa3f1dbba5130ec30a75",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/XmlUtf8RawTextWriterIndent.cs",
+      "before_sha256": "d5140dfb20125338b4e384dcb68ae24adbffd6d4b68fd18277939b2fbeabff2a",
+      "after_sha256": "2b85fdd95942636e52f3802d3b714a3815bc23aadbec94be82d95cfbe70a7fe5",
+      "line_delta": 0
+    },
+    {
+      "file": "System.Xml/System/Xml/XmlWellFormedWriter.cs",
+      "before_sha256": "660cbf98e8d9c0f58a4b9f0774c9d3ce7b29973090201e831f690637de3be77c",
+      "after_sha256": "19beb71d7787726e11245a8a462fc2eeffac1ca12cebaad5cf79870e9c8771d0",
+      "line_delta": 0
+    },
+    {
+      "file": "System/Mono/Btls/MonoBtlsObject.cs",
+      "before_sha256": "116c78f811d95a4fa0c98cb152cbcd99cffadfb3ed417fe6af2c07f1ebcac882",
+      "after_sha256": "b32d67961291119e31c53cda870bb5732e62dae1f4fcab21063f3d56c33bb5b2",
+      "line_delta": 0
+    },
+    {
+      "file": "System/Mono/Btls/MonoBtlsPkcs12.cs",
+      "before_sha256": "ab084a49372d30e7abb599b8de1e5bc82e5a287feb7dd26f9c86149182a10833",
+      "after_sha256": "239b7342105038cd4c216197802ebfe4baa28b78f2e4c851e6d7f79bb068e4e6",
+      "line_delta": 0
+    },
+    {
+      "file": "System/Mono/Btls/MonoBtlsSsl.cs",
+      "before_sha256": "daabeb495fad48ebc4a858cfe2adf0836ad0bbf57a6d8133785d1f0e25597537",
+      "after_sha256": "5650e1855645d5d2e1a764e3d8ce65423019bb2d84e55bca28634c04d37df8ac",
+      "line_delta": 0
+    },
+    {
+      "file": "System/Mono/Btls/MonoBtlsSslCtx.cs",
+      "before_sha256": "cd204cdbb18075100fa5f852d4404715a40ea35ea3300334d5aff7796547a0e7",
+      "after_sha256": "1c4410cf522ce4b2f444543f420a62b1e44775d9450634085ddcfc03ff704822",
+      "line_delta": 0
+    },
+    {
+      "file": "System/Mono/Btls/MonoBtlsX509.cs",
+      "before_sha256": "2b1c68211b0474396d2215db63234dd32e3aba01307e38d527dd10f3d9072442",
+      "after_sha256": "8c4670614a0eac4396ddf0a2237f9429924edfa50a8c1468e98bf278cd5b9764",
+      "line_delta": 0
+    },
+    {
+      "file": "System/Mono/Btls/MonoBtlsX509Chain.cs",
+      "before_sha256": "86b032a8dd87bd35da7b2e7dc962150604b665f81400cf2e4f050d5a9c52af82",
+      "after_sha256": "fc6b2a6356371535dd933965b287c399c3e4149b1041c941cdfa6bfad1a0f127",
+      "line_delta": 0
+    },
+    {
+      "file": "System/Mono/Btls/MonoBtlsX509Lookup.cs",
+      "before_sha256": "e31f5993ffb5b4183df72edd2620595f5d1d963fa09ba1e8469705b76eb43dd1",
+      "after_sha256": "9cf47cd888e8502c0ba731d9a26e8284c5f8f37a270deb05f1eac0ecdcdac0fe",
+      "line_delta": 0
+    },
+    {
+      "file": "System/Mono/Btls/MonoBtlsX509LookupMono.cs",
+      "before_sha256": "ae41b44c6921e2d2ecb6e7429afacd9b97f03a82f0a81b682d576e7f6bc14daf",
+      "after_sha256": "1a78fae518a9752ef4f69d7d81c2241c24317520d14ccc4765eded5d30801ba4",
+      "line_delta": 0
+    },
+    {
+      "file": "System/Mono/Btls/MonoBtlsX509Store.cs",
+      "before_sha256": "0114733bcbd8dac28df47160ce95e9e3da91f4c5cb29aebcd975d1b975a3e1f7",
+      "after_sha256": "87913c1083ef64f390cb676dc075bbded94f65e93e89e9c95615671d40df4e3e",
+      "line_delta": 0
+    },
+    {
+      "file": "System/Mono/Btls/MonoBtlsX509StoreCtx.cs",
+      "before_sha256": "e5f0d2c9330776991e94e84480cae8af9b779a10131ba31ff3a103de3baca00f",
+      "after_sha256": "99ee61dd57a22269bc4346d8ae1271ddb64dfd8fb2f7d15ff5d65b7caf52a6c0",
+      "line_delta": 0
+    },
+    {
+      "file": "System/Mono/Btls/MonoBtlsX509VerifyParam.cs",
+      "before_sha256": "f77963df9402ffe981e4035c426b1db25b78b70e3d4116f17679ffc5dfbb7df7",
+      "after_sha256": "6b17f053e0f0b665a211bf1cad1568a8d0bdfc664ae5ff89022755d3d4e87725",
+      "line_delta": 0
+    },
+    {
+      "file": "System/Mono/Net/Security/AsyncHandshakeRequest.cs",
+      "before_sha256": "36ea6a6e3d1c5f98353f4347e1c4736ca672cb8afd259a3868c1a2f6c57ca42d",
+      "after_sha256": "97aea6a57a31f1d8db925f0b24a5407f18ee71b1885e040d0e632cf50e630bb7",
+      "line_delta": 0
+    },
+    {
+      "file": "System/Mono/Net/Security/MobileAuthenticatedStream.cs",
+      "before_sha256": "9f0ecac711a30e39fe725b62106e85ffd461162ba10da393c82955e8d7ccc951",
+      "after_sha256": "f774c3cf051e5abd8c670d0b77a168aec1c6d472a8375abbed5194e0bb9130ed",
+      "line_delta": 0
+    },
+    {
+      "file": "System/Mono/Net/Security/MonoTlsProviderFactory.cs",
+      "before_sha256": "d37b9ec9c6a8bf54fa3e5df31b43dd07d0747a03000c1b25bd1ee33e0ec7c6bf",
+      "after_sha256": "446476d536651281189a96ef74140b986320dc74151be44aba1088c45900e1a0",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/Collections/Specialized/OrderedDictionary.cs",
+      "before_sha256": "b7f9ef58231cd504fec88757537c0f44550d2e0b35ac9dbaffff25404bad8c5a",
+      "after_sha256": "ddca47575d43219e15b550496271fca6331eb2a0a3dfbe07412d5d242dd5f076",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/ComponentModel/ReflectPropertyDescriptor.cs",
+      "before_sha256": "57a469186f8f63ed670dc340b2aaed45bf0a6fb8235821bcbdb5e5c31cedabfa",
+      "after_sha256": "4717033384afd9b01e201252e0a9db61e9b70a87fff638821fc7a5b41f07cd75",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/ComponentModel/TypeDescriptor.cs",
+      "before_sha256": "7804e10b46225feb0ba669cfc8eb04bf6186a8a07c167b974cdbd73aaf3cb464",
+      "after_sha256": "450bd0d7f3d833c24a2c8e50f21b0c7ba690db96041091d2b8524de9c3e2ae25",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/Diagnostics/Process.cs",
+      "before_sha256": "1bd845b8ff67af689f736bc2197b85624d4b50548aac63f645857b64f465abda",
+      "after_sha256": "24ed80d3f9aaf28e65fbd563d8fce001d525a05f33c06f67498d5dfdbbe79c36",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/IO/Compression/DeflateStreamNative.cs",
+      "before_sha256": "f815c4352e626aaa6650d8728f1f4d1f734ae6068b0bd6be3fa4bb98feef9e68",
+      "after_sha256": "8c012860464e8eeccba517dfabeb0185b611891eb862945db03a39cebb1f2237",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/Net/HttpWebResponse.cs",
+      "before_sha256": "86f36efd445e9fffa78388a99975aa5e081da81aeadfdca68793b5b0259fa8f1",
+      "after_sha256": "b0757ec106dc8c0246e74511515f4ded6abede6dcb0472df2a402c14b4c0259d",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/Net/IPAddress.cs",
+      "before_sha256": "99835ffe7aec7550da34742d1e3668abf34433631841236e0ca28eec24f5e419",
+      "after_sha256": "aea98c301370442a51c69e7bfb447f613c5e6b2d67ca4bd4c71c22c1d2623dcb",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/Net/LazyAsyncResult.cs",
+      "before_sha256": "82f6f0ae323d55b6dd7a8011149884e068673f52fac80ab7c121de374f68c3f0",
+      "after_sha256": "abaeaf57bae52e156d80f33ec430d2d74d5d9a8f02a90d917ebfd5720e8c79c9",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/Net/NetRes.cs",
+      "before_sha256": "7db1c72dc08cd988d988f53f52de7842c009f9ac1d4fc07f82b4234352fdd568",
+      "after_sha256": "48b3a87a181a2feb49ba575dd81fc3b47619d9f9c9e9bb1344f876bee15935f4",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/Net/ServicePointScheduler.cs",
+      "before_sha256": "4bb19aaa6fd9f79ec8c90916d541e1285902baafbcd38ca09125e03ef0766621",
+      "after_sha256": "ba4535ee3b7446e5ce3875801e94f6d64c3da04a9d4baca089610358672e338c",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/Net/Sockets/Socket.cs",
+      "before_sha256": "73716bb2603b7df511cd634914ae0f0fa271bbf1a2e94bfda072616364e84ff1",
+      "after_sha256": "98f0a1f37ebee99ac411414280f213d21efee1cd31f0123ec5c70eed44941910",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/Net/Sockets/SocketException.cs",
+      "before_sha256": "46f00600e73b8a9938e2f40637583672d4bcb63d3d024ef88b91fb0dea99792b",
+      "after_sha256": "12d62b52e2c2eef83b7968f2c33dba2ecaae77e259605a7da789d86b2717e6b3",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/Net/WebConnection.cs",
+      "before_sha256": "5547cafaeff3c6b86d8264f1d48b29cc62b6478e104f8c6a9fe7dbc8f1634e9d",
+      "after_sha256": "e88eacf5642b1edd9f62b62cb70c5283e4a56a1409886483b11c36d774c7ff1a",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/Net/WebConnectionStream.cs",
+      "before_sha256": "e1232f15e3517e91ea916e804a9acabef1392442d42abec172b6b6d3c73811a6",
+      "after_sha256": "93296ac3ee82fe795c1b8ec4fb81833b43a0b889b8fe8b29367342045bce0823",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/Net/WebHeaderCollection.cs",
+      "before_sha256": "31a8baefd7f529c9178018a8b373b53ffade15fa247f8fe1d67a35748f857efd",
+      "after_sha256": "cd2cf3c190bb1fa7a742530725d1cc374a45cc9c1052d76779d529585328ddfb",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/Net/WebOperation.cs",
+      "before_sha256": "bff6120c6c63d07ecab41b8d4c02e67d950b8b62d93514413c5578dfc92310ce",
+      "after_sha256": "d6e8f043d4d2f5da3e8cf5d8aee42a8f5539d8ee772acd1f5e2497ec5dcd8b2a",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/Net/WebReadStream.cs",
+      "before_sha256": "ee480967c62a2009e033fe04db81630a982fde4706d1b231d73e87e3c40d67d2",
+      "after_sha256": "53061bbebd66c447e73045fe6cc4fbdf862c94713b306c80f7a0a8dd545cc41c",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/Net/WebRequest.cs",
+      "before_sha256": "bb1045b479c05df9963580031ef4eda93fea25a540885db8dc4b471ab6005e5b",
+      "after_sha256": "b2ea3a0168f1c969247e3678abed2e9ecad1031fc83ef100b2a7284eb13e3ae4",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/Net/WebResponseStream.cs",
+      "before_sha256": "b8c9156fca6a3eac75a2bf9d56479776b21c9681a6cf74c9a27defe3e950f67b",
+      "after_sha256": "8c093c1c8a41fde944e4dd123080664de3ec517edf9cf5f3d3ac3795e08047d6",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/Net/WebSockets/WebSocket.cs",
+      "before_sha256": "e21c3e81f9c1dafb7239e2cf1928ab6da1be02cd7d2673c8a2380a56841265a3",
+      "after_sha256": "cc930af893b8f72883f8a16ca7eb73a340a1c014a4240680f8ce90b2727c6e88",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/Security/Cryptography/X509Certificates/X509Certificate2.cs",
+      "before_sha256": "0cf603c5ebe549a7fceb2dc5336d62f9457a82dcf9e780da39ecb57f7197145d",
+      "after_sha256": "983afb7a293545a3b112190bad82522aedbad540823b8b556247479ce384d58b",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/Security/Cryptography/X509Certificates/X509ChainImpl.cs",
+      "before_sha256": "4c42ee5c65b35538e793d127f222d9bbcf31583f302ef188b982f75326204eba",
+      "after_sha256": "587cfc7bc8ad5b4c2643ae5bc6ecdf32ec81bc273f3b48cf96f2ad5a1b0677a1",
+      "line_delta": 0
+    },
+    {
+      "file": "System/System/Uri.cs",
+      "before_sha256": "bba16f19b29d89af2426b122856ee3eb728ee84f84c32440192d6ca82d413669",
+      "after_sha256": "368e31b0df8e6bb9ce70fab9d44f960075f813b3c05ed63dc77ffe75ab658a25",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.Burst/Unity/Burst/BurstString.cs",
+      "before_sha256": "da13e5c0fc4d1bfc8685e5d5180727a4c3da34882a2477765626ac23cf04c77f",
+      "after_sha256": "8e6eeef8af098034ee936e29b0695cac9e21fc13eded10d64d8a09a73e8bb2c2",
+      "line_delta": -10
+    },
+    {
+      "file": "Unity.Burst/Unity/Burst/Intrinsics/X86.cs",
+      "before_sha256": "d87aa17496802d59273d9e3d03309a4613d7b3ecbf781c73a39aff7d073e5be1",
+      "after_sha256": "a34552f1876130e275c6564b78a89f0d9ae77f11170e12f877e1634caa56de10",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.Collections/Unity/Collections/DataStreamReader.cs",
+      "before_sha256": "0c78e78f47d6fa08259de50beaec7e55327941272318cb0bfed1d8d80dbde6a7",
+      "after_sha256": "09147dc7957d985664486cf558c44f8f2f8ab20cdf3b092548a648543b2ea712",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.Collections/Unity/Collections/LowLevel/Unsafe/UnsafeBitArray.cs",
+      "before_sha256": "95464d40eee2c0e7756198f0a9eee673e971aa44373357012f8bdde8e4b30fb3",
+      "after_sha256": "eb459ee0235080ebf27aaa2a61225bdc8855b79d0290435d335c33aef70c4a7e",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.Collections/Unity/Collections/LowLevel/Unsafe/UnsafeStream.cs",
+      "before_sha256": "f1670ae4a5a09fc3beaeecff66bf031c864b5ed151b8122814a8e167b2bc5d6f",
+      "after_sha256": "dbb077444c461b7470707cbb099fbca8debdd39805fd640e3bd7e8a5a84cfb8d",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem.ForUI/UnityEngine/InputSystem/Plugins/InputForUI/InputSystemProvider.cs",
+      "before_sha256": "f3dfaa07298ae5f96b1c582ee5fc111bbfa4a19d8ee4d0e7c6c4d1811a1c0bb0",
+      "after_sha256": "0e3ee49eb207f01e3e0892475ae1c719f4a1fb044151f5375672b97130944806",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/Controls/ButtonControl.cs",
+      "before_sha256": "88e7b63c8fb47dbba67afc0d2a01479001e73077258ad99ccbeb238ce47142c3",
+      "after_sha256": "835599f87cd65df954c4d0439337e7c4d9a8f4da065c37b47cae921de976851e",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/Controls/DiscreteButtonControl.cs",
+      "before_sha256": "e8634420974858f01a9b4440b0f7d4d9639ce16226ade0fa2a0075b8a50a9ece",
+      "after_sha256": "9c852c92081f04fcf4eec5331ceb3e3d8be218c4f04a4134edb8dadfe9568f3d",
+      "line_delta": 7
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/Controls/DoubleControl.cs",
+      "before_sha256": "dc70d39bacf99e75b22442b83224b3ed72ba129e1213cacdbecc3ba58ded0cdc",
+      "after_sha256": "6102dd6df57f957f1ba01a2d74204dd11a9b0983d0a308722498d37af51e7030",
+      "line_delta": -5
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/Controls/TouchPressControl.cs",
+      "before_sha256": "7ec5e562354ddfd044cd260e5c73bfa36222cfff800bac41c05bd6d17aeadba1",
+      "after_sha256": "5859d6cee4d74fcaab424bf4b8198305d1ccce7d0e009f0cdb5bc9982c7e117c",
+      "line_delta": 1
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/EnhancedTouch/TouchSimulation.cs",
+      "before_sha256": "b4318a2ef78129de041e99580d170e07a01191099e82cf0031507ba7b9521ac1",
+      "after_sha256": "96ec529382b468e1d709a18f18e0b60131e37d0e19d4b1d13fd8520a2f22473b",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/InputAction.cs",
+      "before_sha256": "fb3df5ebb09d1cb21a556ce25735ee98a9a9d3ea77a8829640849155fcd0ed8d",
+      "after_sha256": "efee708a57a1866d296a7444c79321aa46f70abb28dbbe27438cca08a0b4d751",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/InputActionAsset.cs",
+      "before_sha256": "f92c941da7af4a664f36e7c8900df391607c5d17a5c72f681c06c9652f4217eb",
+      "after_sha256": "58fef6ea218f5f6271c5845dc442ce7aaef92dfb48def11a975e77215344dc68",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/InputActionMap.cs",
+      "before_sha256": "0581e64e9971ba95c3e678fef687066d30df72aac98d3dec6b7aac66cab9f4ed",
+      "after_sha256": "eb07640baa80d774ff349640ef76fde3c4df62565bdc8f95272ca4f3c7c8cfbc",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/InputActionState.cs",
+      "before_sha256": "90119f45e62d6e4da29fcf0eaaf1b90b92e775cc754400514a776d96ef49a96e",
+      "after_sha256": "d349cddc14c98f871e0e1e7718b86e8b48c75a232e5df5e28b22dc2af9415295",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/InputControl.cs",
+      "before_sha256": "cba02dd5957094cba44d134d6924311b94ef469f0d53c245df4ac3c1e4a978f7",
+      "after_sha256": "766c694f878e8769fd46a4f968248d6af2420ce78e697e42f31fb3446caff5c2",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/InputInteractionContext.cs",
+      "before_sha256": "fb63224f9f9b900d3bfc4c8e332ef6e0b756e07b544e610f7d62c47482bc3989",
+      "after_sha256": "1e085ada4c29ea83a601e06d938edd7cb6aa3bf9d8caf134fbc8043ff976a311",
+      "line_delta": -5
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/InputManager.cs",
+      "before_sha256": "8d6b37dccb796d7fbe518c64715ce1840a82f20c82055279eacdb74c790b3cfa",
+      "after_sha256": "2ad122b9d9d6bb679e36353ac8d744cfbe919a519ca94b86e29db38642b386d7",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/InputRemoting.cs",
+      "before_sha256": "28a0926414aabf2d8fc2b92b77b877c32eace95dac7a84c6f97082c21b4ea74f",
+      "after_sha256": "3bf90d0944995acbd3b5499b1547568e1eee65c3c7320bdcf2835852a8bd87d1",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/InputSystem.cs",
+      "before_sha256": "d19cd1e6abf8fbceee699f33369543bf9167f653ed9ff43e3abf39a4c1ae2543",
+      "after_sha256": "c5f9227084de6a9681d1ece9b086441d2b777a0e6193f06d427bb845ff9a558d",
+      "line_delta": -5
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/Interactions/HoldInteraction.cs",
+      "before_sha256": "b718e04337a31ed122c43451d5440aeaac6be053dc48f7a503acd162637c4c48",
+      "after_sha256": "69b9f38c2c0dc192a79f0b7328bacb5124becd837c6f5c7752abe9ba5163a031",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/Interactions/MultiTapInteraction.cs",
+      "before_sha256": "3cb96fc7ef7b17a370d607ddd261703527d7e137a90b5d3a6f81455fea918109",
+      "after_sha256": "48da0a414ffd2b490d5dafb3e519864b91d0463e400eb5d423abb474dbcfc399",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/Interactions/TapInteraction.cs",
+      "before_sha256": "65b397167810432b3e3c71835a6c97e0551745159478dcbfd09f27fbec850435",
+      "after_sha256": "b528ab50ce1ec04da8f03122d7c71ef33e91d73efc17be8b305359070a7d8887",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/Layouts/InputDeviceBuilder.cs",
+      "before_sha256": "360510ec64e8dc9fab18d09e27ca3fceb09b61f7bb3154a9bc6bc2bcd4bf51fb",
+      "after_sha256": "8f834d266b35d0def7b2d3c774fcf2a8513fd62181e8f225a944671a89ba1fdb",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/Layouts/InputDeviceMatcher.cs",
+      "before_sha256": "d211d754aac5f55d8935f9725bf18b644908203f032da194e85ed45bb69ca53f",
+      "after_sha256": "1225047065c6d0474354c2e2e3acc269dfed295d12fd615020936f1740a19ab5",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/LowLevel/InputEventTrace.cs",
+      "before_sha256": "b0c0a84b23e8e57f6d008b179187c2fb7dc67030326f5f4071b9c3abfa4738ca",
+      "after_sha256": "2545876c9ad3706ea84dacb14b824d28b1e178059389fcf1d149781cfca55fa9",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/LowLevel/InputStateBlock.cs",
+      "before_sha256": "44c04a501388eaab9a84b8b8669ce1ffdd35d100cd6f923b328ced60e3b39739",
+      "after_sha256": "7eb412f3828d3a6f06716e555173c1cff14fdfed91d9c9e5582949ae6edfd8b8",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/LowLevel/KeyboardState.cs",
+      "before_sha256": "ebed2bf055c7f0aaa87a4b01b4af7150eb6dc7a228b7e8255d316ecc9bbbe979",
+      "after_sha256": "d654f3869286ef96ded14d3d2b90b40a655696b10f59a758a1b849f99e3f4b81",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/LowLevel/NativeInputRuntime.cs",
+      "before_sha256": "f350d015b1cb4d009815f28575604539c4d29b8d5859d33f496d31801a519b9d",
+      "after_sha256": "01f2d21dc0311efabcd8fa193ce17633797a094b311ecb886c2078f0a2acd2bc",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/Touchscreen.cs",
+      "before_sha256": "7fd558609853300c22b14b4a04baf5a5e8241d0c3840602242ab0c6174e6de26",
+      "after_sha256": "8a6d1286721ce45df30243f3c5b336ac00f8b1ce3ddde548c2da1b245c23ae77",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/UI/InputSystemUIInputModule.cs",
+      "before_sha256": "2a84eaa91fc7dac968dc680a7e916822fcaa4dd166891a2789e25c369bb8b509",
+      "after_sha256": "f3c4ece1b26275667f63b36fe53498e142af1b27e025b7770e5fbf9f2c1af6ab",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/UI/VirtualMouseInput.cs",
+      "before_sha256": "4711d96d569bee866b6a3c915880a08b30822dccdc1984ec86e98628ffa8918c",
+      "after_sha256": "bba018a029b246b43c262182386e4458593219c935196c0d7d73779c11403e4b",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/Utilities/InputActionTrace.cs",
+      "before_sha256": "818ffff6300ddd0a5671649a10518b561b0c74749ce395c1fd9276586b151cd3",
+      "after_sha256": "b632e0bd17d58d36d16d3848a6b477a1fd771f7da589e67c7011ebf94c07d0ed",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/Utilities/InternedString.cs",
+      "before_sha256": "4d5fa402b74252ece74e262f466c2fb0bbc1fe1398c49ed1e9076837ee7a6570",
+      "after_sha256": "777db991516274100153c4a034ed60459d6a99ba2326e7b3294bee8a4cf8019d",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/Utilities/PrimitiveValue.cs",
+      "before_sha256": "53c79e9c28163919c7ffc83c43367ac6a64807a4c2d3dab7396cdd9a5b88b773",
+      "after_sha256": "0ab345fcd13d10d7828b33bcb359b784a006c4104db4b9ca4ee8fc45ad3692ae",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.InputSystem/UnityEngine/InputSystem/Utilities/Substring.cs",
+      "before_sha256": "1cb36b39bce584ed64558f711f801060ed2f5ae8932c448c95cee67385323c5c",
+      "after_sha256": "4adff0e27eb743545cd3ace9d52ff26b64ba20a6041bb8319b12580c4f40a645",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.Mathematics/Unity/Mathematics/half.cs",
+      "before_sha256": "489cee933220220beca1a69f5c3a1c92bd8b71a360db35f2a3771cd60fa6bfd6",
+      "after_sha256": "773bf9eaaebcf6abd0cef87ed0c1048feea225775ca4c12ae712fc979136a233",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.Mathematics/Unity/Mathematics/math.cs",
+      "before_sha256": "9c7ab6fcee4d02baf694a4497b08446f31316be2f3a785070c00456c09a41cee",
+      "after_sha256": "2f1f8ab1d86506af0456bfd2b363b42ecfaefcace7e8aeddb4755b4075989631",
+      "line_delta": -10
+    },
+    {
+      "file": "Unity.Mathematics/Unity/Mathematics/noise.cs",
+      "before_sha256": "b3f15213edd96ef99da132257a123e67aa753d0870d1fc722850760321b7f56b",
+      "after_sha256": "dc9abc79e06cd8a5266d23f27d165138e75c70e277572e1655c3a599fdd7c40d",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.Microsoft.GDK/Unity/XGamingRuntime/Interop/SizeT.cs",
+      "before_sha256": "0fc2845a89461cbab5e60d5fa7127622b2cedfb1794c0e2efdf73feb9712511f",
+      "after_sha256": "d9556e9bb367015ae45e2eccf187922662eee6d2ec26cfe24d9edb74bf759671",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.Microsoft.GDK/Unity/XGamingRuntime/SDK.cs",
+      "before_sha256": "8fd33159c321a904e1423feab4f874855dbb98a08c63d9ee41086af30623ee0e",
+      "after_sha256": "561aea9f3ca86ba9c2ce4d2a377a2e27d0bbdbd0320f651e58b665617e9008fe",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/AnimationCurveParameter.cs",
+      "before_sha256": "727d22dd54c8fb037605313d73e5afc3834206448549e94aedfc088197853381",
+      "after_sha256": "73da728044ef55f4b27f844d23eda0ec84b215cc50026140588ac57f62133c6e",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/ComputeCommandBuffer.cs",
+      "before_sha256": "65ed763feb9961484c8557793a6d9108fef5e9c4f40f7889bde0aacf56826978",
+      "after_sha256": "4de01571c4d6f84cb032a0c95138d3ffd6869aafc05001869cad46622491aff8",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/DebugManager.cs",
+      "before_sha256": "8b7ec22cb8b5083ceec01c0e738f85bf98dae98eee36b94970a80ce0558ab1ca",
+      "after_sha256": "67346b68f0ee6ac18a03d589e6e86ace11cf1a20cf48b660824def9b65e420f2",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/LensFlareCommonSRP.cs",
+      "before_sha256": "ce69628a73b7717452294cfa610a771b22eced7ac66df2bec5c89f54883886e3",
+      "after_sha256": "631c48a57f197091a1249b7e8f0d5170a44bc90a82159c5006e8fc4310ebd8bb",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/LightUnitUtils.cs",
+      "before_sha256": "8aac251ef99d1b5a4ab814bfd82247b69f04ef77409d26794f826a13bbdf7ca5",
+      "after_sha256": "4cee79059aea82e22d8f97bf0e66afb5eccee7e93df36d07afddf03d0ce6633a",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/PowerOfTwoTextureAtlas.cs",
+      "before_sha256": "3b33c924a46edb36a72fe3e29737b4b48ff911e5622e992a65647483a7b54253",
+      "after_sha256": "adc3a0debb1bbcc6f165794c2b060161843a2fe8ba03b1032854d00d7e7bbe95",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/ProbeReferenceVolume.cs",
+      "before_sha256": "e6ecbfb4b628bd10bfc1a5ef37a30b2f942129508adc9157fb5e932b9ed4524c",
+      "after_sha256": "da1738ac1ebab3a6a261de868e62264d57a1d47f938d4454fb99684bb4cd5751",
+      "line_delta": -10
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/ProbeVolumeBakingSet.cs",
+      "before_sha256": "212a70efd45a9a20e462560eb15af448b0c7e0659b676fd237ebcfd292b03729",
+      "after_sha256": "01e86eecf20686779475b4b9f3666cbe116b24ab1087e549671ddcc18db0a94c",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/RTHandleSystem.cs",
+      "before_sha256": "81dc195c93fcf4e9b5f81cd8bdce2e99a8b0c26bce151c1b16861979a4e8ee32",
+      "after_sha256": "176724f8a8a2f2443f78a845573dc579acab4e6b5d462b0f04a59cd9880c8c7d",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/RasterCommandBuffer.cs",
+      "before_sha256": "fd02dc2c16150ec1f371d2f38f0cdc76bee3c8a2a41ce2d904fc884408081305",
+      "after_sha256": "2a833e0925513177efd50766a7496fc9692c385689980d2715f703d523e1501a",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/SphericalHarmonicsL2Utils.cs",
+      "before_sha256": "e2e55e164ba75b54e7d5b3c6127682a3f7e3407e8b2aaedc150c9db81ffbf847",
+      "after_sha256": "646f60d95f6bb8ec512409835d1ab6f08b663acb99eb8e264454dd0b20bebfbe",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/UI/DebugUIHandlerBitField.cs",
+      "before_sha256": "7997b83ac34f222c9104b38813b25699c2194bba1d96aa0cb9b028adc4b44f0e",
+      "after_sha256": "41dc3d85ec093fa0c450b12d1a5a65bae64a4642669408377f8e8dcc6afb73b5",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/UI/DebugUIHandlerCanvas.cs",
+      "before_sha256": "9b70281b78c54bb4699832c2baac543efd6f01ab431133c730946fe4d1e2ceeb",
+      "after_sha256": "b7a61d90c87ed4cf579c9e9b5c61bb4b905ce6581154e838177b41748d877669",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/UI/DebugUIHandlerColor.cs",
+      "before_sha256": "3c1fd20b5e23a1dd9843060429717650df9fa4d1d29871ee336b31278b236dd4",
+      "after_sha256": "b30bbcde67cafb1a3225d1b0281bbcce21bfca725d5dbda36ce904c2ce9c8b6d",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/UI/DebugUIHandlerFloatField.cs",
+      "before_sha256": "f6ba869c07f0abd5f543d8506391ecf77d60fd3fb96ec41be6e3fecf0bf0db92",
+      "after_sha256": "fc689d5f06375dea038fdd5faa101d99d7d1471ef9e8ddc866f9cd29ea86d7d1",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/UI/DebugUIHandlerGroup.cs",
+      "before_sha256": "4580338c07cb53e15644d3d28a34f3490f99eb99033b825b506f0f2411a598e7",
+      "after_sha256": "c0c33828965bae6056fbb15ddd12fc4a83381aaf0d86158fed0e1f4ad025a923",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/UI/DebugUIHandlerIndirectFloatField.cs",
+      "before_sha256": "51441810cfce15cd814fdbf147054a7c085788cdaadeeb7ea9c50b21b7bc3352",
+      "after_sha256": "0e220682f2183f74f07a006b227a4b8dec52785de6b6ca84e8c5804e2c08a8a3",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/UI/DebugUIHandlerRenderingLayerField.cs",
+      "before_sha256": "e569a5bb937da28326ef25d6b0534982d1e3b7b41851e26bc0e6a5dc837b15a7",
+      "after_sha256": "36a0686dfb19d9745e5c30e24cec9494fa96d0745383b980536884079427e516",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/UI/DebugUIHandlerVector2.cs",
+      "before_sha256": "10a9c7766105f67273e2d0d6f8491419df085aef34c8b4ac18f34665d83feb51",
+      "after_sha256": "fbc6d5316f26f5922627676cc7612d466a1942caf4fc0bc7632b2ed06f608039",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/UI/DebugUIHandlerVector3.cs",
+      "before_sha256": "eef1c84bd4c27dc8ab9412d63b7d71d1c4fc0cc72163f995cd0e5b6a430d752d",
+      "after_sha256": "731adb3ac145c2050456cc0518feb49ebde73a1a9cd7425f8099ba4844db9530",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/UI/DebugUIHandlerVector4.cs",
+      "before_sha256": "06dfe1d02f98ab96d9d97f938cbf9b1af6635157f26369383af4809e018db922",
+      "after_sha256": "e675a7ec827184cd21d631249c5247a03f20d45dc26d37e3027be257e231d7ac",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/UI/UIFoldout.cs",
+      "before_sha256": "6236ba1d8e28873c2efcaa82eb23834ac3fbc8a63ffaad92db27077f467d5fbf",
+      "after_sha256": "16cbd22cf0d6ccd659d5ddda19253f5de4aaca84534ab0055b198024aa0a7769",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Core.Runtime/UnityEngine/Rendering/UnsafeCommandBuffer.cs",
+      "before_sha256": "f24b3132850a7f58c760474497d9b1a845422e1d48fd4cf3bb295b9696a96d85",
+      "after_sha256": "8536aa7a038fc132f84a3b4ad3b7d64652321a40e6425afca11c694e93856ecb",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.GPUDriven.Runtime/UnityEngine/Rendering/CPUInstanceData.cs",
+      "before_sha256": "e41190bcfb2633322c41ddd5a2bf1cfef3101a647a71d45439899686c64859f5",
+      "after_sha256": "ceb26a8ea601cbace6554cf0ad131df03fdeb0822d030a4de8722ef3626a35c4",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.GPUDriven.Runtime/UnityEngine/Rendering/DisallowGPUDrivenRendering.cs",
+      "before_sha256": "6dcf0775a0d12fde217f662f48b7a435b7662d43846fe879db2936ba7b8e4bc5",
+      "after_sha256": "27575380b7eb4babe1301487f1fa7425734c36cca73e66987789838e89ab92f2",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.GPUDriven.Runtime/UnityEngine/Rendering/DisallowSmallMeshCulling.cs",
+      "before_sha256": "de636a36950891e3e5ff1f3fa914e298a6f20e5d0ca1d0f6ed6d4be896673208",
+      "after_sha256": "f06f68f415b378d80cfc9ced66d57f0ba1ec40ca18e245e0607b33a8e5877ff1",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.GPUDriven.Runtime/UnityEngine/Rendering/GPUResidentBatcher.cs",
+      "before_sha256": "92ce5018757805c28714bf2beb683eb34734800afa89e31eb8140c91714b4b5d",
+      "after_sha256": "5f95819e9bcd8611dad1ea3694e2d837fc27a355d94faed71d2a74feac932ffc",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.GPUDriven.Runtime/UnityEngine/Rendering/GPUResidentDrawer.cs",
+      "before_sha256": "a2b451dc32780022dfa234720be22bc499c3ec0142f89b2f076d78ac2fc99748",
+      "after_sha256": "85d5c6309b901f4adaf1ae03aab921c3a10c318def9576b003046f8f5eed8527",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.GPUDriven.Runtime/UnityEngine/Rendering/InstanceCullerBurst.cs",
+      "before_sha256": "d2c1e875833b488d758bd2b79bd7f8fab434ead65a358c5e90e55cb9b3dbe6b6",
+      "after_sha256": "809b1444ea0b5e66e82457cec7e7490127d2b1704459e2e4745ddb89382ec8e2",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.GPUDriven.Runtime/UnityEngine/Rendering/InstanceCullingBatcher.cs",
+      "before_sha256": "dcb1e44a4c1243714889d1a68df09ff2ab9365d482cc0815ddbed9f3ab3cc073",
+      "after_sha256": "bdddbb9e83dcd76fc4a89955fc0f0b5159853ec3a1d52372ea1721608199928e",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.GPUDriven.Runtime/UnityEngine/Rendering/OccluderContext.cs",
+      "before_sha256": "0ad5469cc2997701fb0d35e32c833d512f45b7c19da69042777c15621f441dec",
+      "after_sha256": "6890ab291c04e0b76426002d87a90855c9799ab9e07e60a81763d3db081b3e05",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Universal.Runtime/UnityEngine/Rendering/Universal/DBufferRenderPass.cs",
+      "before_sha256": "2ab5f0919063de610f007503d1501a72118122d32f8fa839e0b2719bb6491484",
+      "after_sha256": "3e23d5c7e5c9d7d3c550595b24c744d0059898b36b4bc5669964e1206a26db01",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Universal.Runtime/UnityEngine/Rendering/Universal/DebugHandler.cs",
+      "before_sha256": "a2c2d4491ac169958fa33de9a1ab40ad2a181264a3e727e494e93f9f899e0a6f",
+      "after_sha256": "ece8013420f7c596b2c4e9193a34078a83805447393ea931b9119b78c7857e82",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Universal.Runtime/UnityEngine/Rendering/Universal/DebugRenderSetup.cs",
+      "before_sha256": "4ef91d8b9ea6870547bb6a7e78dc758101f2bf7047881b4f884965472aac6c03",
+      "after_sha256": "6d1e6ee1e4a57407f1957a5fd88747bfac300ae60a29bee17bd6687a46960c0e",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Universal.Runtime/UnityEngine/Rendering/Universal/DecalDrawSystem.cs",
+      "before_sha256": "02f858fa18ff5b7c897d17c2f190b5e750ddc0b3c4482478bfa1da2379f9b5f3",
+      "after_sha256": "e44916f0116c97d0cddf703c0dd6204a205bb0b3e8d63a6e948af364a1fd7921",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Universal.Runtime/UnityEngine/Rendering/Universal/DecalGBufferRenderPass.cs",
+      "before_sha256": "56f7a7c13a16f720d8dda95acc304e8aef8fabef81a0889c2710486eef0a5dfc",
+      "after_sha256": "6be20740e0fb8809fbc5bb2667bfece876c6bdb0b837be384445cdb9098fdb55",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Universal.Runtime/UnityEngine/Rendering/Universal/DecalScreenSpaceRenderPass.cs",
+      "before_sha256": "68f4691de7b346f8195cc1c9a9d95396a65afe85cb3b5e27e9b9de2299d718f8",
+      "after_sha256": "ec090b80eb0f398f2bb25a48bd679537aaa7fa020f530cc79dff974f974a5372",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Universal.Runtime/UnityEngine/Rendering/Universal/FilmGrain.cs",
+      "before_sha256": "cd5d616c5e26af986955c4dc6d6e143e722a6e50dbbe4e77f83f96f0c74fc106",
+      "after_sha256": "45daa232cced1f898c4a83db2aa4745a367700b9eab3054588ccfd5b10c26df9",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Universal.Runtime/UnityEngine/Rendering/Universal/Internal/ColorGradingLutPass.cs",
+      "before_sha256": "ad7e459fa8c636b627f1bac59444394a0e439e7bd008cd30966c3aac382651f1",
+      "after_sha256": "1144d5e00f35d483f4fd07861129bbdd8f6c313f56f959bf83bcedb57c371090",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Universal.Runtime/UnityEngine/Rendering/Universal/Internal/CopyColorPass.cs",
+      "before_sha256": "eb04cf0414f38509fc9bb42f94dff3f0aee13cc7184c88b8742ee82e5da87fec",
+      "after_sha256": "b1c04f4e6a1b3f89a8c399941383521c37a5dbca2831b86a629a0f64694b63b7",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Universal.Runtime/UnityEngine/Rendering/Universal/Internal/CopyDepthPass.cs",
+      "before_sha256": "4494f59ca1973698057d2b3b4fd041bba38d367c062e4f76ba3f46487eff6572",
+      "after_sha256": "b7fbdec6887e557925b6b0e19c520018113529fcbf684707b8b4734564630e63",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Universal.Runtime/UnityEngine/Rendering/Universal/Internal/DrawObjectsWithRenderingLayersPass.cs",
+      "before_sha256": "4fe49308c72d7e37a259f8d880c8f1fece0586aafe440e63606a9d9f4897872c",
+      "after_sha256": "b823e307f545ccb2ee7cfd774aa5d3199d7a8238ff15312eed0b2aa3b82f8e28",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Universal.Runtime/UnityEngine/Rendering/Universal/PostProcessUtils.cs",
+      "before_sha256": "39f160eb0fa9cc37b3cbf5343cdff11c577809421991d17880b49f1e10d9802a",
+      "after_sha256": "5d3589b5c3ce1bdb16bb2d29f50ae951d9f67fea46ca601b038981664e71d6f4",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Universal.Runtime/UnityEngine/Rendering/Universal/RenderingLayerUtils.cs",
+      "before_sha256": "de12c72aa2b3a62e7b9d1d908887871024a3f088a8ffdb7dfb4309f29650cf67",
+      "after_sha256": "eeed2aecbdd77422253dd929001d078f49dd178cf6b0f2f5a263d28ad673474d",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Universal.Runtime/UnityEngine/Rendering/Universal/ShadowUtils.cs",
+      "before_sha256": "0c55d25fda526895d83910f47d0ed1fca0f4f34910a12e204754cc9cd5adb6d6",
+      "after_sha256": "a462669bfcc04517d363b48e022114336c78a16f5ff015ffc1426bc5e7393ab5",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Universal.Runtime/UnityEngine/Rendering/Universal/Universal2DResourceData.cs",
+      "before_sha256": "4830d1409c01f0a3dbea810af82c7bb3cfea15d5a0f8aea42633c43321c01eaf",
+      "after_sha256": "ae33219c9276238020c8ecf019b581bb48f25a4a49b3d1ff5e0319dc07836c1b",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Universal.Runtime/UnityEngine/Rendering/Universal/UniversalAdditionalCameraData.cs",
+      "before_sha256": "428f46566d9dc332f033dcb7b269c57272ebd9af3dbd9152a04d058d4b381ffa",
+      "after_sha256": "8a664641809b23f9aa0d3c8601a83c0f769aa87ef4bd6d744b904d321542d129",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Universal.Runtime/UnityEngine/Rendering/Universal/UniversalRenderPipeline.cs",
+      "before_sha256": "e9b99d045f80db5d7a70e7a884a5c64652a8c2473d1c812e86e17650e11918ec",
+      "after_sha256": "897ca2586e38e7533fc5a6c60fffe960437d3f3b5912712cf60cdc948b5469fc",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Universal.Runtime/UnityEngine/Rendering/Universal/UniversalRenderPipelineDebugDisplaySettings.cs",
+      "before_sha256": "119e4186f0cd81c2170449778209eadc6ace46a22a737a769f35f0acf379e82f",
+      "after_sha256": "d6c901a0986786af606e6016f18aaa23b818964e1473854d2b5c1e6e5a37ac9a",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.RenderPipelines.Universal.Runtime/UnityEngine/Rendering/Universal/UniversalResourceData.cs",
+      "before_sha256": "e7a73c3c538390231f9a078dbcb041ead5e864519a6c6fd5baaee8ac9041df11",
+      "after_sha256": "bf640ff409899d681451870b56e8021447bdcf72010e271e6b8115ee8c32a4dc",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.TextMeshPro/TMPro/TMP_DefaultControls.cs",
+      "before_sha256": "7493343c5be25beca125b2666b3c17d3b9aff680e784db2ed3f525c65aaa8ec7",
+      "after_sha256": "07b8e8c3edd18238e53c861eeab10b23d722d53efe05351b4e9916d617870343",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.TextMeshPro/TMPro/TMP_Dropdown.cs",
+      "before_sha256": "da2b6ef0fea0ed50ab5aa515b3d279b2a586c8fd9283d0219022f13d7463a546",
+      "after_sha256": "bbe3100551307fca99680304afedc703182b0907134bb9b95710865ba3396077",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.TextMeshPro/TMPro/TMP_FontAsset.cs",
+      "before_sha256": "100f10f7169b9e633abc2505cecbd75e33b199d27030fa4b53dcc62ff555b313",
+      "after_sha256": "e717193392a22a0b31d8a3010ac9067af7d8f4eb88a8b63c0eebc8e19899a1fc",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.TextMeshPro/TMPro/TMP_InputField.cs",
+      "before_sha256": "8bf15211d93e1b79c3f8c31acecee9aab09cf8951f18a3acc8c919d883cf26b6",
+      "after_sha256": "f91c2ab5ebdb08a4201303e667d21b79334d5cef8c7107d9d52718fc9677c708",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.TextMeshPro/TMPro/TMP_SubMesh.cs",
+      "before_sha256": "8b229e180ac3787cf683cc226cc03ff364b9eb8fa85b78fc88df1776ce33855f",
+      "after_sha256": "fe26bd81ef7620f6d865d2166fc80cde40117773635e8dc392b577f9fdbb4938",
+      "line_delta": -5
+    },
+    {
+      "file": "Unity.TextMeshPro/TMPro/TextMeshPro.cs",
+      "before_sha256": "05dc7dd987bdce0a43d089bb4b06ba7ef8cc80ba859b979a17d5d873a434fe7d",
+      "after_sha256": "a54d05876eb41f664f4c8d7e6473bb3f6942aa01fc6b0bb1a781fb6533f47cab",
+      "line_delta": -4
+    },
+    {
+      "file": "Unity.TextMeshPro/TMPro/TextMeshProUGUI.cs",
+      "before_sha256": "c8cbea0c0649a5edb8d26221877312df16445fc2a05491c7b5734117ca469035",
+      "after_sha256": "1f21ad6abea0054f613802c5e68ff39c8e09451a405bb9fa7ce3ebb622d54293",
+      "line_delta": -4
+    },
+    {
+      "file": "Unity.Timeline/UnityEngine/Timeline/ActivationControlPlayable.cs",
+      "before_sha256": "5fc6008be83f32381d2a38dc024d18e673ea82c1fd81635c50a0b1a551ca24c5",
+      "after_sha256": "269e8970d19a3076dc112d338e3ad380e6f4075d9741d005753a12f7b6036864",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.Timeline/UnityEngine/Timeline/ActivationMixerPlayable.cs",
+      "before_sha256": "0d8c2345f14d7de449b750d0b6eca3741b9c9518a5544c92b6a6c31ac0b6728a",
+      "after_sha256": "b609d1fcf025fc9adbf4f0292ebbfe33e29e0792164ce3029ab643a58fb0a4b2",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.Timeline/UnityEngine/Timeline/DiscreteTime.cs",
+      "before_sha256": "6925c4c5369b86274676b0d447c0462e730edf16c556b398ec73f7ecc1f630cf",
+      "after_sha256": "9fd02be6acab3191203a071a2eefa5c880d4969026f394beffe74d22f1045b77",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.Timeline/UnityEngine/Timeline/RuntimeClipBase.cs",
+      "before_sha256": "2cf0d2a4aadcaa0cd4f1ba47866570bd384b07b0cc2b0163dc437166845718ae",
+      "after_sha256": "a762fdd8f50a0d41637b1325ea6d00ffb6e6be238b77962e61bd4741b973b847",
+      "line_delta": 4
+    },
+    {
+      "file": "Unity.Timeline/UnityEngine/Timeline/ScheduleRuntimeClip.cs",
+      "before_sha256": "f99785a993fb4b220c8fb2bbeda30e9de4d02f3fc0268f2a29ef55f65a79af8d",
+      "after_sha256": "5fd4c52ad092ac4c59375876e8ecc15b4a7576f329e6806c1d3aef7c865ddba6",
+      "line_delta": -7
+    },
+    {
+      "file": "Unity.Timeline/UnityEngine/Timeline/TimelineAsset.cs",
+      "before_sha256": "264930d50871eaea224431bf9d422e6f16186bb7c744cab5659e0c110796c029",
+      "after_sha256": "4e53aade0b5b39a210847b823dd30633ad47f1ab3e368b11dab9bf85ee8c7463",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.Timeline/UnityEngine/Timeline/TimelineClip.cs",
+      "before_sha256": "a20713600f032e7ea706e4848ebee8366bc17ba041e06dc950d8413ada91fad7",
+      "after_sha256": "09e72b5beca93f5bfbf9c5408351062ddfd0b392223d89dfecb6c9b4e273c43c",
+      "line_delta": 11
+    },
+    {
+      "file": "Unity.VisualEffectGraph.Runtime/UnityEngine/VFX/EventAttributeFloat.cs",
+      "before_sha256": "aa8692b33ea006dc80f2a3dd2656b132024ee4af22ff4a29a7e282d7124f2481",
+      "after_sha256": "1ba9793535ae1656a79a68bcdadf2665391464276f02feb1d90d92b520e9d31e",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.VisualEffectGraph.Runtime/UnityEngine/VFX/SetSpawnTime.cs",
+      "before_sha256": "c312ab43c3b6d55a5b061a0c56adbf99e04fa56c63e5287f681a5a9094c66fe6",
+      "after_sha256": "fde7a478890cbf48905ad89bc112e2828ca53968d514d609ea38f420e0e2b51a",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.VisualEffectGraph.Runtime/UnityEngine/VFX/Utility/VFXInputTouchBinder.cs",
+      "before_sha256": "83051b6c79e5fd29218d7e1da104deb95148ffab0f21591dc8cafd93c6aab0aa",
+      "after_sha256": "6c1782005ddbe54ace8fa0ae3cca71bb031792027db8636c5adc6966d2755990",
+      "line_delta": 0
+    },
+    {
+      "file": "Unity.VisualEffectGraph.Runtime/UnityEngine/VFX/Utility/VFXSphereBinder.cs",
+      "before_sha256": "d5fa5771cfc3d29e1346279ea77094aa4ab1842b61482c5dbaf436a05719153a",
+      "after_sha256": "a74870ffadfcd07bdbd1ed1843446049bd770617b42e21d9c282f270a89092eb",
+      "line_delta": 1
+    },
+    {
+      "file": "Unity.VisualEffectGraph.Runtime/UnityEngine/VFX/Utility/VFXTerrainBinder.cs",
+      "before_sha256": "d81e39267caff923e0181d21f9c6f79ad534ec92c1b627da0e9a4f7b817a22db",
+      "after_sha256": "d1b9896614993f832a4de5046f9b72ba31b5edb0fa53cf3e16643204f3f472a5",
+      "line_delta": 1
+    },
+    {
+      "file": "Unity.VisualEffectGraph.Runtime/UnityEngine/VFX/Utility/VFXUISliderBinder.cs",
+      "before_sha256": "6beab2a30e9b352c06b5424c9c0a8935bc580a19d8db82cf5f28c2c32b693844",
+      "after_sha256": "0ce230fd3d80dc26cd642f340754b85f99af5dd26401d6ad1f1a59e19e2d3f40",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.AndroidJNIModule/UnityEngine/AndroidJNIHelper.cs",
+      "before_sha256": "32bf1223e19a46d722938b9166fbd736b2c41e04ce1638b03ad8f82b7f629472",
+      "after_sha256": "72b91ee38405d47e361942a2f22dac75c2d09b43545678b9b48e56d580d7a2e5",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.AndroidJNIModule/UnityEngine/AndroidJNIHelper_2.cs",
+      "before_sha256": "a20ad2cd0904ce4575cf75908a1b409aedf41eebfb13168190b06312b4baa03a",
+      "after_sha256": "b7b7445ef0ac0547fcfd610dae592407c07ca30e14ef6475ba953c537e928280",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.AnimationModule/UnityEngine/Animator.cs",
+      "before_sha256": "793e690e25b726ade7ab6eefafaa9ac9589d2c45655c72b7acf5d28375f6d405",
+      "after_sha256": "1dba252a51c6a22449021bf8070055071dbd7396b9f574a91d8e583f369ee094",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.CoreModule/Unity/Collections/LowLevel/Unsafe/UnsafeUtility.cs",
+      "before_sha256": "e69c29f310100f5f7d4c64bbef85d3b9adb3affd7ce3c970f050dc27878311ef",
+      "after_sha256": "2c56938b18ef276e45516c13aecdacded34a070edb22057e709cea530496415e",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.CoreModule/UnityEngine/Experimental/GlobalIllumination/LightmapperUtils.cs",
+      "before_sha256": "5cfe84014f53563ad089b509d76e19151a41a60eccfa268ca11ca5258b33e6ca",
+      "after_sha256": "866e840b82a3dec371ceaa226f572aa146656c76546b8b17b7917fd87f5df260",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.CoreModule/UnityEngine/Material.cs",
+      "before_sha256": "caaf3af6199291d4e435a9bcc28feb2f0723694a2c9aa25cd1fa0073a7c05308",
+      "after_sha256": "2c7c9af71d8cafede546e18ff7da62564041fe87983a21beed8bce79a30b6938",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.CoreModule/UnityEngine/Mathf.cs",
+      "before_sha256": "d7cec9c7b911d411958753c75d1c7fb4e18182affd1b8454e3d0e8cb311ed86c",
+      "after_sha256": "22619a3b82f3d927f671e3d39b73c4e6493ec662ddf2a53b367cf8e7a535d1de",
+      "line_delta": 5
+    },
+    {
+      "file": "UnityEngine.CoreModule/UnityEngine/Matrix4x4.cs",
+      "before_sha256": "ad8fd803c2a20a7dd488a032832668a23f88f37adea5ffed9141c51385d69c34",
+      "after_sha256": "8752a3bfc6b9b5b9d70eeb4b9879faee5a1880c7199805457d5fa42161678262",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.CoreModule/UnityEngine/Mesh.cs",
+      "before_sha256": "0558bfed94951b72b21f3eb16242a511586e6ef82bfe7acf29900b646c93abd6",
+      "after_sha256": "2f352b95264b9425a85f3928c1786ead9082b8af4e2f87b14217a81e91d78639",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.CoreModule/UnityEngine/MonoBehaviour.cs",
+      "before_sha256": "4b1e5d5052cdfda08acc23dd64111cdacb35abc37f750985e7fa0724514a6ab3",
+      "after_sha256": "3d6a25dc5ede11c6127a2eaa9a600a37b429007405c116bf21486ce2797dc501",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.CoreModule/UnityEngine/NumericFieldDraggerUtility.cs",
+      "before_sha256": "009f48d9cad890d6a17110dbc85615058d0aeef2d17a31d4b46baec48c9f69b5",
+      "after_sha256": "f0deeec93a01d3948ede5136429f60cd940a2885183cc64edfeddf9541dec6e1",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.CoreModule/UnityEngine/Playables/PlayableHandle.cs",
+      "before_sha256": "56516e00282ad30a56278c1db099a15c4cf9757b464d073119c4b79f4c84b416",
+      "after_sha256": "169e1c711d5a2777ff1f44708bc08427408fe178d5f264ea38201669a78d7910",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.CoreModule/UnityEngine/PlayerPrefs.cs",
+      "before_sha256": "75a5d1333b2c10e417adb86b2c75d620f5f5bacf5f69caa7a9b8e9ae0a599826",
+      "after_sha256": "cb3df2540f0ab5fc63521331fae83ecd198a5597f3a173bf7c84dd3981e6a46e",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.CoreModule/UnityEngine/RenderTexture.cs",
+      "before_sha256": "a416a23d3c77a60a3215b024d741f21882af4a9750e6483e2705b8af4f56a483",
+      "after_sha256": "83c7c86d9c56be17c30447f4b5bb1eefd8035265b96bb53d33e1c877a7ff9371",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.CoreModule/UnityEngine/Rendering/RenderPipeline.cs",
+      "before_sha256": "5469f3f7600ea844feab594463b7c02a0eb11087043285b91f26a686bed3c214",
+      "after_sha256": "a06e495e3599f220b1d2bfb1d40f70cb85e84011c5a8f05be4fdf346e00ded87",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.CoreModule/UnityEngine/SpookyHash.cs",
+      "before_sha256": "d8e5fbf74b9107a0687a7ed217b8552deb1adfd609036698530e67b8d257c5f1",
+      "after_sha256": "d1a00fbd821256a9fb57c2cb69363658dfea767e5829b0b149615bf00a663f8a",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.CoreModule/UnityEngine/Texture3D.cs",
+      "before_sha256": "0793bf8777605e957973e02a862515486c3a71ce31342477b0f7b104d23b953f",
+      "after_sha256": "9b4dedff779525ebd0a9c7f854b90f8c1d4166e79dcdfb4101bcb5b7e44a462c",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.CoreModule/UnityEngine/Transform.cs",
+      "before_sha256": "d992b60e2f34e3aa37aabf4f02906e7a52d82d1de725747dbf9f67c75cc62a64",
+      "after_sha256": "a5d7655764b6a0d4be7befa62325a596a6e530d2a64494830e6b04a674c82639",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.IMGUIModule/UnityEngine/IMGUITextHandle.cs",
+      "before_sha256": "7e99b3034b167349b924da63c88bf21980ed6e01b8c2165cea5d4cc3934b719d",
+      "after_sha256": "a08eab977428c108e5b2a9d7fc5f6a61b00ebbd961f0eefc1bc19332ffe1fd6b",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.IMGUIModule/UnityEngine/TextEditingUtilities.cs",
+      "before_sha256": "4d5211d52a9079789f4390694ff91e9967d6d2dcfa1a043ddff7af3c6bfb2a58",
+      "after_sha256": "0a1c7890e902acba2bdc8655c0b222542a58e78be632907de58614fe1bbe194c",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.IMGUIModule/UnityEngine/TextSelectingUtilities.cs",
+      "before_sha256": "b5e58793b6782d7703bd1f87dd9a43306e4b0c16f720d9503177cb88b25f2459",
+      "after_sha256": "116ce0a1c61fa0a68460ebe48223bf49869b88650c4454e3f4754515fe483b3d",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.InputForUIModule/UnityEngine/InputForUI/Event.cs",
+      "before_sha256": "914b4055bdc156e304e27d20fc2db9052a797704cd0fdde9552e738e1706cf03",
+      "after_sha256": "cc10afaa21af624b699542a75d30a40116b8eaf233759ee4e12bd1959513d850",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.Physics2DModule/UnityEngine/PhysicsScene2D.cs",
+      "before_sha256": "a855d307c074ecf41b8026d261561d91cd1e30812142c074d00c602429a335c7",
+      "after_sha256": "47c03e0db34d48157c2ce18dbc0ee73fdaa7f93371982c9e2b009f59f9e870dc",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.TextCoreTextEngineModule/UnityEngine/TextCore/Text/Character.cs",
+      "before_sha256": "f9b6cb596f5752175936c7618f95767bb8db060dd40bca296ddddd8113537fc3",
+      "after_sha256": "5938cd665c7b4590991650c80a0e868f4e96b22d827c5b1696acfcc12e0846eb",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UI/UnityEngine/UI/AspectRatioFitter.cs",
+      "before_sha256": "8dc2e675e6731294856e779332e63e03694dd1dca2e973835400c8f274dd0eb8",
+      "after_sha256": "06e2e61cf1487ae8698732514d52f188fb683d53a9ce6df1b07af9a438e3c2ba",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UI/UnityEngine/UI/ContentSizeFitter.cs",
+      "before_sha256": "fd65c4aa8c02e469912b1f607f314dc1e0dd1a5b113502aae5ac53c76fa6c1ae",
+      "after_sha256": "c9fc37d351eb3886b5277f036bcdb3bb2cf7e3fc28b87d5e4bb623bd204ce049",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UI/UnityEngine/UI/Dropdown.cs",
+      "before_sha256": "7ec9a1c473140528e1386644778a717ba6130bf132bdc4138d8fb517a81c4ef2",
+      "after_sha256": "b97bda05e12a0f3ac775184cff9a9f11d2b837473d2468eb539352c076d77b12",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UI/UnityEngine/UI/HorizontalLayoutGroup.cs",
+      "before_sha256": "9cd3d3d6d959b2deadd3cbf4781725df0deae75ad3c4f08abb7c1130e18e43c3",
+      "after_sha256": "a717af7ba5d0b972f001f29ad7674c8ac805827305c370db7d6adfeca2ca7748",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UI/UnityEngine/UI/Image.cs",
+      "before_sha256": "4b41968ec7925d3d91a798f76e98d2b59a5c1aaed18f899521fe691185f24822",
+      "after_sha256": "ac1617f8c4a50d9cae7ded9a6486d2357b75f505054d21f63bf93164279dcf56",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UI/UnityEngine/UI/InputField.cs",
+      "before_sha256": "b992fb005003b15d3bedf632bf858c78505b04af4deab7000d5aab3fc5d41797",
+      "after_sha256": "777abed64111d670b729fa48dfa66da0d4ec9ae7a35a1e3d4be82f79e1bc8cc4",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UI/UnityEngine/UI/Scrollbar.cs",
+      "before_sha256": "f94bde9d329ef6dd513e72e93eca780c0f6b2c853acc263044558ec25ebac5db",
+      "after_sha256": "792407bf489eb15dab5dc2cdc09efc58fe6bb0582b2aa1c172a6932fff030fee",
+      "line_delta": -22
+    },
+    {
+      "file": "UnityEngine.UI/UnityEngine/UI/Toggle.cs",
+      "before_sha256": "b559b230f0c33ef6986a8dfdda5c9a9aa278f5c2446114e8cfc79a19fb945376",
+      "after_sha256": "161e8989a53a34541bb2aba241468230dfad2848af6375afab252b5452572b40",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UI/UnityEngine/UI/VerticalLayoutGroup.cs",
+      "before_sha256": "07ddf69961e9ebf38bfabc9e1a10cd82216291b6b32b9d15dc4dcc4112d1cc81",
+      "after_sha256": "b544eef92bc8896a81e1feb6028c5ca09d01580fde03a4efba73c20294ec7080",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/AbstractProgressBar.cs",
+      "before_sha256": "aa54ef2927f6481e38e349e3198f2f0d98c8fe201f0bdc99f0f4f8240e7cef38",
+      "after_sha256": "4759f31cca8d1c01bfb5b99ec38653d44b4d2205cc7f8bb0b2e5bf5fce7b4a90",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/BaseListView.cs",
+      "before_sha256": "7046dfca33a916bea9e557c55f305ad7653668776732e03e352b96c41afd96ee",
+      "after_sha256": "c8c09e51e376dd7125db0f60191aa6ff9fc90828ef96454da4e61536c3cb142a",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/BaseTreeView.cs",
+      "before_sha256": "df33a11ccae9ade2c3d9ffeabbfaa41136bc1993a33f5c3bcfed20298b107ad6",
+      "after_sha256": "64f41cfb628f975f62e47e25ae9ca6e1877c08090ea21e6ac01269e00a1f1ad5",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/BaseVerticalCollectionView.cs",
+      "before_sha256": "9810b51a5be746c9fd7b7f4e15617cb401aba1e9b32a272cdf9fb88998106da8",
+      "after_sha256": "fc1162f95b49499b1a1ef1c865181b1640e196ad5338d813d9409973b2967920",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/BaseVisualTreeHierarchyTrackerUpdater.cs",
+      "before_sha256": "79bcbac3690a05e5532c8166016b6a7903012a6c72cc2f4f6614042630efe784",
+      "after_sha256": "7dcdaeb85f5fb4305f217205b46ea8b488364a37544cd63ec696f1a1548f447e",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/BaseVisualTreeUpdater.cs",
+      "before_sha256": "6e001d3ead8e048ba45452edbf119c8bfa586893248b7060992e8f86ea68d28b",
+      "after_sha256": "ba82e6b40b172691ce8ce6429d2a695bb93261f650f3dbadb59713b95c33f22c",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/Columns.cs",
+      "before_sha256": "3d114913529e606fdf666a6218274158b544d0d99c2c0655598320ad866f4fa1",
+      "after_sha256": "6e3a5adc23796ffe04e8adb403d7a55f56469d65c421f6d4d38d9236f585e6e4",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/ComputedTransitionUtils.cs",
+      "before_sha256": "a339ca5cfcd3a181f5a997541d79b63f7331e9db96ebaf55644f8760f09bca9d",
+      "after_sha256": "2e28ac6be4af7b610f633f57841fc15f14550e98c3461cab130980968fa760b4",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/DragEventsProcessor.cs",
+      "before_sha256": "8f3cbef74acc8302adba21d930ea3c987c980ba77e67cd81cbe14620bf271eb8",
+      "after_sha256": "243f37b2e84e14cdadb5da37b7c5b98bc899adb600097e0dad9656ab4cb81829",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/EnumField.cs",
+      "before_sha256": "b4ae116e4abd400378511b73d891efa0eb944504f96906527f404551ee269be4",
+      "after_sha256": "74f7986cb96f42b5904d1395c0d6428149a47a5c463396ae3ef25ce81f958405",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/Experimental/StyleValues.cs",
+      "before_sha256": "6ae5a8b46a85395ec392185feb92de2ddf1c30ab68eaed08ed5d90867d4b35f7",
+      "after_sha256": "f6b24c797896e1e2ad707d19a04cc1f6c1297d27086bc15bca780e6390c8dd7b",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/FocusController.cs",
+      "before_sha256": "32e7fc8ea3b0bd07c6459517363e19a41b416849e5eae27d31029ac18923771f",
+      "after_sha256": "f27450f26527ebd26a71e0f84c24281c406eaeeb4ca70984371e99364ad63811",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/GenericDropdownMenu.cs",
+      "before_sha256": "821159e522f8154a9d08d6e3715d58a83fd526de27610572ae8426c071ba8375",
+      "after_sha256": "dc33bbe836fd20724f46ce4b78f99de03a2171d92336f425a600604e96a91752",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/IMGUIContainer.cs",
+      "before_sha256": "918235f0cc433b476fe6cc1328081d6c6cbc761af80e4301ff3c9d889e9851e1",
+      "after_sha256": "9bb4ee5f33b90e0026b55b762497df451d244cf3e20b26bce02a3d9173dbc51b",
+      "line_delta": -5
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/Internal/MultiColumnCollectionHeader.cs",
+      "before_sha256": "53a6acb786c9e58937aa764de89f7e52ade6164481cdd7145c558870248f3e7e",
+      "after_sha256": "fd47a04866e07d09ff37e7c934ef190886b5fbdf0f7e8a6f8e0e602a9f1a87ca",
+      "line_delta": 2
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/Layout/LayoutNode.cs",
+      "before_sha256": "0ffe1f15d9549d31c3e46b7b05e1e8dffbaa5c787dc651d944e003762602b00a",
+      "after_sha256": "79233e0a88e1fe763a0ca765d31d1c79651aa19e135b39a17f56bc7c8e0420e5",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/MeshGenerationContext.cs",
+      "before_sha256": "7895756b8bd259f2fb6a4c18424d9332d5d60193884cabfa9b932095765ab893",
+      "after_sha256": "f40014d16f67430a036f5a59446b6bd39c0b51d9e82c26bc5db6d90691187249",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/MinMaxSlider.cs",
+      "before_sha256": "0e6a82a03918ebde565711282755c4d846118470a91442d3285bd18a652cc52d",
+      "after_sha256": "f09768421ac1d8817d96bd2f269b48f0554f88993a3b02fbc2303fb2e4f1f486",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/MouseCaptureOutEvent.cs",
+      "before_sha256": "143d96602851855610c622aa841b21ef7f41a0115e9a6bfbba9b58058f680068",
+      "after_sha256": "81099d0c5f1cb850de2e925d1a0564d41247712865241efbd3258380677a10db",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/MouseOutEvent.cs",
+      "before_sha256": "7aa52e8269ec573d03e2a8480ec0a4b4a82ccad251e41012e96492a0035c906e",
+      "after_sha256": "85a0146a51540662621ea2126f4e66e7a33bc997d5640f69a52f1d7b8d539d0d",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/MultiColumnController.cs",
+      "before_sha256": "9460d127de36ccb998997f24956f91531dce3015b377700ba97ffa1c881e480a",
+      "after_sha256": "c9a971e2d4b02c2908ae1c8060cc90e45bc0a94be7202effe66b123c4ffe82e3",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/PanelSettings.cs",
+      "before_sha256": "b9db193daa27b111d53b12e82fb3805393bb1cc5b9a529543ee9399e9a56cf26",
+      "after_sha256": "bf13d34a89eddb3a8539893a268452abd30e87c00ba6ae514097b300fecc0f48",
+      "line_delta": 2
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/PropertyChangedEvent.cs",
+      "before_sha256": "9b503c78af875a5d7f396dc56de887351bcb9fdfa6cc7e878aea5c003e23a093",
+      "after_sha256": "120b3d0880d0d5f6a893a114015f366ccdad03e31ef79829ab312228c271d9e6",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/RadioButtonGroup.cs",
+      "before_sha256": "c04503cd1455763b5ff19c79ccec3475bed02e5e6417cdd212bee4f71c1cdabe",
+      "after_sha256": "ce8973a63df2ba824459ea648294793da297ce12901f6b83f73bfd5b8f44528e",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/ResolvedStyleAccess.cs",
+      "before_sha256": "3105c5a554b2ef0e2f7480a4aa7dba8b3fb67261d5ffa77eee529009fc99dad3",
+      "after_sha256": "57cd0b52fb669d3d4611540c8b6a4cc860f252575defe80c65896424016b67a4",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/ReusableTreeViewItem.cs",
+      "before_sha256": "dd49198a4b34169a99ccd0c7b7294810d6e39e94833196eaa98bea06d8a29419",
+      "after_sha256": "856f1b51d226ef98741c77bd55d47d7fefaf89027893b695f29baf9592e76eaf",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/Rotate.cs",
+      "before_sha256": "98d6b6cfe9532ec986596072ab02dd84840735a072b32fc7f66d4e4dfcd5b1d4",
+      "after_sha256": "ae0e6145be9f0cfbdaee270e530e046f36bfb51dd31cba2067766a4e7baf1cf7",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/ScrollView.cs",
+      "before_sha256": "c3a604096ddd45174356f994998f4a364eee81fa3d05d2d7dc7d40acc2bb9e99",
+      "after_sha256": "c1fd444139fcbf8b905fe4e172ea1b8e25a462239718803e1420b15bd174c702",
+      "line_delta": 12
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/Scroller.cs",
+      "before_sha256": "87d7cd8671ccdddf2ed618eee5fe32ba8f66f9e703fb10cdd8c5f5a160c39c7a",
+      "after_sha256": "965a0a1cc12350344a82bc4d3b0ac4911b2d3f79ba18e0034116e4c47a0d489a",
+      "line_delta": 33
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/SortColumnDescriptions.cs",
+      "before_sha256": "007c2f106e41ee915c361c2ae3324adb1d9011cf60dea77f1ddda5d0ad86a2fb",
+      "after_sha256": "312a70739eff43a05789f2e750dfe84289d7f0d625c49b9586afa97465eab442",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/StylePropertyAnimationSystem.cs",
+      "before_sha256": "80ab97f740fbff6b987d7c3967cf2b74503fb3dee1c68fb5d6a1a41964d814a8",
+      "after_sha256": "527af3c795a0a281f35034edf38e72ba6a941ef2d94e0cae04ef62c746fd14bb",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/StyleValueExtensions.cs",
+      "before_sha256": "f7801f5f2aaee8e5d2e90f619797b938da4bbcbd121cde3d6505a5f57ccd7de2",
+      "after_sha256": "253d6bbee3c7dc6a6a0faed9de48d562ea8bade04dbcc84d4169607d99edebe7",
+      "line_delta": 1
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/TextElement.cs",
+      "before_sha256": "8983c038f669a51df8d28f65cedb05f2699f8929a3b2eb982a0f5b39f03b43c0",
+      "after_sha256": "3fa9446c8a8abdd06864bbd016a89baf6788f37bf01de80c4b9e551d0bc7b315",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/TextSelectingManipulator.cs",
+      "before_sha256": "642d4bf0e0202aac3684ab6e5df3778ff9b4919a8277a48a3c95e49ff99d1f4c",
+      "after_sha256": "4444bf2e92deea33a3e1228f769ebfa146fced7ccfc24c3264d187961c1b0c69",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/TextureRegistry.cs",
+      "before_sha256": "e2eff721ff0faff5aae76766dc983084e5256616f245abcb92d5cd76f1c764b9",
+      "after_sha256": "1d9a3a3298da9a128071fe5cfa1b6a880730e0662d41fa063229ea4bb7ed46d9",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/TwoPaneSplitView.cs",
+      "before_sha256": "c5c7cc007f26748635bcf75826a386405f33a562388ad8475992d0c8a228c33a",
+      "after_sha256": "3b8ce257ef90d58fd03c90ccb4222a60aaea8c872c15ee75274bc4650915b780",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/UIElementsRuntimeUtility.cs",
+      "before_sha256": "82f60bdf3f6c5af152017dde2827d633a6eba7c7804e62dd75b68b7053e4907c",
+      "after_sha256": "f745af554a8963db757a8e1d607128338de88220cc4ecebd2bd5348999034a91",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/UIR/BestFitAllocator.cs",
+      "before_sha256": "5153f5856a7c7e7537baca0927551783fbb6dfb0786d356a75785276c2d1d50a",
+      "after_sha256": "f2966d8632b56a6325a5a87fa83c64c3663600bba9397537d161801527e8a970",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/UIR/EntryPreProcessor.cs",
+      "before_sha256": "46b3ab8ac55d8d218d32fa0302910635033f7bc377f2cff61f802448e866eba5",
+      "after_sha256": "d494090503aad34e812753c13de921f6eb2919bf6094d2d22971aa2892669514",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/UIR/EntryProcessor.cs",
+      "before_sha256": "33d2e1e175fe1b93a460058b4b0a7e5c3fa5e4ab2f98b7e7bda0cb5def397cb9",
+      "after_sha256": "6dff4e58af8ef6c2209813e3caf920bd62ce2c1d22287ed9b5822c20afdd1c30",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/UIR/ExtraRenderChainVEData.cs",
+      "before_sha256": "e515a4a0cce91704c6c2659f89fe7f7d51c4858e7a7a40e9c7a4e03c0e420058",
+      "after_sha256": "9ea9fbe1d84e6ae6f83a046833c8861c270451e65289a047604c275c584caae3",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/UIR/RenderChain.cs",
+      "before_sha256": "693eb3529a4356b2667eaf838c8a59174728f58b1ab20582643ee11647dee220",
+      "after_sha256": "db133f198b5602c1a2c6b404922d472225e5a27cdd9fc0798ebbce473b645756",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/VisualElement.cs",
+      "before_sha256": "bca90b53233d059af5c60882cde1bdf91d0a63f0317d04a7799ca84ac8ec118f",
+      "after_sha256": "e8bee9f47943744417013e77643cfaf17f2ec803496217636907716bfecf223b",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/VisualElementUtils.cs",
+      "before_sha256": "67d5be9e459f22b2526e0e35c8e2156355f14e0100cc9c57f80055e81207a43c",
+      "after_sha256": "9548d15406d6ed0c3aeaffff01df1ab2b2af57e6cc11cd06e553e50baf2a2d63",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/VisualTreeHierarchyFlagsUpdater.cs",
+      "before_sha256": "4491ecfe501c119d799cde5166468ac2410d341638c09ea0209c080364132aea",
+      "after_sha256": "584277d5155084e263b6c1a89d3d2f230896a09ab02623d15d581e4c4f5591a1",
+      "line_delta": 0
+    },
+    {
+      "file": "UnityEngine.UIElementsModule/UnityEngine/UIElements/VisualTreeStyleUpdater.cs",
+      "before_sha256": "c1b1ab008da405ef49c937e85a9b33fb1e8f669558ea868a8f80c19e33bd8381",
+      "after_sha256": "1ec88a11b6c0c172acb358445d0ff160351006fe9ee98ad376d6ffc255e9ea0b",
+      "line_delta": 0
+    },
+    {
+      "file": "com.rlabrecque.steamworks.net/Steamworks/GameServer.cs",
+      "before_sha256": "1b6f763a72e08a53eb2b0137a27e7106256b22fbae043a2532e197a6da640318",
+      "after_sha256": "df120a87a471bea3717a6e39142bcbb8dc9633efd43527b4705e69501747bd65",
+      "line_delta": 0
+    },
+    {
+      "file": "com.rlabrecque.steamworks.net/Steamworks/SteamAPI.cs",
+      "before_sha256": "dae8ac48895fddd46a2055d0e4a38ce086d57a952c7f3e419f6aba0dedd053e4",
+      "after_sha256": "a47d4bf8e910510fb2f3395918f3d732bd28582538f348f0d7fff624a2a28151",
+      "line_delta": 0
+    },
+    {
+      "file": "com.rlabrecque.steamworks.net/Steamworks/SteamApps.cs",
+      "before_sha256": "7b8ce04733e70dba20b38903e8d3d7fdd8b3454d41c8e58e516eacbf21880964",
+      "after_sha256": "30f7025184d3f8782373c760e465a299d9232e846824d7d1ddd1da7b004d4aea",
+      "line_delta": 0
+    },
+    {
+      "file": "com.rlabrecque.steamworks.net/Steamworks/SteamFriends.cs",
+      "before_sha256": "cd78870abc70ff39bb38f732b554d8925a656612157e262aa62423e1f69aac69",
+      "after_sha256": "9ae0cbc3db68b89f3900d9f438ffb3ed0412c9cd239c14914ce3a07029bb1f45",
+      "line_delta": 0
+    },
+    {
+      "file": "com.rlabrecque.steamworks.net/Steamworks/SteamGameServerNetworkingUtils.cs",
+      "before_sha256": "665ed57db78da4fbcffdbdf13fb6e962290599b2759dc6dec90428f66f06a44e",
+      "after_sha256": "07120d2197639660b009b184157338b2e66ca22a93287c5eb81a5748da5f4c5b",
+      "line_delta": 0
+    },
+    {
+      "file": "com.rlabrecque.steamworks.net/Steamworks/SteamHTMLSurface.cs",
+      "before_sha256": "08955b09871a824d4fcf8f3913ca1a4aaa7fb67604daeeaffcc9eca72230156b",
+      "after_sha256": "00be7f21c12328bdf97790eacd75cd83a4ef1ebd6e207a1c6f2c2d8a852e712e",
+      "line_delta": 0
+    },
+    {
+      "file": "com.rlabrecque.steamworks.net/Steamworks/SteamMusic.cs",
+      "before_sha256": "095ea0234ec21b5cd60cba31b37b189845af4b7db6b0302f71f97625a11779ce",
+      "after_sha256": "4302fd72004a533efbfe3d954326237fae35bd4ca4f220ea965d581219a97533",
+      "line_delta": 0
+    },
+    {
+      "file": "com.rlabrecque.steamworks.net/Steamworks/SteamMusicRemote.cs",
+      "before_sha256": "4aae6764edec362b21ac83ce0f88b98dc1839ec42b85d4f87d38a1461557bbbd",
+      "after_sha256": "6643616303c4787eaa41ac870e534a05b3933714afe897ef4bee92ed9437f46e",
+      "line_delta": 0
+    },
+    {
+      "file": "com.rlabrecque.steamworks.net/Steamworks/SteamNetworkingUtils.cs",
+      "before_sha256": "776c47c1f2e684655f0fb2938200b042037e0f2b96437b0aae9d238d4536bd9b",
+      "after_sha256": "a573bc15699d27d9f934341ca100ec45bce7c5f4d5f846ccafc011325dce9400",
+      "line_delta": 0
+    },
+    {
+      "file": "com.rlabrecque.steamworks.net/Steamworks/SteamTimeline.cs",
+      "before_sha256": "53c7eeb57b851344193a45593dbde7d61068a5fc7ddefb0d7c4195223dc09377",
+      "after_sha256": "dbecb869648997ca4dcead870870f34961815b76e439cdfce77bff7ce7ac26c0",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/Mono/Globalization/Unicode/SortKeyBuffer.cs",
+      "before_sha256": "265ec6c21667eed27687f98f21bcf9e88060aee45cfa0b07cd70df2202172d6e",
+      "after_sha256": "bb355c34f561ea7f0fa51520f2e418d0446e127f804765f1ff94655d0f80092c",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/Mono/Xml/SecurityParser.cs",
+      "before_sha256": "77e7d3f165306524d659985e7ee26625f8a917cab3babe31bd61b767dc67dd36",
+      "after_sha256": "0a8776dc257d57db99de11fe83915dd9019de09e353668c609518da85ab281f8",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/Mono/Xml/SmallXmlParser.cs",
+      "before_sha256": "e33fd51db98d6c036cc048fafbbfb3bbc5f68736280ff3c7eac2c9a3ee51b202",
+      "after_sha256": "9a49b9777e0f998fe28206ab615a1d8d285882ab31352bce55ee48765bfd8aa0",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Activator.cs",
+      "before_sha256": "ff9616795e84a7371ff148596985bce690aae3bc7297ca8b58f2eba3e5c71fc3",
+      "after_sha256": "64b3f73c8d95513961dd8a8d7600e16f1d59ee9e227a3cffd7f09be5b33e18d6",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Array.cs",
+      "before_sha256": "02ccc99b4df5bb38993c7403987b14b91420fe02b668cb5724ff38e393623191",
+      "after_sha256": "e207a00ed977325cc5b8c44486c409b12ce7071a8281841d22c24874d8253a83",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Attribute.cs",
+      "before_sha256": "604620bd161cbf26fa540e46dfe9944b8db1b48ce9fd6d665362eee5911799b5",
+      "after_sha256": "6f281399429dfdbf47df1293e547d66e04e80ce19b1c8b671d4079257e9b2a60",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Char.cs",
+      "before_sha256": "b9901938f884c455a62843436b95d46e43412bd26a663f48fea7ae70888bbc37",
+      "after_sha256": "de85389540d49ce4c9f5829255f67a53558858bdd355617dc6958002f2cf418b",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Collections/Generic/ByteEqualityComparer.cs",
+      "before_sha256": "5ddec5bbee1f14c642c31f870dc77d9df832376e7eed32936096fa1e9d086013",
+      "after_sha256": "83e2c26028bfc0bdd1c88c7940fcbf9e3d5a78a64f12500dd5cb51b3f076d624",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Convert.cs",
+      "before_sha256": "e0add79bd50a120c06c5889db6e1669fffff72f9f30a521ba19435de386d5fc9",
+      "after_sha256": "0406f2bad804aa4ea04250abc40e9ded731f84504599f71cd29593685ce7cc14",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/DateTime.cs",
+      "before_sha256": "1d288b744126619c5169fe503a4367fd208a819404c42c9b90dfae46fec4ede9",
+      "after_sha256": "ee7e5753db596d582c097eee6124ee6b326feac78f96f9fc9c20ec5b1ce223a3",
+      "line_delta": -15
+    },
+    {
+      "file": "mscorlib/System/Decimal.cs",
+      "before_sha256": "f43ec08b573a048ae074fddf7679396800beeb7a503475367fc9a229dc88adc7",
+      "after_sha256": "4561aa859e4575f685f4f450581364af2e4971b365998d4e2c02ca3cf6167c7e",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/DefaultBinder.cs",
+      "before_sha256": "745875b40f98b3660dc993056e0156b9da7af6bd62344482c45923596519578c",
+      "after_sha256": "bdead7671d6b71a06e308bda2f34b24fd794c9b81211712be0568c03d4cc5b27",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Diagnostics/StackTrace.cs",
+      "before_sha256": "38794815504879664990f6ce7e0f4e1b9fb82b5a94dd79ed284a4a55f0c1ab05",
+      "after_sha256": "8abb8bcd58d9baacf9d5810a79e77388e6aa7bc70c0b9e37b0cbda32aa05707b",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Double.cs",
+      "before_sha256": "5c69367a499fce6ae3b3d84a6de1ca2e772fa6f540049ec79b4d241167f89acb",
+      "after_sha256": "dd48454f47fe70cc4978f3ed50bc99781f1688de04d901075b72b164d7f08c81",
+      "line_delta": -70
+    },
+    {
+      "file": "mscorlib/System/Exception.cs",
+      "before_sha256": "339cda562270bac8636cfef4350ffd1ec1a731a920a095ad5749c7352afab83b",
+      "after_sha256": "9e97cfffb7471a243c1d7c46415f608f382c3a630b77d5df771856cb42e79d1c",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Globalization/CompareInfo.cs",
+      "before_sha256": "963c0a430c9be778d96aaddfcd479bb227c10ff44e39636d45a155de102d6635",
+      "after_sha256": "f9fc36bd4f814cf6d914f0dbb69d592a88890a6abf96b38212eff1bb823f426d",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/IO/FileStream.cs",
+      "before_sha256": "d8f1b63b3c97b965a44e5a2325f9192c76cb8bf784953806c0f1d70ddf296496",
+      "after_sha256": "a044d236f95dd85dca5c767861428e8a37083d6d42b28a5cc8bd208dbc1eb214",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/IO/Path.cs",
+      "before_sha256": "ce748c40ba23067b3f136e0ce5531f8452ff4cc263ee45f68f39d8f319711170",
+      "after_sha256": "6977ae73ee46c16266d8a38821e8c46c571d706377dbfb52e99c2051490fd710",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/IO/Stream.cs",
+      "before_sha256": "2805f0a9e1dde72ac8fd348d17f9adcdb2f03c7c14f3e30028d6ee425bdf805e",
+      "after_sha256": "a629c2253fa91612df036a085dd44575cfb8e7e1965f98f2c3dd2e9e2d1f2075",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/IO/StreamWriter.cs",
+      "before_sha256": "e0e41775e399c83a440f41f256ac07690347fcbe191345b4e315fab9feb1d1c3",
+      "after_sha256": "45c98fc7c6f472f558b839b45f20e240f22b6a89e6092b6226aa30d9b5012097",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/IO/UnmanagedMemoryStream.cs",
+      "before_sha256": "a18a67f45301cb881969050b95c9ea49d9677bc5a9fe96e319d25af04be0fb25",
+      "after_sha256": "f7ee2ff080fb3861ee1a02cf672ac387375dfffa64ee64a2087775a9a95b690c",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Math.cs",
+      "before_sha256": "47f420c9c2fd0761d8d22d5d4c217273879bfbebc9054c649e7494a4066c9efe",
+      "after_sha256": "570b31368f86c50254b709c10cdc0510aeb96fa2f0c7dba8cbfde23b279c6c2a",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/MemoryExtensions.cs",
+      "before_sha256": "79efa66c041307306621c2fb454a9d899a1f9bd81aa74d2fb6fa96d05874b1c0",
+      "after_sha256": "2c5ffa272be91e9c500b0ba35cc0833666d9364414f592eadad5d3f9e16dc1cc",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/MonoCustomAttrs.cs",
+      "before_sha256": "a197d9119f8e148642bc378ad2229e9bc147f11453dff5efb29c4cdeb6f9da62",
+      "after_sha256": "4016f9bc094470600aa14649c94542b22bcf60cf33e6953c83bd6f706ee624cf",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Number.cs",
+      "before_sha256": "dedc9fe3cc03d06c4be1c5b41c6d73ac050dcc1dc4e78fc6b299e74330ca5610",
+      "after_sha256": "872bf3a45623c58fb7dcde011a0a11236d35bc5053c61c46965bd07ac1b05084",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/OrdinalCaseSensitiveComparer.cs",
+      "before_sha256": "b6e1c25e70face1aafd8e6432287847caa9f0e4352e54961ac920252aa81a40e",
+      "after_sha256": "b160ce03543341d788ed7768be47c45ab66d8cf09ef2e65c3b73cb7abb059069",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/OrdinalIgnoreCaseComparer.cs",
+      "before_sha256": "35fd42754e64824141d91a5b4450bdafae5f72ff850c23262addc3772f8db5b8",
+      "after_sha256": "9101142c2483729ddbbc6126ff79ba09a09a008e0333378c0f86742a2a302a26",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Reflection/CustomAttributeTypedArgument.cs",
+      "before_sha256": "a1d05d99e5480fc36a70301355d1aa7c4b708893c0c158fe2c8659be1bc6bfc7",
+      "after_sha256": "c54c899f3280806883d65e802a60415b88282970753336190e3a3df48de24b41",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Reflection/Module.cs",
+      "before_sha256": "4741cb2ed8037e4860ca46287e178e49abba5b3b96737db952ee8324f643261e",
+      "after_sha256": "9d1d57ba842f885e143176de6c64f168eceef5e5d8c2b420905c9b9e9cbc74d0",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Reflection/ReflectionTypeLoadException.cs",
+      "before_sha256": "7d276ba4e7dc6f676798f9950106d939345a90e2c4e5bf1fd0c3df69a04b7088",
+      "after_sha256": "3d419dac10e63b3207dcb3dde7d49b8751cd4e4decd01bc3e89ac10891d77f14",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Reflection/RuntimeConstructorInfo.cs",
+      "before_sha256": "fe3699fff3e0869df6e744d200bbed54161499e56271f9885e7accc037425584",
+      "after_sha256": "e5c0dd85640a6bab52b90d1b2d96a92dceb28bda5eca1fe50dec2c7194f3b370",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Reflection/RuntimeParameterInfo.cs",
+      "before_sha256": "93e688bdaeb1d8cdec83e926a4a2f4c3731d02556cd9649a7684d9360d6eaedd",
+      "after_sha256": "37716bbe1664b4b7b57dc75ad0821500e1a6809ac1d05684327d9fd8524c34f4",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Reflection/RuntimePropertyInfo.cs",
+      "before_sha256": "3842e2bb53d5438b828568ea36ca2c40bf0afda83afe516cf0f18b5d1a6ebb2e",
+      "after_sha256": "85c28ebdc21d58f090ea05255785ecf445ab01fb0cd92e11a573455824d5919d",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Resources/ResourceReader.cs",
+      "before_sha256": "fec2c314c6b27274b188a31f135d99b3ceabce2c76b6f852e1e94dcb3cd1a6e1",
+      "after_sha256": "32695a0a451e553c08ac82afd84f8b4b10a12a803241eb2023d29bd4394a8772",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Runtime/CompilerServices/YieldAwaitable.cs",
+      "before_sha256": "7f418139dc56e79c712cb798cac5caac4e0c4d693009d0dff4a8978da6197d84",
+      "after_sha256": "cc8498698b2f0cbe77d969a86394a42396e629b4052a0c7797e85be9863429de",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Runtime/InteropServices/SafeBuffer.cs",
+      "before_sha256": "f1370251e3e39b9a2762158cbcdc645b82d8883171f1da041ccf01cecb35e44d",
+      "after_sha256": "2413e0124dec5ab0eeb0f487c7826cc687c582d82c25844f291aac22107bbd04",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Runtime/InteropServices/SafeHandle.cs",
+      "before_sha256": "bc96cd4178b991c4f3ab141c50b7ac8bac8b1423e90426b0539d577f07f215de",
+      "after_sha256": "06716b39279bea2fde9b2a28b5458e06e85ed2d47b497f237b8eee4e65c80e22",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Runtime/Remoting/Channels/CADSerializer.cs",
+      "before_sha256": "979314c9fa931256dadeaa0710eeb0ff28aa798c1ba14b889bb6a6347583a55c",
+      "after_sha256": "b68d8a56cc270eda01da13d0fe049714a8e51fe9169c7a598620836ccbdae909",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Runtime/Remoting/Channels/ChannelServices.cs",
+      "before_sha256": "1f88d3415bea34a84f40bfb6b0497c9119384914b4c14e995f3c47e9acbd163a",
+      "after_sha256": "6d69d2f83f96e9108831df78e20377957e6d084d005cada7f3588c6ec6940ea3",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Runtime/Remoting/ConfigHandler.cs",
+      "before_sha256": "30bf672fb9e62425a9858bc4273085f9f9a6a3e4909e9c7708a685f94eaeac93",
+      "after_sha256": "fddfdfc0c7b1608189d8b0836e91386036dae520e9cb06392a301da3dd6de3a6",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Runtime/Remoting/ObjRef.cs",
+      "before_sha256": "d8ded5b6c9b2f9e8a91dc8da4252771b116776603d0bbd807d90265c9e26605f",
+      "after_sha256": "d67979872770fb04b08d6ba35afbe78cd8318b5c394d27caef93cc9af9d84458",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Runtime/Remoting/RemotingServices.cs",
+      "before_sha256": "5207709cd72e6b5dd24b8e9a417aad962d6489fb2491ce8e0e4f862d6c78276e",
+      "after_sha256": "953b56f8062cd877ed06a9326a3e8aa8f7fb8f88c14ab3995d7b683ef2c23017",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Runtime/Remoting/SoapServices.cs",
+      "before_sha256": "da61c2426156d719577b5b7d4be6c758a5a4d581b284844e46fba576fb020044",
+      "after_sha256": "e28a2ed82b318200dc4b7602f06400941227cf56f6869b4e2e5e81d543e6f8e2",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Runtime/Serialization/Formatters/Binary/BinaryParser.cs",
+      "before_sha256": "9b0fd810de973b541e1b949855c9146a2fc71a451cdf9f01203f572e71dcbc80",
+      "after_sha256": "a77ede932a6f6ec3b544efb863a6a37a29ab7af7bd4c7c0cf86929b17427ca17",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/RuntimeType.cs",
+      "before_sha256": "321d7765027208144fe8217d4eec0bc23d8ea0add81262f3d47edc08d8dcfcee",
+      "after_sha256": "a3ca06e1101a5f8e6c89ebc02aa1ab370e6064d22a125f6f07b69163477a875c",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Security/Cryptography/AsymmetricAlgorithm.cs",
+      "before_sha256": "428d48c23a532bab3f834617587eb3d180f40b9d3f771081a773d805a775e8ed",
+      "after_sha256": "c171fb94852c22247471f7208ffcc955f189fbcc7ff030ae8003829e809783f1",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Security/Cryptography/DSA.cs",
+      "before_sha256": "d06ad0f744091a1d60b5fc6fe8ce6a21e15c34a2c0d99e514b04c81dc047594c",
+      "after_sha256": "0d4bc1386af1a7cd1517a890939b2827a251a89978ce75bbc9586e82b6dda7a4",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Security/Cryptography/DSACryptoServiceProvider.cs",
+      "before_sha256": "2f1642d6cf993eaf3e9f31615a12ba0f7daf1b4afaccb9b3accd87400d1fe2e4",
+      "after_sha256": "cca66ac361ead26663bc56dacf8ee467aef3b50e2dd37e62ea5f355026987462",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Security/Cryptography/RSA.cs",
+      "before_sha256": "87cf998fdf13cf9b2994d7000f98c44599a233688407c861b25ac2aa050c0704",
+      "after_sha256": "edb7e62e88c473e8e79955c738c1bf816365d7d23908315419d7ae5289cf8c81",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Security/Cryptography/RSACryptoServiceProvider.cs",
+      "before_sha256": "32d85a821a5b42d5c422feb89dd3dd7e16d2502c1e216d9cd8ed373b274d465b",
+      "after_sha256": "4158a32bf433d3eec1142cc795e32840c93340dea2a1cbb16cc9584a984b0abe",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Security/Cryptography/RandomNumberGenerator.cs",
+      "before_sha256": "7f84c32facb7b55a70436e0da72a27fb9c1d0f185a9828bfff44abdbda59e060",
+      "after_sha256": "a7ec59b78a4f7dbcb6e6360e5743bf8c0b9d7998bc8e290998f129e1ad794264",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Security/Cryptography/X509Certificates/X509CertificateImpl.cs",
+      "before_sha256": "b7a54f9c07a05b950c2e76bd42da485cf5f0a7748e276aa41187b06278899e38",
+      "after_sha256": "ec85eefdf504814458c95b2333cf6aab27c771e4d6864eb28254bf7af697ca9d",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Security/Util/Tokenizer.cs",
+      "before_sha256": "2648de2f80bf783344e747b6d607188ab21048a69f151c86a1c60a5f50d59405",
+      "after_sha256": "55d2fa5ab1d98146e302d8a292ab38ed058a4a960fa899f85d2a328320fd837a",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Single.cs",
+      "before_sha256": "b4d37526cc948b5d8090c647bb24a4a45aeace21705c8d317020568e1d7fa874",
+      "after_sha256": "5860cb455ad9c5a7b214346f03e2dbd1532ae929870b2ed5b0953140d3969f33",
+      "line_delta": -70
+    },
+    {
+      "file": "mscorlib/System/String.cs",
+      "before_sha256": "c75039b26c8974339d80859c4b73762b050793592765e4d06e5d673682ae28db",
+      "after_sha256": "5191452a3dd61e33ebfd90d2f59df19f31239e299f09cf1063bc9179a46ca489",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/TermInfoDriver.cs",
+      "before_sha256": "f01d2e4082f3d1b908ebcb513d7ce4b299049f53ebc43e9e8c77158323b5004d",
+      "after_sha256": "7458e63b9b2b995ca8e59b0b51ba6f6b28327835307098f7dbd53fb231c48d5a",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/TermInfoReader.cs",
+      "before_sha256": "5802f5eda64ad7e52652e0e14fe41c91b554c65062215c0b5fda24947b6837a9",
+      "after_sha256": "381bd3f97cc1b756ae6dc7dd26651ba53449fedee58c15eed1edcd327390af58",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Text/Normalization.cs",
+      "before_sha256": "dd1337dd43f4f6f0f05361f46d8353b476608fb42f6ff65969cb038ebb177089",
+      "after_sha256": "68559937702b9b154a226752788566c920d6f77461a8ce0167d4069fb6a2e761",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Text/StringBuilder.cs",
+      "before_sha256": "2e497577bc2e585a8808a2c84ce02c197a237c8ee7bb465324e50046b1214ccb",
+      "after_sha256": "7d4bc9d89fc135832d0fe034d66c51f6d4b11f29b0ea966a6303830b10ea7911",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Threading/CancellationTokenSource.cs",
+      "before_sha256": "9cf99432e33bb316fd9daef38ac69e74fa0eac5c4e2cbe4e04487bd45b97ff81",
+      "after_sha256": "a216643de1a7687d7cdf4ea745097db26042291297c918a40accccc77898f85c",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Threading/ExecutionContext.cs",
+      "before_sha256": "286aee70155875279baac911d1623b9baa6809c431af85bd2e7fbb6dcd128b19",
+      "after_sha256": "c4acbd37eadb8c2b4e469d8591271261b918023c1ce87b97aba84752f3744c19",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Threading/ManualResetEventSlim.cs",
+      "before_sha256": "647220e84f05266e19739d41531460d425115f1bdac736c91fa88dad054bae70",
+      "after_sha256": "a83359a187ee080da922fbde8206d1a5e49fc7cd88fb9db804ce415f2f52fd08",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Threading/SemaphoreSlim.cs",
+      "before_sha256": "8d5e5dc89f1cb6da769372139c6429c182bdf858fb99516844203dfffb3ff00f",
+      "after_sha256": "c0d31aeb62b845062b10440dd176d210106bc7a137e4674a937ccc893dca8c16",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Threading/Tasks/AwaitTaskContinuation.cs",
+      "before_sha256": "9010d41d229287a99fd2281cef687efa57b74ba36807004c68fc06f2f3b14fe7",
+      "after_sha256": "f9ea395b9565fba0cbb1cbdb349f032a3c279ec9f293bb8b8168135881fd144e",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Threading/Tasks/SynchronizationContextTaskScheduler.cs",
+      "before_sha256": "e9bef2b15ac531c5bf811efe33c420c19169757a5462e4a04f77d6e561102dde",
+      "after_sha256": "6cf4afda3966b56c66739050fc877aefc115f093263aaaed32336f984f62f10a",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Threading/Tasks/TaskScheduler.cs",
+      "before_sha256": "b51c9f62e9487b98cfa0683a7ad3d53009a8cbe1935fc248dd8f6a22b846ff10",
+      "after_sha256": "b936af38fdf96e187f96bd3dc0124c18ae841344d6342a1ad7867db8c0891673",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Threading/Tasks/Task_2.cs",
+      "before_sha256": "c950be893501e8d446e8cd8187f7c01f73a18c685655fb2a4657f3dc8c2257cd",
+      "after_sha256": "796c3bf504eec899505b21c5d91555f28959bb16891bfd8116b7043e0772c0e1",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Threading/Tasks/ThreadPoolTaskScheduler.cs",
+      "before_sha256": "549179f2634c3e2288d31f5e8ac1461a5660d40bac24be927b3285a3ec892b75",
+      "after_sha256": "676a58b0e0062dce81da502da9c0a8786fb2ab0d5dd6e990d664b5c628fc3b58",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Threading/Thread.cs",
+      "before_sha256": "be7df402378070f488d04107ab74c9d2673af3062ba3661b774a5bf616c67bdf",
+      "after_sha256": "5eca82a6329c697564c28792feabed2fb26fa1f2b54d1d481c7bcec95720f4a3",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Threading/Timer.cs",
+      "before_sha256": "6ba1f69fb3ee83c0321ef6612dda1d7454ada1aba919a401cb2188fae2c8a0b3",
+      "after_sha256": "708f6ab760304ef59c43d777dd4f435b900d8ed3599c7526d87d6225152d816f",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/Threading/WaitHandle.cs",
+      "before_sha256": "f214b357b2a831b764e1a97f0e5fe0d30bef68e5520deb660ae01c5ffb071ce6",
+      "after_sha256": "9968a690cdf712d612c8dbd40af7f3f9bcc227002e19bb6d3bb50146e65b1753",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/TimeSpan.cs",
+      "before_sha256": "3469570beb81e365500451d5670d96d813861ba898165172207c918ebdf7bfcb",
+      "after_sha256": "bb1cc0c9d869c542fe54bcd9f4000fdd1e45dd2689153f5f0830e419fd671030",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/TimeZoneInfo.cs",
+      "before_sha256": "13e2c15a36e10966328971561f5e7e10c65d6a701ea09a4174fc35dcbfb8853f",
+      "after_sha256": "9e3f473dbf56f27c2eaa255f8276707e93e9153d14e77e6ff05fe90f3cc64540",
+      "line_delta": 0
+    },
+    {
+      "file": "mscorlib/System/UnitySerializationHolder.cs",
+      "before_sha256": "a14907530741fe30dcfd80c14f5086f5e49ab38ad1e6f126099b8ed3b01a294d",
+      "after_sha256": "c40e61f7499d96eec576c2d91ba6acce767bab5536adfe278a69878304a67bb3",
+      "line_delta": 0
+    }
+  ]
+}

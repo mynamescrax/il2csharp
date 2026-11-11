@@ -1,0 +1,301 @@
+{
+  "release": "Review 80",
+  "date": "2026-09-09",
+  "scope": "Private full-folder replacement; static native inspection only",
+  "input_archive_sha256": "b4707a8936ee7c93c307e9bc73a69d965c62369dbfdf70b811acb8bd4c0e6515",
+  "baseline_source_sha256": {
+    "il2csharp.py": "bb7abc07de35df5d146ae56ca307fc84d053e77801fda1fd5080e29f41eec0d9",
+    "decompiler.py": "9507589dcc2dc9c4303a0e2fa95975274af72dcd3f2a3a149e165be2a7362246"
+  },
+  "source_sha256": {
+    "il2csharp.py": "214aebc8833c50415441c0649427b560bb7d05d4530be824be5f52b0de96e348",
+    "decompiler.py": "5e787d4cd949f6f60668480e37617201630bb21c65430f5a6ee2c79b5399aac0"
+  },
+  "source_formats": {
+    "il2csharp.py": {
+      "bytes": 433212,
+      "lines": 9372,
+      "crlf_lines": 9372,
+      "lf_only_lines": 0,
+      "utf8_bom": true
+    },
+    "decompiler.py": {
+      "bytes": 366289,
+      "lines": 7735,
+      "crlf_lines": 7735,
+      "lf_only_lines": 0,
+      "utf8_bom": false
+    }
+  },
+  "fixtures_unchanged_sha256": {
+    "testgame/GameAssembly.dll": "d7209d756930bcb2d9bc2e763a74de3b86ec5d94910796f4dc610308650a70ab",
+    "testgame/ShiftAtMidnight_Data/il2cpp_data/Metadata/global-metadata.dat": "a2c6baf6b3aa18866f1871a393cd88d9f8397593284dd2d49cfb9adaaacf81d9"
+  },
+  "environment": {
+    "python": "3.13.14 (main, Jul 15 2026, 00:00:00) [GCC 11.5.0 20240719 (Red Hat 11.5.0-5)]",
+    "platform": "Linux-6.18.40-x86_64-with-glibc2.34",
+    "dotnet_sdk": "8.0.425",
+    "packages": {
+      "iced-x86": "1.21.0",
+      "pytest": "9.1.1",
+      "tree-sitter": "0.26.0",
+      "tree-sitter-c-sharp": "0.23.5"
+    }
+  },
+  "tests": {
+    "baseline_passed": 255,
+    "total": 265,
+    "portable": 188,
+    "snapshot_cases": 64,
+    "native_assertions": 13,
+    "snapshot_unchanged": 59,
+    "snapshot_changed_indices": [
+      11974,
+      32833,
+      32837,
+      39789,
+      80548
+    ]
+  },
+  "build": {
+    "strict": true,
+    "exit_code": 0,
+    "csharp_files": 11107,
+    "projects": 91,
+    "lifted": 115658,
+    "failed": 0,
+    "structured_fallbacks": 0,
+    "type_emit_failures": 0,
+    "elapsed_ms": 1375305
+  },
+  "parse": {
+    "kind": "tree-sitter C# syntax gate",
+    "tree": "/vercel/sandbox/data/rebuilt80/final_out",
+    "files": 11107,
+    "bad_files": 0,
+    "errors": 0,
+    "missing": 0,
+    "recovery_nodes": 0,
+    "details": {},
+    "elapsed_seconds": 25.844
+  },
+  "sweep": {
+    "kind": "direct structured-lift sweep",
+    "metadata_sha256": "a2c6baf6b3aa18866f1871a393cd88d9f8397593284dd2d49cfb9adaaacf81d9",
+    "binary_sha256": "d7209d756930bcb2d9bc2e763a74de3b86ec5d94910796f4dc610308650a70ab",
+    "source_sha256": {
+      "il2csharp.py": "214aebc8833c50415441c0649427b560bb7d05d4530be824be5f52b0de96e348",
+      "decompiler.py": "5e787d4cd949f6f60668480e37617201630bb21c65430f5a6ee2c79b5399aac0"
+    },
+    "methods": 116178,
+    "crashes": 0,
+    "totals": {
+      "brace_unclosed": 0,
+      "brace_underflow": 0,
+      "dangling_gotos": 0,
+      "into_block_gotos": 8067,
+      "empty_args": 0,
+      "lines": 2205134
+    },
+    "affected_methods": {
+      "into_block_gotos": 2047
+    },
+    "crash_details": [],
+    "method_manifest": "final_sweep.methods.jsonl.gz",
+    "tail_argument_changes": 1218,
+    "tail_argument_methods": 1177,
+    "tail_argument_manifest": "final_sweep.tail-args.jsonl.gz",
+    "elapsed_seconds": 1323.961
+  },
+  "comparison": {
+    "common_methods": 116178,
+    "added_methods": [],
+    "removed_methods": [],
+    "changed_method_count": 7797,
+    "structural_change_count": 1615,
+    "new_crash_count": 0
+  },
+  "structural_delta": {
+    "before_into_block_gotos": 13641,
+    "after_into_block_gotos": 8067,
+    "net_into_block_gotos": -5574,
+    "before_affected_methods": 2996,
+    "after_affected_methods": 2047,
+    "methods_decreased": 1532,
+    "methods_increased": 83
+  },
+  "output_comparison": {
+    "before_files": 11200,
+    "after_files": 11200,
+    "common_files": 11200,
+    "added_files": [],
+    "removed_files": [],
+    "identical_files": 7734,
+    "changed_files": 3466,
+    "changed_csharp_files": 3466,
+    "changed_project_files": 0,
+    "selected_metrics": {
+      "inventory_manager": {
+        "before": {
+          "lines": 12445,
+          "unknown_tokens": 10,
+          "gotos": 264,
+          "while_true": 3,
+          "do_loops": 5
+        },
+        "after": {
+          "lines": 16310,
+          "unknown_tokens": 10,
+          "gotos": 70,
+          "while_true": 4,
+          "do_loops": 4
+        }
+      },
+      "people_walk_path": {
+        "before": {
+          "lines": 641,
+          "unknown_tokens": 1,
+          "gotos": 5,
+          "while_true": 7,
+          "do_loops": 4
+        },
+        "after": {
+          "lines": 876,
+          "unknown_tokens": 0,
+          "gotos": 0,
+          "while_true": 8,
+          "do_loops": 4
+        }
+      },
+      "stream_reader": {
+        "before": {
+          "lines": 2788,
+          "unknown_tokens": 10,
+          "gotos": 57,
+          "while_true": 3,
+          "do_loops": 6
+        },
+        "after": {
+          "lines": 2864,
+          "unknown_tokens": 3,
+          "gotos": 59,
+          "while_true": 3,
+          "do_loops": 6
+        }
+      },
+      "touchscreen": {
+        "before": {
+          "lines": 572,
+          "unknown_tokens": 19,
+          "gotos": 0,
+          "while_true": 0,
+          "do_loops": 3
+        },
+        "after": {
+          "lines": 596,
+          "unknown_tokens": 17,
+          "gotos": 0,
+          "while_true": 3,
+          "do_loops": 2
+        }
+      },
+      "viscosity_job": {
+        "before": {
+          "lines": 754,
+          "unknown_tokens": 124,
+          "gotos": 0,
+          "while_true": 5,
+          "do_loops": 0
+        },
+        "after": {
+          "lines": 787,
+          "unknown_tokens": 123,
+          "gotos": 0,
+          "while_true": 7,
+          "do_loops": 0
+        }
+      },
+      "socket_native_source": {
+        "before": {
+          "lines": 1010,
+          "unknown_tokens": 0,
+          "gotos": 0,
+          "while_true": 2,
+          "do_loops": 1
+        },
+        "after": {
+          "lines": 1007,
+          "unknown_tokens": 0,
+          "gotos": 0,
+          "while_true": 2,
+          "do_loops": 1
+        }
+      }
+    }
+  },
+  "compiled_smoke": {
+    "scope": "synthetic instruction-generated C# only; NOT final_out",
+    "fragments": {
+      "sqrt_float": "(float)Math.Sqrt(value)",
+      "sqrt_double": "Math.Sqrt(value)",
+      "array_body": "var t0 = new string[2];\nt0[0x0] = \"left\";\nt0[0x1] = \"right\";\nvar t1 = new string[2];",
+      "first_array": "t0",
+      "second_array": "t1",
+      "sret_body": "s_40 = s_20.point;",
+      "loop_body": "while (true)\n{\nvar t0 = loopSource;\nif (!(t0 != 0))\n{\nt0 = Refill();\n}\nif (t0 == 0)\n{\nbreak;\n}\nTick();\n}"
+    },
+    "compiled": true,
+    "executed": true,
+    "generated_unsafe_project_compiled": true,
+    "exit_code": 0
+  },
+  "promotion_verification": {
+    "expected_files": 11200,
+    "actual_files": 11200,
+    "changed_paths_checked": 3466,
+    "failures": []
+  },
+  "limits": [
+    "No complete recovered-game C# build",
+    "No native game execution",
+    "No semantic-equivalence guarantee",
+    "8,067 into-block gotos in 2,047 methods remain",
+    "Definite assignment and project references remain open",
+    "Cyclic allocation identity remains guarded",
+    "Packed SIMD and native sqrt/helper ABI remain open",
+    "Broader sret/generic/virtual/indirect/stack argument recovery remains open",
+    "Remaining goto/SEH/control-flow artifacts remain open",
+    "No ARM64 fixture validation",
+    "Concurrent elapsed times are not performance measurements"
+  ],
+  "release_copy_verification": {
+    "stage": "pre-final archive extraction; final archive differs only in release evidence/docs and the regenerated manifest, not source, tests, fixtures, or final_out",
+    "archive": "il2csharp-review80-provisional.zip",
+    "archive_bytes": 113866101,
+    "archive_sha256": "e9890969148142e67f433d06560c1ebdbe99ca3817c3cd1ed1f10a086acab98c",
+    "root_layout": "il2csharp/il2csharp.py",
+    "root_layout_ok": true,
+    "manifest_entries_checked": 11753,
+    "manifest_failures": 0,
+    "tests_passed": 265,
+    "tests_exit_code": 0,
+    "compiled_smoke_passed": true,
+    "compiled_smoke_exit_code": 0,
+    "compiled_smoke_scope": "actual CFG-loop/lifter patterns and emitter-generated unsafe project; not final_out",
+    "core_sha256": {
+      "il2csharp.py": "214aebc8833c50415441c0649427b560bb7d05d4530be824be5f52b0de96e348",
+      "decompiler.py": "5e787d4cd949f6f60668480e37617201630bb21c65430f5a6ee2c79b5399aac0"
+    },
+    "fixtures_sha256": {
+      "GameAssembly.dll": "d7209d756930bcb2d9bc2e763a74de3b86ec5d94910796f4dc610308650a70ab",
+      "global-metadata.dat": "a2c6baf6b3aa18866f1871a393cd88d9f8397593284dd2d49cfb9adaaacf81d9"
+    },
+    "logs": [
+      "tests_release_copy.log",
+      "csharp_smoke_release_copy.log",
+      "manifest_release_copy.log"
+    ],
+    "initial_extracted_file_count": 11755,
+    "post_test_file_count_including_disposable_caches": 11831
+  }
+}

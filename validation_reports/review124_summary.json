@@ -1,0 +1,306 @@
+{
+  "kind": "fix 124 wide-store byte offsets: landing evidence",
+  "fix": "fix 102/103 rendered a wide raw lvalue as `((T*)E + N)[0]`; C# pointer arithmetic scales N by sizeof(T), so every non-byte raw store addressed N*sizeof(T). The display now casts after a byte-addressed sum, matching `_wide_raw_lvalue`: `((T*)((byte*)E + N))[0]`.",
+  "source_files": [
+    "il2cpp/lifter/insn.py (_wide_store_disp, _wide_rmw_disp)",
+    "il2cpp/text.py (_canon_wide_cast inner-byte-cast strip)"
+  ],
+  "native_recheck": [
+    {
+      "mi": 1935,
+      "va": "0x181c9fee0",
+      "type": "System.HashCode",
+      "name": "Initialize",
+      "native_store_offsets": [
+        {
+          "offset": "0x0",
+          "width": 4,
+          "respelled_by_fix": true
+        }
+      ],
+      "pre_fix_wrong_byte_offset": [],
+      "note": "offset 0: spelling-only change (uint store, no-op)"
+    },
+    {
+      "mi": 25626,
+      "va": "0x180704750",
+      "type": "InventoryManager",
+      "name": "Rpc_CMD_UpdateInventoryForHost",
+      "native_store_offsets": [
+        {
+          "offset": "0x0",
+          "width": 8,
+          "respelled_by_fix": false
+        },
+        {
+          "offset": "0x8",
+          "width": 4,
+          "respelled_by_fix": true
+        }
+      ],
+      "pre_fix_wrong_byte_offset": [
+        "0x20"
+      ],
+      "note": "RPC header, then the first array length at byte 0x20"
+    },
+    {
+      "mi": 26747,
+      "va": "0x18057b760",
+      "type": "PlayerManager",
+      "name": "Rpc_CMD_Heal",
+      "native_store_offsets": [
+        {
+          "offset": "0x1c",
+          "width": 8,
+          "respelled_by_fix": false
+        },
+        {
+          "offset": "0x24",
+          "width": 4,
+          "respelled_by_fix": true
+        }
+      ],
+      "pre_fix_wrong_byte_offset": [
+        "0x90"
+      ],
+      "note": "header, then the float payload at byte 0x90"
+    },
+    {
+      "mi": 32837,
+      "va": "0x18264a970",
+      "type": "UnityEngine.InputSystem.Touchscreen",
+      "name": "UnityEngine.InputSystem.LowLevel.ICustomDeviceReset.Reset",
+      "native_store_offsets": [
+        {
+          "offset": "0x0",
+          "width": 16,
+          "respelled_by_fix": false
+        },
+        {
+          "offset": "0x10",
+          "width": 4,
+          "respelled_by_fix": true
+        }
+      ],
+      "pre_fix_wrong_byte_offset": [
+        "0x40"
+      ],
+      "note": "16-byte event, then eventId at byte 0x40"
+    },
+    {
+      "mi": 75101,
+      "va": "0x1826da850",
+      "type": "Unity.Mathematics.uint3x3",
+      "name": "op_Explicit",
+      "native_store_offsets": [
+        {
+          "offset": "0x0",
+          "width": 8,
+          "respelled_by_fix": false
+        },
+        {
+          "offset": "0xc",
+          "width": 8,
+          "respelled_by_fix": false
+        },
+        {
+          "offset": "0x18",
+          "width": 8,
+          "respelled_by_fix": false
+        },
+        {
+          "offset": "0x8",
+          "width": 4,
+          "respelled_by_fix": true
+        },
+        {
+          "offset": "0x14",
+          "width": 4,
+          "respelled_by_fix": true
+        },
+        {
+          "offset": "0x20",
+          "width": 4,
+          "respelled_by_fix": true
+        }
+      ],
+      "pre_fix_wrong_byte_offset": [
+        "0x20",
+        "0x50",
+        "0x80"
+      ],
+      "note": "three qword lanes, then ints at bytes 0x20/0x50/0x80"
+    },
+    {
+      "mi": 80548,
+      "va": "0x181eab2f0",
+      "type": "ViscosityVorticityJob",
+      "name": "Execute",
+      "native_store_offsets": [
+        {
+          "offset": "0x0",
+          "width": 4,
+          "respelled_by_fix": true
+        }
+      ],
+      "pre_fix_wrong_byte_offset": [],
+      "note": "indexed `[base + idx*4]`: the index stride was squared, so every element but the first was misplaced"
+    },
+    {
+      "mi": 109194,
+      "va": "0x182537160",
+      "type": "Sse",
+      "name": "sqrt_ps",
+      "native_store_offsets": [
+        {
+          "offset": "0x0",
+          "width": 4,
+          "respelled_by_fix": false
+        },
+        {
+          "offset": "0x4",
+          "width": 4,
+          "respelled_by_fix": true
+        },
+        {
+          "offset": "0x8",
+          "width": 4,
+          "respelled_by_fix": true
+        },
+        {
+          "offset": "0xc",
+          "width": 4,
+          "respelled_by_fix": true
+        }
+      ],
+      "pre_fix_wrong_byte_offset": [
+        "0x10",
+        "0x20",
+        "0x30"
+      ],
+      "note": "four float lanes at bytes 0x10/0x20/0x30"
+    },
+    {
+      "mi": 128953,
+      "va": "0x182f84900",
+      "type": "System.__Il2CppComDelegate",
+      "name": "Finalize",
+      "native_store_offsets": [
+        {
+          "offset": "0x10",
+          "width": 8,
+          "respelled_by_fix": true
+        }
+      ],
+      "pre_fix_wrong_byte_offset": [
+        "0x80"
+      ],
+      "note": "8-byte null store at byte 0x80"
+    }
+  ],
+  "gates": {
+    "ac_pair_builds": {
+      "files": 490,
+      "bodies": 6622,
+      "failed": 0,
+      "structured_fallbacks": 0,
+      "type_emit_failures": 0
+    },
+    "ac_tree_diff": {
+      "changed_files": 155,
+      "changed_lines_pure_fix124": 1701,
+      "unexpected_lines": 0,
+      "line_count_deltas": 0
+    },
+    "ac_brace": {
+      "files": 490,
+      "unbalanced": 0
+    },
+    "ac_parse": {
+      "files": 490,
+      "bad_files": 0,
+      "errors": 0,
+      "missing": 0
+    },
+    "whole_tree_build": {
+      "files": 11183,
+      "note": "91 images in 10 balanced concurrent group runs; one image (Unity.InputSystem) matched two groups, so the union has 11,526 files / 11,183 unique"
+    },
+    "whole_tree_brace": {
+      "files": 11526,
+      "unbalanced": 0
+    },
+    "whole_tree_parse": {
+      "files": 11183,
+      "bad_files": 0,
+      "errors": 0,
+      "missing": 0
+    },
+    "sweep": {
+      "methods": 116178,
+      "crashes": 0,
+      "totals": {
+        "brace_unclosed": 0,
+        "brace_underflow": 0,
+        "dangling_gotos": 0,
+        "into_block_gotos": 8075,
+        "empty_args": 0,
+        "lines": 2222680
+      },
+      "affected_methods": {
+        "into_block_gotos": 2046
+      }
+    },
+    "sweep_compare": {
+      "changed_methods": 9339,
+      "structural_changes": 0,
+      "new_crashes": 0
+    },
+    "purity": {
+      "changed": 9339,
+      "pure_by_hash": 9313,
+      "residue": 26,
+      "residue_pure_by_line_pair": 26
+    },
+    "goldens": {
+      "kind": "fix124 golden re-pin purity",
+      "snapshots": 64,
+      "unchanged": 59,
+      "changed": [
+        26747,
+        32837,
+        75101,
+        80548,
+        128953
+      ],
+      "pure_fix124": [
+        26747,
+        32837,
+        75101,
+        80548,
+        128953
+      ],
+      "impure": []
+    },
+    "suite": {
+      "kind": "full pytest suite, branch source",
+      "command": "PYTHONHASHSEED=0 IL2CSHARP_METADATA=... IL2CSHARP_BINARY=... python -X utf8 -m pytest -q",
+      "total": 1465,
+      "passed": 1463,
+      "failed": 2,
+      "elapsed_seconds": 974.51,
+      "goldens": "64/64 pass",
+      "failures": [
+        "tests/test_game_parallel_build.py::test_parallel_build_is_byte_identical_to_serial",
+        "tests/test_game_parallel_build.py::test_scoped_parallel_build_engages_the_pool"
+      ],
+      "failure_cause": "sandbox named-pipe denial in concurrent.futures ProcessPoolExecutor (see review124_environment.json); not fix 124",
+      "portable_only": {
+        "command": "python -m pytest -m \"not game\" -q",
+        "passed": 1223,
+        "deselected": 242
+      }
+    }
+  },
+  "environment_caveat": "Two tests in tests/test_game_parallel_build.py fail in this sandbox because Python's ProcessPoolExecutor cannot create its named pipe (`PermissionError: [WinError 5]` at concurrent.futures.process -> mp.Pipe). A three-line repro (`ProcessPoolExecutor(2)`) raises the same error with no il2cpp code involved, and the failure precedes any decompiler work. See review124_environment.json."
+}

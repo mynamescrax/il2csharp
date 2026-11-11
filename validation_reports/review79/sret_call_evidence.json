@@ -1,0 +1,94 @@
+[
+  {
+    "ip": "0x1807090fa",
+    "args": [
+      {
+        "text": "&s_70",
+        "ty": null,
+        "kind": "ptr",
+        "unk": false,
+        "slot": [
+          7246,
+          2148597760
+        ],
+        "hint": null
+      },
+      {
+        "text": "&s_ffffffffffffff80",
+        "ty": null,
+        "kind": "ptr",
+        "unk": false,
+        "slot": [
+          16201,
+          1114114
+        ],
+        "hint": [
+          16201,
+          1114114
+        ]
+      },
+      {
+        "text": "0",
+        "ty": null,
+        "kind": "int",
+        "unk": false,
+        "slot": null,
+        "hint": null
+      },
+      {
+        "text": "v650",
+        "ty": null,
+        "kind": "?",
+        "unk": true,
+        "slot": null,
+        "hint": null
+      }
+    ]
+  },
+  {
+    "ip": "0x1807092df",
+    "args": [
+      {
+        "text": "&s_70",
+        "ty": null,
+        "kind": "ptr",
+        "unk": false,
+        "slot": [
+          7246,
+          2148597760
+        ],
+        "hint": null
+      },
+      {
+        "text": "&s_ffffffffffffff80",
+        "ty": null,
+        "kind": "ptr",
+        "unk": false,
+        "slot": [
+          16201,
+          1114114
+        ],
+        "hint": [
+          16201,
+          1114114
+        ]
+      },
+      {
+        "text": "0",
+        "ty": null,
+        "kind": "int",
+        "unk": false,
+        "slot": null,
+        "hint": null
+      },
+      {
+        "text": "v853",
+        "ty": null,
+        "kind": "?",
+        "unk": true,
+        "slot": null,
+        "hint": null
+      }
+    ]
+  }
+]

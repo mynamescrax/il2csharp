@@ -1,0 +1,28 @@
+{
+  "kind": "direct structured-lift sweep",
+  "metadata_sha256": "a2c6baf6b3aa18866f1871a393cd88d9f8397593284dd2d49cfb9adaaacf81d9",
+  "binary_sha256": "d7209d756930bcb2d9bc2e763a74de3b86ec5d94910796f4dc610308650a70ab",
+  "source_sha256": {
+    "il2csharp.py": "8cc258cd5dae2a98eec13ca6a78111d4c7daeb409efa8a2f6db1568b4138da04",
+    "decompiler.py": "4d52608634c3da144adc1aabe2888dec570788585028ef55d04e4e15180fb689"
+  },
+  "methods": 116178,
+  "crashes": 0,
+  "totals": {
+    "brace_unclosed": 0,
+    "brace_underflow": 0,
+    "dangling_gotos": 0,
+    "into_block_gotos": 13642,
+    "empty_args": 0,
+    "lines": 2054559
+  },
+  "affected_methods": {
+    "into_block_gotos": 2997
+  },
+  "crash_details": [],
+  "method_manifest": "final_sweep.methods.jsonl.gz",
+  "tail_argument_changes": 1186,
+  "tail_argument_methods": 1145,
+  "tail_argument_manifest": "final_sweep.tail-args.jsonl.gz",
+  "elapsed_seconds": 1428.963
+}

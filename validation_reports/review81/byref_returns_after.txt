@@ -1,0 +1,21 @@
+===== mi 22676 LayoutConfig.get_PointScaleFactor 0x182e2b870 =====
+return sub_182e27460(this, this.m_Handle, 0, obj1);
+===== mi 60240 ElementReaderWriterSingle.ReadRef 0x180881d80 =====
+return index * 4 + data;
+===== mi 60246 ElementReaderWriterDouble.ReadRef 0x180881f70 =====
+return index * 8 + data;
+===== mi 65961 CameraData.get_aspectRatio 0x182a22140 =====
+int num1 = this.frameData.Get<int>();
+return num1 + 360;
+===== mi 65962 CameraData.get_renderScale 0x182a22b60 =====
+int num1 = this.frameData.Get<int>();
+return num1 + 364;
+===== mi 65966 CameraData.get_fsrSharpness 0x182a22460 =====
+int num1 = this.frameData.Get<int>();
+return num1 + 380;
+===== mi 65995 CameraData.get_maxShadowDistance 0x182a22980 =====
+int num1 = this.frameData.Get<int>();
+return num1 + 424;
+===== mi 66020 ShadowData.get_mainLightShadowCascadeBorder 0x182a28050 =====
+int num1 = this.frameData.Get<int>();
+return num1 + 44;

@@ -1,0 +1,15 @@
+{
+  "kind": "Review 84 full-output constructor invariants",
+  "tree": "final_out",
+  "cs_files": 11107,
+  "counts": {
+    "raw_pseudo_ctor_calls": 0,
+    "leading_comma_allocations": 0,
+    "standalone_constructor_allocations": 0,
+    "base_initializers": 9530,
+    "this_initializers": 325,
+    "legacy_this_ctor_calls": 45,
+    "shared_180506120": 160
+  },
+  "success": true
+}

@@ -1,0 +1,17 @@
+{
+  "kind": "Review 83 rendered shared-call semantic form audit",
+  "counts": {
+    "bare": 3543,
+    "direct_condition": 2550
+  },
+  "types": {
+    "bare": {
+      "void": 3543
+    },
+    "direct_condition": {
+      "bool": 2550
+    }
+  },
+  "mismatches": [],
+  "success": true
+}

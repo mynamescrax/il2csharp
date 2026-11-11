@@ -1,0 +1,24 @@
+{
+  "kind": "audit batch 3 promotion verification (r10)",
+  "verified_at_utc": "2026-09-28T13:13:39.790648+00:00",
+  "candidate": "r10_out1",
+  "destination": "final_out",
+  "moved_in_place": true,
+  "files": 11276,
+  "candidate_aggregate_sha256": "b0c8750946b7e9ffbad3fd0b1404b1f0bb742492c0f909c8e4e6c76bf358b9fe",
+  "promoted_aggregate_sha256": "b0c8750946b7e9ffbad3fd0b1404b1f0bb742492c0f909c8e4e6c76bf358b9fe",
+  "per_file_mismatches": [],
+  "missing_files": [],
+  "stale_files": [],
+  "files_changed_vs_r9": 302,
+  "gates": {
+    "strict_build": "11,183 files / 114,458 bodies / 0 failed / 0 structured fallbacks / 0 type-emission failures in 1,465,953 ms (r10_out1)",
+    "brace": "0 unbalanced / 11,183 files",
+    "parse": "0 bad / 0 ERROR / 0 MISSING / 0 recovery nodes",
+    "paired_sweep": "116,178 methods / 0 crashes both sides; into_block 8,075/2,046 identical to r9; lines -1,171",
+    "suite": "1117 passed / 0 failed on the merged tree",
+    "golden": "one reviewed body movement (mi 80548), regenerated from the sweep+parse evidence"
+  },
+  "source_note": "r10_out1 was built from the audit-batch-3 tree (commit cbcbe3e content); main now carries it as 99d14bb rebased onto e3763a8, whose CLI/emitter additions do not change any emitted .cs file",
+  "success": true
+}

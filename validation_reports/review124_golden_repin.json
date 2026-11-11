@@ -1,0 +1,20 @@
+{
+  "kind": "fix124 golden re-pin purity",
+  "snapshots": 64,
+  "unchanged": 59,
+  "changed": [
+    26747,
+    32837,
+    75101,
+    80548,
+    128953
+  ],
+  "pure_fix124": [
+    26747,
+    32837,
+    75101,
+    80548,
+    128953
+  ],
+  "impure": []
+}

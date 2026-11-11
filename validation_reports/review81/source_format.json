@@ -1,0 +1,12 @@
+{
+  "il2csharp.py": {
+    "utf8_bom": true,
+    "crlf_only": true,
+    "bytes": 441100
+  },
+  "decompiler.py": {
+    "utf8_bom": false,
+    "crlf_only": true,
+    "bytes": 372572
+  }
+}

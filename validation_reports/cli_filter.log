@@ -1,0 +1,7 @@
+metadata: [supplied fixture]/global-metadata.dat
+binary  : [supplied fixture]/GameAssembly.dll
+metadata v31 | 16916 types | 128954 methods | 91 images | 35920 string literals
+binary loaded: 7 sections, 273 exports
+registrations ok | 116178/128954 methods have native code | 15221 ms
+  Assembly-CSharp.dll                                      1 types  (0 bodies, 0 failed, 0 fallbacks)
+done: 1 type files in 6489 ms | bodies lifted: 0, failed: 0, structured fallbacks: 0, type emit failures: 0

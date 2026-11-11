@@ -1,0 +1,51 @@
+===== mi 287 BitConverterLE.ToSingle 0x181ad1d60 =====
+unsafe
+{
+obj1 = ((byte*)startIndex + value*1 + 0x20)[0];
+return obj1;
+}
+===== mi 288 BitConverterLE.ToDouble 0x181ad1d10 =====
+unsafe
+{
+obj1 = 0f;
+num1 = 0;
+num2 = startIndex;
+do
+{
+    object obj2 = ((byte*)num2 + value*1 + 0x20)[0];
+    mem[48] = obj2;
+    if (num1 + 1 >= 8)
+    {
+        break;
+    }
+    num1 += 1;
+    num2 += 1;
+}
+while (num1 + 1 < 8);
+return obj1;
+}
+===== mi 1092 BitConverter.ToSingle 0x181c04db0 =====
+unsafe
+{
+if (startIndex >= value.Length)
+{
+    System.ThrowHelper.ThrowArgumentOutOfRangeException(14, 22);
+}
+object obj3 = ((byte*)value + 0x18)[0] - 0x4;
+if (startIndex > obj3)
+{
+    System.ThrowHelper.ThrowArgumentException(5, 15);
+}
+return ((byte*)startIndex + value*1 + 0x20)[0];
+}
+===== mi 1160 Byte.System.IConvertible.ToSingle 0x181c06a50 =====
+System.Type obj1 = typeof(System.Convert);
+return this.m_value;
+===== mi 1405 Convert.ToSingle 0x181c0fcf0 =====
+if (value != null)
+{
+    object obj3 = sub_180434690(value, typeof(System.IConvertible));
+    object obj4 = sub_180434690(value, typeof(System.IConvertible));
+    return sub_18032a740(11, typeof(System.IConvertible), obj4, 0);
+}
+return 0f;

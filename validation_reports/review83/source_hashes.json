@@ -1,0 +1,11 @@
+{
+  "kind": "Review 83 core source hashes",
+  "review83": {
+    "il2csharp.py": "2499e0a4cee29670d289164ed1e250b7d0b91c7b04e9256b36ea8cf40a4decac",
+    "decompiler.py": "b0a9c0660e9708d18da611d7b725d9962c33b4315e89d5e1c218f386ebe88814"
+  },
+  "review82": {
+    "il2csharp.py": "c4d6e78d8e4cd4591301f74f2e9b5d72c4ba4acc236e5e127124fb5d95ce64e9",
+    "decompiler.py": "b0a9c0660e9708d18da611d7b725d9962c33b4315e89d5e1c218f386ebe88814"
+  }
+}

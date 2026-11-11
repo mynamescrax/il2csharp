@@ -1,0 +1,110 @@
+{
+  "review": 77,
+  "date": "2026-09-08",
+  "scope": "Static-only validation against the supplied Windows x64 IL2CPP v31 fixture; no game execution.",
+  "environment": {
+    "python": "3.13.14",
+    "iced-x86": "1.21.0",
+    "pytest": "9.1.1",
+    "tree-sitter": "0.26.0",
+    "tree-sitter-c-sharp": "0.23.5",
+    "capstone": "5.0.9",
+    "PYTHONHASHSEED": "0",
+    "arm64_validated": false
+  },
+  "fixture_sha256": {
+    "global-metadata.dat": "a2c6baf6b3aa18866f1871a393cd88d9f8397593284dd2d49cfb9adaaacf81d9",
+    "GameAssembly.dll": "d7209d756930bcb2d9bc2e763a74de3b86ec5d94910796f4dc610308650a70ab"
+  },
+  "baseline_source_sha256": {
+    "il2csharp.py": "ebc3baf4fc0975de99a806a69716001aa82fa2a123496f861b94a9fe45093147",
+    "decompiler.py": "84ed2517b5416a876726f9ef38b0839f0d9cab38fbc4eaeb3db6c641ede95ed3"
+  },
+  "final_source_sha256": {
+    "il2csharp.py": "0d886131d55e1c09f469788cca2795152c8386b1811c3ed9b4eafef4c3ee8c0d",
+    "decompiler.py": "192d2826e1378410ed8e07c5e8ae1120b6124102945329cfdf4653d823de6d1e"
+  },
+  "tests": {
+    "passed": 136,
+    "unit": 72,
+    "new_game_snapshots": 64,
+    "historical_50_snapshots_run": false
+  },
+  "final_build": {
+    "strict": true,
+    "exit_code": 0,
+    "type_files": 11107,
+    "bodies_lifted": 115658,
+    "failed": 0,
+    "structured_fallbacks": 0,
+    "type_emit_failures": 0
+  },
+  "parse": {
+    "before": {
+      "files": 11107,
+      "bad_files": 2,
+      "errors": 0,
+      "missing": 0,
+      "recovery_nodes": 8
+    },
+    "after": {
+      "files": 11107,
+      "bad_files": 0,
+      "errors": 0,
+      "missing": 0,
+      "recovery_nodes": 0
+    },
+    "newly_bad": [],
+    "cleared": [
+      "Obi/Obi/BurstDensityConstraintsBatch.cs",
+      "Unity.InputSystem/UnityEngine/InputSystem/Touchscreen.cs"
+    ],
+    "changed_bad_files": []
+  },
+  "direct_sweep": {
+    "methods": 116178,
+    "crashes": 0,
+    "totals": {
+      "brace_unclosed": 0,
+      "brace_underflow": 0,
+      "dangling_gotos": 0,
+      "into_block_gotos": 13642,
+      "empty_args": 0,
+      "lines": 2053197
+    },
+    "affected_methods": {
+      "into_block_gotos": 2997
+    },
+    "changed_method_hashes": 1647,
+    "new_crashes": 0,
+    "per_method_structural_metric_changes": 0,
+    "tail_argument_changes": 1186,
+    "tail_argument_methods": 1145,
+    "baseline_repeat_hash_changes": 0
+  },
+  "emitted_tree_diff": {
+    "before_files": 11107,
+    "after_files": 11107,
+    "byte_identical_files": 10470,
+    "changed_files": 637,
+    "added_files": [],
+    "removed_files": []
+  },
+  "limitations": [
+    "Parsing is not C# compilation or semantic equivalence.",
+    "Existing into-block goto scope violations remain (13642 in 2997 methods).",
+    "Snapshots are regression sentinels, not a semantic oracle.",
+    "Hidden-sret/generic-return and constructor-initializer tail handling, later stack arguments, liveness/SEH/state machines and ARM64 semantics remain open.",
+    "Concurrent elapsed times are not a controlled performance benchmark.",
+    "The original baseline did not separately instrument structured fallbacks or type emission failures."
+  ],
+  "release_verification": {
+    "tests_passed_in_staged_copy": 136,
+    "portable_parse_comparison_reproduced": true,
+    "portable_sweep_comparison_reproduced": true,
+    "patch_applies_to_uploaded_baseline": true,
+    "patch_result_matches_release": true,
+    "python_compile_check": true,
+    "source_hashes_and_original_crlf_bom_preserved": true
+  }
+}

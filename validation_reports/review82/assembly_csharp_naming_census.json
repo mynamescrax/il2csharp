@@ -1,0 +1,134 @@
+{
+  "kind": "Review 82 Assembly-CSharp naming preflight",
+  "counts": {
+    "files": 489,
+    "lines": 193261,
+    "obj_tokens": 58987,
+    "object_obj_decls": 6815,
+    "concrete_obj_decls": 108,
+    "foreach_obj_decls": 76,
+    "semantic_decls": 10574
+  },
+  "top_semantic_prefixes": [
+    [
+      "type",
+      2488
+    ],
+    [
+      "vector",
+      942
+    ],
+    [
+      "text",
+      627
+    ],
+    [
+      "simulationMessagePtr",
+      514
+    ],
+    [
+      "simulation",
+      512
+    ],
+    [
+      "gameObject",
+      491
+    ],
+    [
+      "transform",
+      487
+    ],
+    [
+      "list",
+      322
+    ],
+    [
+      "quaternion",
+      305
+    ],
+    [
+      "storeManager",
+      188
+    ],
+    [
+      "enumerator",
+      185
+    ],
+    [
+      "clientPlayer",
+      134
+    ],
+    [
+      "jsonAccess",
+      106
+    ],
+    [
+      "valueArray",
+      94
+    ],
+    [
+      "networkObject",
+      89
+    ],
+    [
+      "legsAnimator",
+      87
+    ],
+    [
+      "eventSystem",
+      84
+    ],
+    [
+      "coroutine",
+      80
+    ],
+    [
+      "variable",
+      80
+    ],
+    [
+      "gameObjectArray",
+      74
+    ],
+    [
+      "fusionNetworkManager",
+      74
+    ],
+    [
+      "dictionary",
+      73
+    ],
+    [
+      "fpsController",
+      69
+    ],
+    [
+      "platformManager",
+      68
+    ],
+    [
+      "action",
+      67
+    ],
+    [
+      "image",
+      64
+    ],
+    [
+      "animator",
+      59
+    ],
+    [
+      "inputActionAsset",
+      50
+    ],
+    [
+      "traceLogStream",
+      49
+    ],
+    [
+      "delegate",
+      49
+    ]
+  ]
+}

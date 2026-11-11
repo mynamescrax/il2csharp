@@ -1,0 +1,12 @@
+{
+  "kind": "main-source vs branch-source direct-lift sweep comparison",
+  "common_methods": 116178,
+  "added_methods": [],
+  "removed_methods": [],
+  "changed_method_count": 9339,
+  "structural_change_count": 0,
+  "new_crash_count": 0,
+  "structural_changes": [],
+  "new_crashes": [],
+  "note": "per-method rows live in work/fix124_ab/sweep_*.methods.jsonl.gz (not tracked)"
+}
