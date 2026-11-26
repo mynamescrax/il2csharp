@@ -1010,6 +1010,18 @@ comparison. The strict 503-file census changed only PurchaseNode.cs:
 396 → 395 shared calls, 3,188 → 3,187 `object objN`. Report:
 `work/shift_purchase_lookup_census.json`.
 
+**PurchaseNode.Despawned (26974):** Before the metadata-init branch the
+caller saves `this`, `runner` and the low byte of `hasState` in RBX, RSI
+and EDI. At `0x18059501a`, RCX and RDX have been restored from RBX and RSI,
+R8D is the zero-extended DIL, and R9D is zero. Slot 26 selects the public
+`NetworkBehaviour.Despawned` (59669) registered at the shared bare return;
+the following parent lookup does not consume its result. The complete
+override compiled. Both bool values with null and non-null runners produced
+`base;lookup;manager;remove` on success. The lookup ran once, and removal
+used its animator and the manager selected after the base callback. Only
+PurchaseNode.cs changed. Strict 503-file census: 395 → 394 shared calls,
+3,187 → 3,186 `object objN`. Report: `work/shift_purchase_despawn_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;

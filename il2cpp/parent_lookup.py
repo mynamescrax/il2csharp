@@ -182,6 +182,20 @@ def fold_lookup_list_tail(lift,blocks):
     if not getattr(lift,'_parent_lookup_windows',None): return
     il=lift.il
     for b in blocks:
+        # Remove returns a bool, and unlike the unregistered Add tail this
+        # call already lifts. Recover just the public owner getter once the
+        # captured item, list type and closed Remove binding also agree.
+        if len(b.insns)==3 and len(b.preds)==1:
+            slot,src,call=b.insns
+            if (slot.mnemonic==M.MOV and slot.op0_register==R.R8 and slot.memory_base==R.RIP and not slot.has_segment_prefix and
+                    slot.next_ip==src.ip and src.next_ip==call.ip and src.mnemonic==M.MOV and src.op0_register==R.RDX and
+                    src.op1_register==R.RBX and call.mnemonic==M.CALL and call.op0_kind==K.NEAR_BRANCH64):
+                incoming=blocks[b.preds[0]].end_state or {}; arg=incoming.get('RBX'); rcx=incoming.get('RCX'); result=(b.end_state or {}).get('RAX')
+                if (arg and rcx and result and any(lift._material_values.get(ip) is arg for ip in lift._parent_lookup_sites) and
+                        result.text=='%s.Remove(%s)'%(rcx.text,arg.text)):
+                    key=_list_member(il,slot.ip_rel_memory_address,call.near_branch_target,'Remove',il._closed_type_key(arg.ty))
+                    owner=_manager_field(lift,blocks,b,key) if key and il._closed_type_key(rcx.ty)==key else None
+                    if owner and owner[2]==rcx.text: owner[0].stmts[0]=owner[1]
         if len(b.insns)!=5 or b.succs or len(b.stmts)!=1: continue
         add,item,sp,pop,tail=b.insns
         if (add.mnemonic!=M.MOV or add.op0_register!=R.R8 or add.memory_base!=R.RIP or add.has_segment_prefix or

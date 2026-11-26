@@ -6,7 +6,7 @@ import pytest
 
 from il2cpp.binary import PE
 from il2cpp.expr import Expr
-from il2cpp.shared_action import _bool_transfer, _entry_forward, _guarded_helper_forward, _guarded_this_forward, shared_action_tail, shared_base_action, shared_bool_tail, shared_void_action
+from il2cpp.shared_action import _bool_transfer, _entry_forward, _guarded_helper_forward, _guarded_this_forward, _guarded_ref_bool_forward, shared_action_tail, shared_base_action, shared_bool_tail, shared_void_action
 from iced_x86 import Register as R
 
 
@@ -285,6 +285,27 @@ def test_nullary_guard_must_reach_call_with_entry_this(case):
     il=NS(eh_regions=lambda _:{'pads':[p]} if case=='EH pad' else None)
     lift=NS(il=il,_blocks=blocks,_current_method=NS(addr=start),rt_init_meta=init)
     assert _guarded_this_forward(lift,blocks[2],blocks[2].insns[-1])==(case in ('hot and cold','linearized guard'))
+
+
+@pytest.mark.parametrize('case',['hot and cold','linearized','swapped refs','wrong bool lane','constant flag','wrong context','other edge'])
+def test_guarded_reference_and_bool_must_come_from_the_original_arguments(case):
+    start=0x2000; flag=0x3200; init=0x4000
+    def rel(n): return n.to_bytes(4,'little',signed=True)
+    # Use RBP for the bool to avoid tying its proof to the game register DIL.
+    head=bytes.fromhex('48895c2408 4889742410 55 4883ec20 803d')
+    head+=rel(flag-(start+len(head)+5))+b'\0'
+    head+=bytes.fromhex('410fb6e8 488bf2 488bd9 7513');p=start+len(head)
+    cold=bytes.fromhex('488d0d00010000 e8')+rel(init-(p+12))+bytes.fromhex('c605')+rel(flag-(p+19))+b'\1'
+    join=bytes.fromhex('4531c9 440fb6c5 488bd6 488bcb e800040000')
+    if case=='swapped refs':join=join.replace(bytes.fromhex('488bd6 488bcb'),bytes.fromhex('488bd3 488bce'))
+    if case=='wrong bool lane':join=join.replace(bytes.fromhex('440fb6c5'),bytes.fromhex('440fb6c7'))
+    if case=='constant flag':join=join.replace(bytes.fromhex('440fb6c5'),bytes.fromhex('41b801000000'))
+    if case=='wrong context':join=join.replace(bytes.fromhex('4531c9'),bytes.fromhex('4531d2'))
+    incoming=[1] if case=='linearized' else [0,1];bs=[];ip=start
+    for n,(raw,preds,succs) in enumerate([(head,[],[1] if case=='linearized' else [2,1]),(cold,[0],[2]),(join,incoming+([3] if case=='other edge' else []),[])]):
+        bs.append(NS(bid=n,is_entry=n==0,insns=list(Decoder(64,raw,ip=ip)),preds=preds,succs=succs));ip+=len(raw)
+    lift=NS(_blocks=bs,_current_method=NS(addr=start),rt_init_meta=init,il=NS(eh_regions=lambda _:None))
+    assert _guarded_ref_bool_forward(lift,bs[2],bs[2].insns[-1])==(case in ('hot and cold','linearized'))
 
 
 @pytest.mark.parametrize('change',['wrong source','other call','other flag','clobber before branch','other edge','handler entry'])

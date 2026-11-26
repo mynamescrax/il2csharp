@@ -9,7 +9,7 @@ from il2cpp.prelude import HAVE_ICED
 from il2cpp.text import reg_name, sdisp
 
 if HAVE_ICED:
-    from iced_x86 import Mnemonic as M, OpKind as K, Register as R
+    from iced_x86 import Mnemonic as M, OpKind as K, Register as R, RegisterExt
     _NONVOL = (R.RBX, R.RBP, R.RSI, R.RDI, R.R12, R.R13, R.R14, R.R15)
 
 
@@ -82,31 +82,60 @@ def _init_arm(cold, init, flag):
             store.ip_rel_memory_address==flag and store.op1_kind==K.IMMEDIATE8 and store.immediate8==1)
 
 
-def _guarded_this_forward(lift, block, ins):
-    """Entry saves this before the metadata guard. Both paths reach the
-    same reload and null MethodInfo. The cold edge may already be pruned."""
+def _guard_entry(lift, block, ins, saves, restores):
+    """Shared outer shape: no other entry into the saves, cold metadata
+    setup, or argument reloads. Either native guard edge may be linearized."""
     blocks=getattr(lift,'_blocks',())
-    if len(blocks)<3 or blocks[2] is not block: return False
-    head,cold=blocks[:2]; ops=block.insns[:3]
-    if (not head.is_entry or head.preds or len(head.insns)!=5 or len(ops)!=3 or ops[-1].ip!=ins.ip or
+    if len(blocks)<3 or blocks[2] is not block: return None
+    head,cold=blocks[:2]; ops=block.insns[:restores]
+    if (not head.is_entry or head.preds or len(head.insns)!=saves or len(ops)!=restores or ops[-1].ip!=ins.ip or
             head.insns[0].ip!=lift._current_method.addr or cold.succs!=[block.bid] or
             not head.succs or not set(head.succs)<={cold.bid,block.bid} or
             cold.preds!=([head.bid] if cold.bid in head.succs else []) or
-            set(block.preds)!=({head.bid,cold.bid} if block.bid in head.succs else {cold.bid})): return False
+            set(block.preds)!=({head.bid,cold.bid} if block.bid in head.succs else {cold.bid})): return None
     seq=head.insns+cold.insns+ops
     if (any(a.next_ip!=b.ip for a,b in zip(seq,seq[1:])) or
-            any(i.has_segment_prefix or i.has_lock_prefix or i.has_rep_prefix or i.has_repne_prefix for i in seq)): return False
-    push,sub,cmp,save,branch=head.insns; zero,reload,_=ops; parked=push.op0_register
-    if (push.mnemonic!=M.PUSH or parked not in _NONVOL or sub.mnemonic!=M.SUB or sub.op0_register!=R.RSP or
-            sub.op1_kind!=K.IMMEDIATE8TO64 or sub.immediate8to64!=0x20 or
-            cmp.mnemonic!=M.CMP or cmp.memory_base!=R.RIP or cmp.memory_size!=1 or cmp.op1_kind!=K.IMMEDIATE8 or cmp.immediate8!=0 or
-            save.mnemonic!=M.MOV or save.op0_register!=parked or save.op1_register!=R.RCX or
-            branch.mnemonic!=M.JNE or branch.op0_kind!=K.NEAR_BRANCH64 or branch.near_branch_target!=zero.ip or
-            zero.mnemonic!=M.XOR or zero.op0_register!=R.EDX or zero.op1_register!=R.EDX or
-            reload.mnemonic!=M.MOV or reload.op0_register!=R.RCX or reload.op1_register!=parked): return False
+            any(i.has_segment_prefix or i.has_lock_prefix or i.has_rep_prefix or i.has_repne_prefix for i in seq)): return None
+    branch=head.insns[-1]; cmp=next((i for i in head.insns if i.mnemonic==M.CMP),None)
+    if (not cmp or cmp.memory_base!=R.RIP or cmp.memory_size!=1 or cmp.op1_kind!=K.IMMEDIATE8 or cmp.immediate8!=0 or
+            branch.mnemonic!=M.JNE or branch.op0_kind!=K.NEAR_BRANCH64 or branch.near_branch_target!=ops[0].ip): return None
     eh=lift.il.eh_regions(lift._current_method.addr) or {}
-    return (not any(seq[0].ip<=p<=ins.ip for p in eh.get('pads',())) and
-            _init_arm(cold.insns,lift.rt_init_meta,cmp.ip_rel_memory_address))
+    if not any(seq[0].ip<=p<=ins.ip for p in eh.get('pads',())) and _init_arm(cold.insns,lift.rt_init_meta,cmp.ip_rel_memory_address):
+        return head.insns,ops
+
+
+def _guarded_this_forward(lift, block, ins):
+    witness=_guard_entry(lift,block,ins,5,3)
+    if not witness: return False
+    (push,sub,cmp,save,_),(zero,reload,_)=witness; parked=push.op0_register
+    return (push.mnemonic==M.PUSH and parked in _NONVOL and sub.mnemonic==M.SUB and sub.op0_register==R.RSP and
+            sub.op1_kind==K.IMMEDIATE8TO64 and sub.immediate8to64==0x20 and cmp.mnemonic==M.CMP and
+            save.mnemonic==M.MOV and save.op0_register==parked and save.op1_register==R.RCX and
+            zero.mnemonic==M.XOR and zero.op0_register==zero.op1_register==R.EDX and
+            reload.mnemonic==M.MOV and reload.op0_register==R.RCX and reload.op1_register==parked)
+
+
+def _guarded_ref_bool_forward(lift, block, ins):
+    """Two distinct reference saves plus the low-byte bool parked before
+    init. Zero extension on both moves preserves exactly that bool byte."""
+    witness=_guard_entry(lift,block,ins,9,5)
+    if not witness: return False
+    (home1,home2,push,sub,cmp,flag,arg,recv,_),(zero,flag2,arg2,recv2,call)=witness
+    a,b,c=recv.op0_register,arg.op0_register,push.op0_register
+    if len({a,b,c})!=3 or not {a,b,c}<=set(_NONVOL): return False
+    for home,r,off in ((home1,a,8),(home2,b,16)):
+        if (home.mnemonic!=M.MOV or home.op0_kind!=K.MEMORY or home.op1_register!=r or home.memory_base!=R.RSP or
+                home.memory_index!=R.NONE or home.memory_displacement!=off): return False
+    return (push.mnemonic==M.PUSH and sub.mnemonic==M.SUB and sub.op0_register==R.RSP and
+            sub.op1_kind==K.IMMEDIATE8TO64 and sub.immediate8to64==32 and cmp.mnemonic==M.CMP and
+            flag.mnemonic==M.MOVZX and RegisterExt.is_gpr32(flag.op0_register) and RegisterExt.full_register(flag.op0_register)==c and
+            flag.op1_register==R.R8L and arg.mnemonic==M.MOV and arg.op1_register==R.RDX and
+            recv.mnemonic==M.MOV and recv.op1_register==R.RCX and zero.mnemonic==M.XOR and zero.op0_register==zero.op1_register==R.R9D and
+            flag2.mnemonic==M.MOVZX and flag2.op0_register==R.R8D and RegisterExt.is_gpr8(flag2.op1_register) and
+            flag2.op1_register not in (R.AH,R.BH,R.CH,R.DH) and RegisterExt.full_register(flag2.op1_register)==c and
+            arg2.mnemonic==M.MOV and arg2.op0_register==R.RDX and arg2.op1_register==b and
+            recv2.mnemonic==M.MOV and recv2.op0_register==R.RCX and recv2.op1_register==a and
+            call.mnemonic==M.CALL and call.op0_kind==K.NEAR_BRANCH64)
 
 
 def _guarded_helper_forward(lift, block, ins):
@@ -279,6 +308,8 @@ def shared_base_action(lift, ins, regs, xmm, *, tail_body=None):
             guarded = True
         elif m.param_count == 1 and _guarded_helper_forward(lift, b, ins):
             guarded = True
+        elif m.param_count == 2 and _guarded_ref_bool_forward(lift,b,ins):
+            guarded = True
         else:
             return None
     else:
@@ -315,13 +346,17 @@ def shared_base_action(lift, ins, regs, xmm, *, tail_body=None):
     if len(params) != m.param_count:
         return None
     names, keys = [], []
-    for p, e in zip(params, regs[1:]):
+    for j,(p,e) in enumerate(zip(params, regs[1:])):
         ty = il.types[p.type] if 0 <= p.type < len(il.types) else None
+        name = safe_ident(p.name); spellings = (name,)
+        if guarded and m.param_count == 2:
+            if not ty or il._type_enum(ty) != (0x12,0x02)[j]: return None
+            if j==1: spellings=(name, '((%s & 0xFF/*z*/) & 0xFF/*z*/)' % name)
         if (not ty or ty[1] & (1 << 29) or il._type_enum(ty) not in (0x02, 0x12) or
                 not e or e._unk or e.kind != ('int' if il._type_enum(ty) == 2 else 'obj') or
-                e.text != safe_ident(p.name) or il._closed_type_key(e.ty) != il._closed_type_key(ty)):
+                e.text not in spellings or il._closed_type_key(e.ty) != il._closed_type_key(ty)):
             return None
-        names.append(e.text)
+        names.append(name)
         keys.append(il._closed_type_key(ty))
     target = ins.near_branch_target
     if not keys or (guarded and keys[0][0] == 0x12):
