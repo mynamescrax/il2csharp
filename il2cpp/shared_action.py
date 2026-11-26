@@ -3,6 +3,7 @@ import re
 
 from il2cpp.awaiter import _unused_return
 from il2cpp.binary import PE
+from il2cpp.framed_cleanup import framed_cleanup_tail
 from il2cpp.metadata import source_params
 from il2cpp.names import safe_ident
 from il2cpp.prelude import HAVE_ICED
@@ -166,6 +167,8 @@ def _cleanup_tail_forward(lift, block, jump, *, boxes=None):
     parked argument, or frame/home alias can precede the argument reloads.
     """
     blocks=getattr(lift,'_blocks',()); method=lift._current_method
+    if block is not None and len(block.insns)==11:
+        return framed_cleanup_tail(lift,block,jump)
     if (not blocks or block is None or not 0<=block.bid<len(blocks) or blocks[block.bid] is not block or len(block.insns)!=10 or block.succs or
             not blocks[0].is_entry or blocks[0].preds or len(blocks[0].insns)!=10): return False
     start=blocks[0].insns; out=block.insns
@@ -391,7 +394,13 @@ def shared_base_action(lift, ins, regs, xmm, *, tail_body=None):
             m.is_static or td.is_valuetype or m.slot == 0xffff or not 0 <= m.param_count <= 2 or
             not 0 <= m.return_type < len(il.types) or il._closed_type_key(il.types[m.return_type]) != (1, 0) or
             ins.op0_kind != K.NEAR_BRANCH64 or not 0 <= td.parent < len(il.types) or
-            len(regs) != 4 or any(e and not e._unk for e in xmm)):
+            len(regs) != 4):
+        return None
+    # The R11 tail's stack-copy lanes can reach the join as phi locals.
+    # Bare locals have no deferred evaluation. Accept them only with the
+    # framed cleanup proof below and the registered return-only base slot.
+    if any(e and not e._unk and not (tail_body is not None and len(tail_body)==11 and
+           e.kind=='float' and re.fullmatch(r'v\d+',e.text or '')) for e in xmm):
         return None
     guarded = False
     prefix = None
@@ -479,7 +488,7 @@ def shared_base_action(lift, ins, regs, xmm, *, tail_body=None):
 
 
 def shared_action_tail(lift, ins, body, args, regs):
-    if (args == ['this', '0'] and len(body) == 2 or len(args)==4 and args[0]=='this' and args[-1]=='0' and len(body)==10):
+    if (args == ['this', '0'] and len(body) == 2 or len(args)==4 and args[0]=='this' and args[-1]=='0' and len(body) in (10,11)):
         # Use the actual register file, not only the trimmed tail arguments.
         # In particular, don't hide a surplus expression with side effects.
         full = [dict.get(lift.regs, r) for r in ('RCX', 'RDX', 'R8', 'R9')]

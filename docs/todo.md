@@ -1051,6 +1051,21 @@ manager before the base call. Throws preserved each earlier effect. Across
 503 files only VoiceVolumeHandler.cs changed: 393 → 392 shared calls and
 3,186 → 3,185 `object objN`. Report: `work/shift_voice_box_cleanup_census.json`.
 
+**UIDService.Despawned (26518):** The tail reloads `this` from RBX, `runner`
+from RSI and `hasState` from DIL before touching the saved registers. R11
+is post-allocation RSP+0xe0 (entry RSP−8). Its +0x10/+0x18/+0x20 loads
+restore the entry +8/+16/+24 homes, then `mov rsp,r11; pop rbp` restores
+entry RSP. The jump at `0x180593f32` reaches the registered bare-return
+implementation of `Fusion.NetworkBehaviour.Despawned`, slot 26. The two
+64-byte dictionary receiver homes and the 64-byte getter result fit below
+the saved RBP; each Count/Clear MethodSpec matches its closed type and
+registered code pointer. No cleanup branch can skip an argument reload or
+enter mid-copy. The compiled override used fresh dictionary values for each
+clear, reset `_spawned` before the base call, and stopped before both the
+reset and the base call on a cleanup exception. Only UIDService.cs changed
+in the strict 503-file rebuild. Shared calls 392 → 391, `object objN` still
+3,185. Report: `work/shift_uid_tail_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;
