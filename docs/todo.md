@@ -1543,6 +1543,22 @@ and 2,328 single-worker portable tests. Other width/stride, index, and
 exception edges do not establish this checked-load proof. Previous mixed
 forward batch: `8580483` (20 exact-build, 2,328 single-worker portable).
 
+**Placement query emptiness.** `InventoryManager.Update` contains 23 native
+calls to the same `OverlapSphere` overload. Its old C# contained 42, with
+raw byte reads at array offset `+0x18`. Each accepted producer now binds
+once. The succeeding compare reads a qword, and every reaching definition
+of its other operand is zero: the emitted condition uses `.LongLength == 0`.
+The raw graph includes all 61 slots of the guarded switch (59 distinct
+targets); the ordered slots must agree with the structurer and the entire
+immutable trailer must fit within the unwind extent. Truncation, relocation
+or a different reaching operand invalidates the proof. All 23 query/test
+slices are compiled with 0, 1 and 256 results, a null result and a throwing
+query. The upstream origin and mask calculations and the rest of `Update`
+are not covered. Validation in separate foreground processes: 7 header tests,
+2 gas-spawner tests, 2 particle-spawner tests and 2,334 single-worker portable
+tests passed. An earlier combined command exited 255 without a final pytest
+summary; the separate runs completed. Prior whole-loop batch: `5f31d5c`.
+
 **Whole-method behavior gate: `GasCollisionSpawner.OnParticleCollision`.**
 At `0x1806efcda` the RPC takes two different by-value arguments: the saved
 intersection (XMM6 + EBX, 8+4 bytes copied through RDX) and the full 16-byte

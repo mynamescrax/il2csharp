@@ -105,5 +105,6 @@ def capture_saved_reference(lift,ins,mi,recv,result,dispatch):
     from il2cpp.expr import Expr,acc_get
     local=lift.new_var();lift._var_types[local]=rt;lift._type_hints[local]=rt
     lift.emit(ins.ip,'var %s = %s;'%(local,acc_get(result.text)),None)
-    lift.regs['RAX']=Expr(local,rt,'obj')
+    value=Expr(local,rt,'obj');lift.regs['RAX']=value
+    if reference_vector(il,rt):lift._captured_arrays[ins.ip]=value
     return True

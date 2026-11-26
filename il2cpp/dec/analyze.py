@@ -38,6 +38,9 @@ class _AnalyzeMixin:
         L._saved_fp_consumers = saved_fp_consumers(blocks)
         from il2cpp.saved_ref import saved_references
         L._saved_references=saved_references(L,blocks)
+        from il2cpp.array_header import header_sites
+        headers,header_calls=header_sites(L,m,blocks,self._pad_bids)
+        L._saved_references.update(header_calls)
         from il2cpp.array_member import checked_ref_elements
         checked_ref_loads=checked_ref_elements(L,m,blocks,self._pad_bids)
         scalar_fields,scalar_getters=scalar_sites(L,m,td,blocks,self._pad_bids)
@@ -197,6 +200,12 @@ class _AnalyzeMixin:
                     L.regs['RDI'] = Expr(snapshot, capture[2], 'obj')
                     continue
                 mn = ins.mnemonic
+                if ins.ip in headers:
+                    array=dict.get(L.regs,'RAX')
+                    if array is not None and L._captured_arrays.get(headers[ins.ip]) is array:
+                        L.flags=(Expr(array.text+'.LongLength',(0,0x0a<<16),'int'),Expr('0',None,'int'))
+                        L._flags_mn=Mnemonic.CMP
+                        continue
                 if ins.ip in scalar_fields:
                     capture_field(L,ins,scalar_fields[ins.ip]);continue
                 if element_plan and element_step(L,element_plan,element_values,ins):continue

@@ -23,7 +23,7 @@ def _reachable(edges, roots):
     return seen
 
 
-def _graph(il, seq, *, allow_tail=False, runtime_tails=(), chained=False):
+def _graph(il, seq, *, allow_tail=False, runtime_tails=(), chained=False, switch_slots=None):
     """Instruction edges, including both arms of every skipped init guard."""
     lo, hi = seq[0].ip, seq[-1].next_ip
     if il.eh_regions(lo):
@@ -45,7 +45,21 @@ def _graph(il, seq, *, allow_tail=False, runtime_tails=(), chained=False):
         if (entry!=end or stop<=entry or len(h)!=4 or h[0]!=0x21 or
                 il.bin.read(image+ui+4+2*((h[2]+1)&~1),12)!=parent):return None
         end=stop
-    if hi!=image+end:return None
+    tables = {}
+    if switch_slots:
+        from il2cpp.bounded_switch import bounded_switch
+        ips = {i.ip for i in seq}
+        for j,i in enumerate(seq):
+            if i.flow_control != F.INDIRECT_BRANCH:continue
+            t = bounded_switch(il.bin,seq,j,ips)
+            if t is None or t[0]!=switch_slots.get(i.ip):return None
+            tables[i.ip] = t
+    if tables:
+        # The table exactly fills the trailer of this runtime function. No
+        # adjacent method, undecoded instruction gap, or truncated table.
+        if (len(tables)!=1 or next(iter(tables.values()))[1]!=(hi,image+end) or
+                any(a.next_ip!=b.ip for a,b in zip(seq,seq[1:]))):return None
+    elif hi!=image+end:return None
 
     pred = {i.ip: [] for i in seq}
     succ = {}
@@ -56,14 +70,16 @@ def _graph(il, seq, *, allow_tail=False, runtime_tails=(), chained=False):
         if fc == F.NEXT:
             edges = (i.next_ip,)
         elif fc == F.CALL and i.mnemonic == M.CALL and i.op0_kind == K.NEAR_BRANCH64:
-            if lo <= i.near_branch_target < hi or not il.bin.is_exec_va(i.near_branch_target):
+            if lo <= i.near_branch_target < image+end or not il.bin.is_exec_va(i.near_branch_target):
                 return None
             edges = (i.next_ip,)
         elif fc in (F.CONDITIONAL_BRANCH, F.UNCONDITIONAL_BRANCH) and i.op0_kind == K.NEAR_BRANCH64:
             edges = ((i.near_branch_target, i.next_ip) if fc == F.CONDITIONAL_BRANCH else (i.near_branch_target,))
-            if (allow_tail and fc==F.UNCONDITIONAL_BRANCH and not lo<=i.near_branch_target<hi and
+            if (allow_tail and fc==F.UNCONDITIONAL_BRANCH and not lo<=i.near_branch_target<image+end and
                     (i.near_branch_target in il.addr_candidates or i.near_branch_target in runtime_tails) and il.bin.is_exec_va(i.near_branch_target)):
                 edges=()  # known tail exit: it cannot feed a later lookup
+        elif i.ip in tables:
+            edges = set(tables[i.ip][0])
         elif i.mnemonic in (M.RET, M.INT3, M.UD2):
             edges = ()
         else:
@@ -75,6 +91,9 @@ def _graph(il, seq, *, allow_tail=False, runtime_tails=(), chained=False):
         succ[i.ip] = edges
     if len(_reachable(succ, [lo])) != len(seq):
         return None  # disconnected roots are not ordinary entry paths
+    for targets,span,window in tables.values():
+        if any(pred[b.ip]!=[a.ip] for a,b in zip(window,window[1:])):return None
+        if span[0]<hi and lo<span[1]:return None
     return pred, succ
 
 
