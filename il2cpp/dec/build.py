@@ -10,6 +10,7 @@ from il2cpp.byref_fields import ref_field_copies
 from il2cpp.frame_args import entry_reference_loads
 from il2cpp.this_home import saved_this_reloads
 from il2cpp.captured_home import captured_receiver
+from il2cpp.list_append import fold_terminal_appends
 from il2cpp.names import safe_ident
 from il2cpp.expr import unwrap_accessor_markers
 import collections
@@ -345,6 +346,7 @@ class _BuildMixin:
         self._prune_nonreturning(blocks)
         L._array_allocation_loop_guard = self._allocation_needs_loop_guard(blocks)
         self._analyze(m, td, blocks, bmap)
+        fold_terminal_appends(L,m,td,blocks,self._pad_bids)
         # type inference: hints gathered during pass 2 feed the renaming pass
         for k, v in getattr(self.L, '_type_hints', {}).items():
             self._var_types.setdefault(k, v)

@@ -901,6 +901,20 @@ shared markers and fourteen `object objN` declarations removed. Remaining:
 406 and 3,194 respectively. All 503 files passed syntax and brace checks.
 Report: `work/shift_collision_arrays_census.json`.
 
+**List appends in RegularBrowsingNPC.OnEnable (27016):** Both paths match
+the registered `List<int>.Add` (MethodSpec 66217, entry `0x180e0a540`). The
+caller increments the version once before the capacity test, stores into the
+old size slot on the fast path, and passes the same list, item and generic
+method context to `AddWithResize` (66220, `0x180e09d60`) on the other path.
+The second resize is a tail jump. Looking up the helper address alone would
+instead suggest three unrelated `CopyTo` registrations. Each `generatedGoals`
+read precedes its own `Random.Range(2,14)` call. The compiled method preserved
+that order when the random callback replaced the list or threw; tests also
+checked list contents, version increments, and growth on the first or second
+append. Only RegularBrowsingNPC.cs changed in the 503-file strict rebuild.
+Shared calls 406 → 404 (24 → 22 at the resize address); `object objN` stayed
+at 3,194. Report: `work/shift_goal_appends_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;
