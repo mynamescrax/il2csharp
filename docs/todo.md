@@ -942,6 +942,25 @@ list. Only DialogueInteractable.cs changed. Shared calls 403 → 402 (21 → 20
 at the resize helper); `object objN` stays at 3,194. Strict lift, syntax and
 brace checks passed. Report: `work/shift_dialogue_append_census.json`.
 
+**Direct base Start dispatch:** `DialogueInteractable.Start` (24853) calls
+`0x1805397f0` directly at `0x1806c5000`; `PickupObject.Start` (26657) calls
+the same address at `0x1805872da`. Both pass their own `this`. MethodDef
+25582 is the sole target and is `Interactable.Start`, the implementation of
+slot 30 on the immediate parent. Ordinary direct calls now share the tail
+call's slot proof. Both complete recovered overrides compiled against test
+doubles: dialogue called the base once, then appended `-37`; a throwing base
+left the report untouched. Pickup called the base once before the three
+delayed invokes. A new-slot method did not qualify for `base` dispatch.
+Only DialogueInteractable.cs and PickupObject.cs changed in the strict
+503-file rebuild. The shared-call and `object objN` counts remain 402 and
+3,194. Report: `work/shift_direct_base_call_census.json`.
+
+The earlier collision-array checkpoint's full 91-image gate also finished:
+112,718 bodies lifted, zero failures/fallbacks; all 11,198 files parsed.
+The single-unit Roslyn diagnostic probe with `LocalIndexerNameAttribute.cs`
+still reports 601 errors across 171 files (291 CS0111 and 246 CS0102).
+Report: `work/shift_collision_all_images_compile.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;

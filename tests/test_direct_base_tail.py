@@ -35,7 +35,7 @@ def test_direct_tail_receiver(case, expected):
         # Even a candidate picked by a separate shared resolver isn't proof
         # of a nonvirtual base dispatch. Exercise the common resolution seam.
         lift.il.addr_candidates[parent_method.addr].append(('method', 1))
-        assert not lift._direct_base_tail(parent_method.addr, 0, lift.regs['RCX'])
+        assert not lift._direct_base_target(parent_method.addr, 0, lift.regs['RCX'])
         return
     lift._insn(ins, [ins], 0, None, ins.next_ip)
     assert lift.out[-1][1] == f'return {expected}.Read(x); /* tail */'

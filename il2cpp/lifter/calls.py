@@ -3657,6 +3657,15 @@ class _CallsMixin:
                         self.regs.pop(rr, None)
                     return
                 else:
+                    # A CALL rel32 can select the parent implementation just
+                    # as a tail JMP can. `this.M()` would dispatch straight
+                    # back into the override. Keep genuine virtual calls and
+                    # calls on a different instance on the normal path.
+                    if (recv_txt == 'this' and not rest and not m2.param_count and m2.name != 'Finalize'
+                            and rty and self.il._type_enum(rty) == 1 and ins.mnemonic == Mnemonic.CALL
+                            and ins.op0_kind == OpKind.NEAR_BRANCH64 and
+                            self._direct_base_target(ins.near_branch_target, mi, recv)):
+                        recv_txt = 'base'
                     cand = '%s.%s(%s)' % (_recv_fold(recv_txt), mdot, ', '.join(rest))
                     if len(cand) < 150:
                         short = cand

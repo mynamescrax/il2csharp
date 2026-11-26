@@ -337,18 +337,18 @@ class _ValuesMixin:
         out = self._positional_args(prepared, m2, rty)
         out = self._materialize_float_lanes(out, arg_exprs, m2, rty)
         if (direct_target is not None and out and out[0] == 'this' and arg_exprs and
-                self._direct_base_tail(direct_target, mi, arg_exprs[0])):
+                self._direct_base_target(direct_target, mi, arg_exprs[0])):
             out[0] = 'base'
         return out
 
-    def _direct_base_tail(self, target, mi, receiver):
-        """A direct jump to the overridden slot bypasses virtual dispatch.
+    def _direct_base_target(self, target, mi, receiver):
+        """A direct call or jump to the overridden slot bypasses virtual dispatch.
 
         Only use C# base lookup when the immediate parent declares the sole
         target and the emitted invocation cannot pick another overload.
         """
-        return (self._base_slot_matches(mi, receiver) and self.meta.methods[mi].addr == target and
-                self.il.addr_candidates.get(target) == [('method', mi)])
+        return (self.il.addr_candidates.get(target) == [('method', mi)] and
+                self.meta.methods[mi].addr == target and self._base_slot_matches(mi, receiver))
 
     def _base_slot_matches(self, mi, receiver):
         """Would `base.M` select this exact immediate-parent slot/signature?"""
