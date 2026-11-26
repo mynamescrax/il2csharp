@@ -961,6 +961,19 @@ The single-unit Roslyn diagnostic probe with `LocalIndexerNameAttribute.cs`
 still reports 601 errors across 171 files (291 CS0111 and 246 CS0102).
 Report: `work/shift_collision_all_images_compile.json`.
 
+**Inherited Spawned callback:** In `PickupObject.Spawned` (26658) the entry
+parks `this` in RBX. Both paths through the metadata-init guard reach the
+same `RCX = RBX` and zero MethodInfo before the call at `0x18058722a`.
+Slot 25 on `Interactable` inherits `Fusion.NetworkBehaviour.Spawned` (59668)
+without hiding its name. That method is registered at the shared return-only
+body, and neither return register is used. Emit `base.Spawned()` as an
+equivalent call, retaining the shared-implementation annotation. The whole
+compiled override called the base once in both the early-return and disable
+paths; an exception from the instrumented base left `_spawned` false. Four
+files changed: EndOfDayReport, EndingScene, PickupObject and SaveManager.
+Strict census: 402 → 398 unresolved calls; 3,194 → 3,190 `object objN`.
+Report: `work/shift_inherited_spawn_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;

@@ -1,5 +1,6 @@
 from il2cpp.prelude import *  # noqa: F401,F403
 from il2cpp.common import csharp_type_name, u64
+from il2cpp.csharp import declares_member_name
 from il2cpp.expr import Expr, _BARE_HINT_RX, _BARE_TOKEN_RX, _INT_TY, _byref_arg_render, _is_unresolved_gp, _mentions, _merge_arr_proof, _recv_fold
 from il2cpp.text import _int_lit, disp_add, strip_outer
 from il2cpp.x64 import ARG_XMM, KLASS_ELEMENT_CLASS, KLASS_INITIALIZED, KLASS_STATIC_FIELDS, KLASS_VTABLE
@@ -350,8 +351,8 @@ class _ValuesMixin:
         return (self.il.addr_candidates.get(target) == [('method', mi)] and
                 self.meta.methods[mi].addr == target and self._base_slot_matches(mi, receiver))
 
-    def _base_slot_matches(self, mi, receiver):
-        """Would `base.M` select this exact immediate-parent slot/signature?"""
+    def _base_slot_matches(self, mi, receiver, *, inherited=False):
+        """Would `base.M` select this exact slot/signature from the parent?"""
         caller = getattr(self, '_current_method', None)
         owner = getattr(self, '_current_td', None)
         callee = self.meta.methods[mi]
@@ -369,8 +370,22 @@ class _ValuesMixin:
                 owner.generic_container != -1 or not 0 <= owner.parent < len(self.il.types)):
             return False
         parent = self.il.types[owner.parent]
-        if (self.il._type_enum(parent) != 0x12 or parent[0] != callee.declaring or
-                not 0 <= callee.declaring < len(self.meta.typedefs) or callee.declaring == owner.index):
+        if not 0 <= callee.declaring < len(self.meta.typedefs) or callee.declaring == owner.index:
+            return False
+        seen = {owner.index}
+        while (parent and self.il._type_enum(parent) == 0x12 and not parent[1] & (1 << 29) and
+               0 <= parent[0] < len(self.meta.typedefs) and parent[0] not in seen):
+            if parent[0] == callee.declaring:
+                break
+            if not inherited: return False
+            mid = self.meta.typedefs[parent[0]]
+            if (mid.is_valuetype or mid.flags & 0x20 or mid.generic_container != -1 or
+                    self.il.vtable_method(mid.index,caller.slot) != mi or declares_member_name(self.il,mid,callee.name) or
+                    not 0 <= mid.parent < len(self.il.types)):
+                return False
+            seen.add(mid.index)
+            parent = self.il.types[mid.parent]
+        else:
             return False
         base = self.meta.typedefs[callee.declaring]
         if (base.generic_container != -1 or base.flags & 0x20 or

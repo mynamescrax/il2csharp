@@ -72,6 +72,43 @@ def _plain_return(il, addr):
     return bool(code and (code.startswith(b'\xc3') or code == b'\xc2\x00\x00'))
 
 
+def _init_arm(cold, init, flag):
+    if len(cold)<3 or len(cold)%2!=1: return False
+    for lea,call in zip(cold[:-1:2],cold[1:-1:2]):
+        if (lea.mnemonic!=M.LEA or lea.op0_register!=R.RCX or lea.memory_base!=R.RIP or
+                call.mnemonic!=M.CALL or call.op0_kind!=K.NEAR_BRANCH64 or call.near_branch_target!=init): return False
+    store=cold[-1]
+    return (store.mnemonic==M.MOV and store.memory_base==R.RIP and store.memory_size==1 and
+            store.ip_rel_memory_address==flag and store.op1_kind==K.IMMEDIATE8 and store.immediate8==1)
+
+
+def _guarded_this_forward(lift, block, ins):
+    """Entry saves this before the metadata guard. Both paths reach the
+    same reload and null MethodInfo. The cold edge may already be pruned."""
+    blocks=getattr(lift,'_blocks',())
+    if len(blocks)<3 or blocks[2] is not block: return False
+    head,cold=blocks[:2]; ops=block.insns[:3]
+    if (not head.is_entry or head.preds or len(head.insns)!=5 or len(ops)!=3 or ops[-1].ip!=ins.ip or
+            head.insns[0].ip!=lift._current_method.addr or cold.succs!=[block.bid] or
+            not head.succs or not set(head.succs)<={cold.bid,block.bid} or
+            cold.preds!=([head.bid] if cold.bid in head.succs else []) or
+            set(block.preds)!=({head.bid,cold.bid} if block.bid in head.succs else {cold.bid})): return False
+    seq=head.insns+cold.insns+ops
+    if (any(a.next_ip!=b.ip for a,b in zip(seq,seq[1:])) or
+            any(i.has_segment_prefix or i.has_lock_prefix or i.has_rep_prefix or i.has_repne_prefix for i in seq)): return False
+    push,sub,cmp,save,branch=head.insns; zero,reload,_=ops; parked=push.op0_register
+    if (push.mnemonic!=M.PUSH or parked not in _NONVOL or sub.mnemonic!=M.SUB or sub.op0_register!=R.RSP or
+            sub.op1_kind!=K.IMMEDIATE8TO64 or sub.immediate8to64!=0x20 or
+            cmp.mnemonic!=M.CMP or cmp.memory_base!=R.RIP or cmp.memory_size!=1 or cmp.op1_kind!=K.IMMEDIATE8 or cmp.immediate8!=0 or
+            save.mnemonic!=M.MOV or save.op0_register!=parked or save.op1_register!=R.RCX or
+            branch.mnemonic!=M.JNE or branch.op0_kind!=K.NEAR_BRANCH64 or branch.near_branch_target!=zero.ip or
+            zero.mnemonic!=M.XOR or zero.op0_register!=R.EDX or zero.op1_register!=R.EDX or
+            reload.mnemonic!=M.MOV or reload.op0_register!=R.RCX or reload.op1_register!=parked): return False
+    eh=lift.il.eh_regions(lift._current_method.addr) or {}
+    return (not any(seq[0].ip<=p<=ins.ip for p in eh.get('pads',())) and
+            _init_arm(cold.insns,lift.rt_init_meta,cmp.ip_rel_memory_address))
+
+
 def _guarded_helper_forward(lift, block, ins):
     """RCX=this and RDX=helper parked across an entry metadata-init diamond.
 
@@ -133,18 +170,12 @@ def _guarded_helper_forward(lift, block, ins):
             continue
         else:
             return False
-    if flag is None or saved != {src:R.RDX, obj:R.RCX} or len(cold.insns) < 3 or len(cold.insns) % 2 != 1:
+    if flag is None or saved != {src:R.RDX, obj:R.RCX}:
         return False
-    for lea, call in zip(cold.insns[:-1:2], cold.insns[1:-1:2]):
-        if (lea.mnemonic != M.LEA or lea.op0_register != R.RCX or lea.memory_base != R.RIP or
-                call.mnemonic != M.CALL or call.op0_kind != K.NEAR_BRANCH64 or call.near_branch_target != lift.rt_init_meta):
-            return False
     eh = lift.il.eh_regions(lift._current_method.addr) or {}
     if any(seq[0].ip <= pad <= ins.ip for pad in eh.get('pads', ())):
         return False  # exceptional entry wouldn't inherit the saved arguments
-    store = cold.insns[-1]
-    return (store.mnemonic == M.MOV and store.memory_base == R.RIP and store.memory_size == 1 and
-            store.ip_rel_memory_address == flag and store.op1_kind == K.IMMEDIATE8 and store.immediate8 == 1)
+    return _init_arm(cold.insns,lift.rt_init_meta,flag)
 
 
 def _entry_forward(prefix, ip, ins, inputs, hidden_reg):
@@ -232,6 +263,8 @@ def shared_base_action(lift, ins, regs, xmm, *, tail_body=None):
             return None
         if getattr(b, 'is_entry', False) and not b.preds:
             prefix = b.insns
+        elif m.param_count == 0 and _guarded_this_forward(lift, b, ins):
+            guarded = True
         elif m.param_count == 1 and _guarded_helper_forward(lift, b, ins):
             guarded = True
         else:
@@ -251,7 +284,8 @@ def shared_base_action(lift, ins, regs, xmm, *, tail_body=None):
     if not parent or il._type_enum(parent) != 0x12 or not 0 <= parent[0] < len(il.meta.typedefs):
         return None
     base = il.vtable_method(parent[0], m.slot)
-    if base is None or not 0 <= base < len(il.meta.methods) or not lift._base_slot_matches(base, regs[0]):
+    if (base is None or not 0 <= base < len(il.meta.methods) or
+            not lift._base_slot_matches(base, regs[0], inherited=(m.param_count == 0))):
         return None
 
     # Inspect a contiguous entry prefix. Stack setup and parking argument

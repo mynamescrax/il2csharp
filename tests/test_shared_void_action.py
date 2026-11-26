@@ -6,7 +6,7 @@ import pytest
 
 from il2cpp.binary import PE
 from il2cpp.expr import Expr
-from il2cpp.shared_action import _bool_transfer, _guarded_helper_forward, shared_action_tail, shared_base_action, shared_bool_tail, shared_void_action
+from il2cpp.shared_action import _bool_transfer, _guarded_helper_forward, _guarded_this_forward, shared_action_tail, shared_base_action, shared_bool_tail, shared_void_action
 
 
 def recover(change=None):
@@ -246,6 +246,27 @@ def guarded_helper(change=None, spill='', null_guard=False):
 
 def test_helper_is_saved_on_both_guard_paths():
     assert guarded_helper()
+
+
+@pytest.mark.parametrize('case',['hot and cold','linearized guard','wrong reload','different initializer','wrong flag','extra predecessor','EH pad'])
+def test_nullary_guard_must_reach_call_with_entry_this(case):
+    # Save RDI before the flag test's branch. On a cold first use the
+    # initializer consumes RCX; only restoring RDI recovers this.
+    start=0x1000; flag=0x1234; init=0x5100
+    def rel(n): return n.to_bytes(4,'little',signed=True)
+    head=bytes.fromhex('57 4883ec20 803d')+rel(flag-(start+12))+bytes.fromhex('00 488bf9 7513')
+    p=start+len(head)
+    cold=bytes.fromhex('488d0d00010000 e8')+rel(init+int(case=='different initializer')-(p+12))
+    cold+=bytes.fromhex('c605')+rel(flag+int(case=='wrong flag')-(p+19))+b'\x01'
+    join=bytes.fromhex('31d2 '+('488bcb' if case=='wrong reload' else '488bcf')+' e800200000')
+    incoming=[1] if case=='linearized guard' else [0,1]
+    blocks=[]; ip=start
+    for n,(data,preds,succs) in enumerate([(head,[],[1] if case=='linearized guard' else [2,1]),(cold,[0],[2]),
+                                           (join,incoming+([3] if case=='extra predecessor' else []),[])]):
+        blocks.append(NS(bid=n,is_entry=n==0,insns=list(Decoder(64,data,ip=ip)),preds=preds,succs=succs));ip+=len(data)
+    il=NS(eh_regions=lambda _:{'pads':[p]} if case=='EH pad' else None)
+    lift=NS(il=il,_blocks=blocks,_current_method=NS(addr=start),rt_init_meta=init)
+    assert _guarded_this_forward(lift,blocks[2],blocks[2].insns[-1])==(case in ('hot and cold','linearized guard'))
 
 
 @pytest.mark.parametrize('change',['wrong source','other call','other flag','clobber before branch','other edge','handler entry'])

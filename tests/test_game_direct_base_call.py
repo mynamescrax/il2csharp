@@ -50,3 +50,55 @@ def test_identical_spelling_does_not_prove_an_override(shift_runtime,monkeypatch
     monkeypatch.setattr(md,'flags',md.flags|0x100)  # newslot, not an override of Interactable.Start
     lines=d.lift_method(md,td)
     assert 'this.Start();' in lines and 'base.Start();' not in lines
+
+
+def test_pickup_spawned_calls_inherited_slot_before_state_change(body,tmp_path):
+    spawned=body('PickupObject','Spawned',0x180587200)
+    assert spawned.startswith('base.Spawned() /* shared implementation */;') and 'sub_' not in spawned
+    runner=tmp_path/'runner';runner.mkdir()
+    (runner/'Program.cs').write_text('''using System;
+using System.Collections.Generic;
+using System.Linq;
+foreach(var mode in new[]{"disable","skip","throw"}) {
+    var p=new PickupObject(); NetworkBehaviour dispatch=p;
+    p.OnBase=()=>{if(p._spawned)throw new Exception("base after state change");p.Trace.Add("base");
+        if(mode=="throw")throw new ApplicationException();p.ignoreAutoDisableInteractable=mode=="skip";p.interactable=true;};
+    try {dispatch.Spawned(); if(mode=="throw")throw new Exception("missing failure");}catch(ApplicationException) when(mode=="throw"){}
+    if(string.Join(";",p.Trace)!=(mode=="disable"?"base;disable;invoke;invoke":"base") || p._spawned!=(mode!="throw") ||
+        p.interactabilityBeforePaused!=(mode=="disable") || p.interactable!=(mode=="skip") ||
+        !p.Delays.SequenceEqual(mode=="disable"?new[]{0.1f,0.3f}:Array.Empty<float>()))throw new Exception(mode);
+    Console.WriteLine(mode+": "+string.Join(";",p.Trace)+", spawned="+p._spawned);
+}
+class NetworkBehaviour {public Action OnBase;public virtual void Spawned()=>OnBase();}
+class Interactable : NetworkBehaviour { }
+class PickupObject : Interactable { public bool _spawned,ignoreAutoDisableInteractable,interactabilityBeforePaused,interactable;
+    public List<string> Trace=new();public List<float> Delays=new();
+    void ChangeInteractableStatus(bool v){if(!_spawned || !interactabilityBeforePaused || v)throw new Exception();interactable=v;Trace.Add("disable");}
+    void Invoke(string method,float delay){if(method!="LoadPendingItems")throw new Exception();Delays.Add(delay);Trace.Add("invoke");}
+    public override void Spawned(){\n'''+spawned+'\n}}',encoding='utf-8')
+    print(run_case(tmp_path,runner).strip())
+
+
+@pytest.mark.parametrize('defect',['hidden by parent','wrong parent slot','different effect','live return'])
+def test_inherited_spawn_declines_without_equivalence(shift_runtime,monkeypatch,defect):
+    from il2cpp import Decompiler,Lifter
+    from il2cpp import shared_action
+    meta,il=shift_runtime;d=Decompiler(Lifter(il));md=meta.methods[26658];td=meta.typedefs[md.declaring]
+    parent=il.types[td.parent][0]; target=0x180507120
+    if defect=='hidden by parent':
+        # A non-method declaration also stops C# base member lookup.
+        fi=next(iter(meta.type_fields(meta.typedefs[parent])))
+        from il2cpp.csharp import source_field_name
+        source_field_name(il,fi)
+        monkeypatch.setitem(il._source_field_names,fi,'Spawned')
+    elif defect=='wrong parent slot':
+        old=il.vtable_method
+        monkeypatch.setattr(il,'vtable_method',lambda t,s:None if (t,s)==(parent,25) else old(t,s))
+    elif defect=='different effect':
+        read=il.bin.read
+        monkeypatch.setattr(il.bin,'read',lambda p,n:b'\x31\xc0\xc3' if (p,n)==(target,3) else read(p,n))
+    else:
+        old=shared_action._unused_return
+        monkeypatch.setattr(shared_action,'_unused_return',lambda l,ip:False if ip==0x18058722f else old(l,ip))
+    text='\n'.join(d.lift_method(md,td))
+    assert 'base.Spawned()' not in text and 'sub_180507120/*shared body,' in text

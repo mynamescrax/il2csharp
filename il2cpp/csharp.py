@@ -78,6 +78,18 @@ def source_field_name(il, fi):
     return names.get(fi, il.meta.fields[fi].name)
 
 
+def declares_member_name(il, td, name):
+    """Could a declaration on this type hide an inherited C# member?"""
+    meta = il.meta
+    names = [source_field_name(il, i) for i in meta.type_fields(td)]
+    names.extend(meta.methods[i].name for i in meta.type_methods(td))
+    for table, start, count in ((meta.properties, td.property_start, td.property_count),
+                                (meta.events, td.event_start, td.event_count)):
+        names.extend(meta.getstr(table[start+i][0]) for i in range(count))
+    names.extend(meta.typedefs[i].name for i in meta.nested_types[td.nested_start:td.nested_start+td.nested_count])
+    return any(safe_ident(n) == name for n in names)
+
+
 class UsingTracker:
     """Namespace references used by one emitted file, rendered as sorted,
     de-duplicated using statements. Sources are the file's rendered text --
