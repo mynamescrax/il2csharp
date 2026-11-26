@@ -3855,7 +3855,14 @@ class _CallsMixin:
         # call spellings keep rendering.
         _m2c = self.meta.methods[mi] \
             if mi is not None and 0 <= mi < len(self.meta.methods) else None
-        if _m2c is not None and _m2c.name in ('op_Explicit', 'op_Implicit') \
+        from il2cpp.truth_operator import truth_owner,truth_cast
+        owner=truth_owner(self.il,_m2c) if _m2c and _m2c.name=='op_Implicit' and len(args)==1 else None
+        if owner:
+            call=truth_cast(owner,'null' if args[0]=='0' else args[0])
+            origin=getattr(self,'_lookup_conversions',{}).get(ins.ip)
+            if origin is not None and gpr_exprs[0] is not None and self._material_values.get(origin) is gpr_exprs[0]:
+                call=acc_get(call);shared_rty=True
+        elif _m2c is not None and _m2c.name in ('op_Explicit', 'op_Implicit') \
                 and _m2c.is_static and '.' not in _m2c.name and _m2c.generic_container == -1 \
                 and len(args) == 1 and args[0] not in ('_', '?', '') and rty is not None:
             try:

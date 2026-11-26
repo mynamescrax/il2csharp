@@ -41,7 +41,7 @@ def test_store_does_not_freeze_the_flags_sentinel(game_decompiler):
     text = _lift(il, dec, 24944, 'Awake')
     assert 'if (this.voiceConnection == null)' in text
     assert '= (this.voiceConnection == null);' not in text
-    assert text.count('UnityEngine.Object.op_Implicit(this.dropdown)') == 2
+    assert text.count('((UnityEngine.Object)(this.dropdown))') == 2
 
 
 def test_flags_phi_keeps_pass_numbering(game_decompiler):

@@ -34,12 +34,12 @@ class DialogueInteractable : Interactable {public Authority _object=new();public
 class PickupObject : Interactable {public object amountText;public bool cantInteractIfDowned;public List<float> Delays=new();
     public void Invoke(string method,float delay){if(method!="LoadAmountText")throw new Exception();Delays.Add(delay);}
     public override void Start(){\n'''+pickup+'''\n}}
-class Pathfind {public bool addToReport;} class Authority {public bool HasStateAuthority;}
+class Pathfind : UnityEngine.Object {public bool addToReport;} class Authority {public bool HasStateAuthority;}
 class EODReportValues {public static EODReportValues Instance; public List<int> npcID=new();}
 class NetPlayerData {public string _Gamertag;}
 class PlatformManager {public static PlatformManager __field_Instance; public List_1<NetPlayerData> GetLobbyMembers()=>new();public string GetPlayerGamertag()=>"test";}
 namespace System.Collections.Generic { class List_1<T>:List<T>{public int _size=>Count;} }
-namespace UnityEngine {class Object {public static bool op_Implicit(Pathfind p)=>p is not null;} class Random {public static int Range(int a,int b)=>a;} }
+namespace UnityEngine {class Object {public static implicit operator bool(Object p)=>p is not null;} class Random {public static int Range(int a,int b)=>a;} }
 ''',encoding='utf-8')
     print(run_case(tmp_path,runner).strip())
 

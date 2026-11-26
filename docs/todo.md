@@ -1403,6 +1403,19 @@ with distinct nonzero vector lanes, and a throwing getter prevents dispatch.
 Changing the slot, home, lane, receiver, or making the public alias ambiguous
 declines the fold. Previous stack literal batch: `0f106cd`.
 
+**Whole light fade callbacks.** In `RealFireLightFade.Start` the closed light
+lookup at `0x180630273` supplies the truth test; only its success arm makes
+the second lookup at `0x1806302bc` and stores that result before reading
+intensity. `Update` has one lookup. Its getter at `0x18063039e` and setter
+at `0x1806303c8` use the same cached light. The scale is read before the
+time getter, the divisor after it. The post-set destruction check reloads
+the light. Previously the source replayed the guard lookup/conversion and
+evaluated `initIntensity` too late. The two complete emitted methods and
+the generated truth-operator signature compile together in
+`tests/test_game_light_fade.py`. Tests change the receiver and both fields
+during callbacks and verify the order through faults, false/null guards,
+and NaN. Icall cache consensus batch: `9cdb8b8`.
+
 **Whole-method behavior gate: `GasCollisionSpawner.OnParticleCollision`.**
 At `0x1806efcda` the RPC takes two different by-value arguments: the saved
 intersection (XMM6 + EBX, 8+4 bytes copied through RDX) and the full 16-byte

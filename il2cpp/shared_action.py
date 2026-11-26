@@ -685,8 +685,10 @@ def shared_bool_tail(lift, ins, args, regs):
     member = _member(il, ins.near_branch_target, recv.ty[0], ((2,0),))
     result = dict.get(lift.regs, 'RAX')
     tn = il.type_name(il.types[ps[0].type])
+    from il2cpp.truth_operator import truth_owner,truth_cast
+    rendered=truth_cast(tn,value.text) if truth_owner(il,conversion) else '%s.op_Implicit(%s)'%(tn,value.text)
     if (not member or not result or result._unk or il._closed_type_key(result.ty) != (2,0) or
-            result.text != '%s.op_Implicit(%s)' % (tn, value.text) or args[1] != flag.text or
+            result.text != rendered or args[1] != flag.text or
             flag.text != '(%s & 0xFF/*z*/)' % result.text):
         return None
     if not lift.dry:

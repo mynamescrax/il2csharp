@@ -66,7 +66,8 @@ class _AnalyzeMixin:
         (L._component_lookups,L._material_sites,L._material_captures,L._material_reads) = material_sites(L,m,blocks,self._pad_bids)
         L._component_lookups.update(L._parent_lookup_sites)
         L._ordinary_lookups=set()
-        for ip,lookup in closed_lookup_sites(L,m,blocks,self._pad_bids).items():
+        lookup_producers={};L._lookup_conversions={}
+        for ip,lookup in closed_lookup_sites(L,m,blocks,self._pad_bids,producers=lookup_producers,conversions=L._lookup_conversions).items():
             if ip not in L._component_lookups:
                 L._component_lookups[ip]=lookup;L._ordinary_lookups.add(ip)
         L._snapshot_srets, packed_loads, snapshot_getters = snapshot_plans(L, td, blocks, self._pad_bids)
@@ -116,6 +117,7 @@ class _AnalyzeMixin:
                 L.regs[r] = e
             L._setup_entry(m, td)
             L._module_reads.update(scalar_getters)
+            L._module_reads.update(lookup_producers)
 
         FLAGS = '!flags'
 

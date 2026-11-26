@@ -1,7 +1,7 @@
 """Explicit MethodRef for a Win64 nullary instance lookup returning its method type parameter."""
 from il2cpp.awaiter import _spec_entry
 from il2cpp.binary import PE
-from il2cpp.array_origin import _graph
+from il2cpp.array_origin import _graph,_definitions
 from il2cpp.generic_array import object_shared_entry
 from il2cpp.names import safe_ident
 from il2cpp.prelude import HAVE_ICED
@@ -12,10 +12,10 @@ if HAVE_ICED:
     _SAVED={R.RBX,R.RBP,R.RDI,R.RSI,R.R12,R.R13,R.R14,R.R15}
 
 
-def _receiver(il,method,byip,pred,site,owner):
+def _receiver(il,method,byip,pred,site,owner,*,initial=None,this_only=False,producers=None):
     """All paths: a complete copy of reference-type this or a registered
     reference return. A typed phi alone may have an unknown predecessor."""
-    work=[(site,R.RCX)];seen=set();proved=False
+    work=[(site,R.RCX if initial is None else initial)];seen=set();proved=False
     while work:
         ip,reg=work.pop()
         if (ip,reg) in seen:continue
@@ -31,11 +31,12 @@ def _receiver(il,method,byip,pred,site,owner):
             i=byip[p]
             if i.mnemonic==M.CALL and reg not in _SAVED:
                 ids=il.addr_candidates.get(i.near_branch_target,())
-                if reg!=R.RAX or len(ids)!=1 or ids[0][0]!='method' or not 0<=ids[0][1]<len(il.meta.methods):return False
+                if this_only or reg!=R.RAX or len(ids)!=1 or ids[0][0]!='method' or not 0<=ids[0][1]<len(il.meta.methods):return False
                 src=il.meta.methods[ids[0][1]]
                 if src.addr!=i.near_branch_target or src.generic_container!=-1 or not 0<=src.return_type<len(il.types):return False
                 ty=il.types[src.return_type]
                 if not ty or il._closed_type_key(ty)!=(0x12,ty[0],0) or owner not in il.base_chain_tds(ty[0]):return False
+                if producers is not None:producers[p]=src.index
                 proved=True;continue
             if i.mnemonic==M.MOV and i.op0_register==reg and RegisterExt.is_gpr64(i.op1_register):work.append((p,i.op1_register));continue
             if any(u.access in _WRITES and RegisterExt.full_register(u.register)==reg for u in _INFO.info(i).used_registers()):return False
@@ -43,7 +44,7 @@ def _receiver(il,method,byip,pred,site,owner):
     return proved
 
 
-def closed_lookup_sites(lift,method,blocks,pads):
+def closed_lookup_sites(lift,method,blocks,pads,*,producers=None,conversions=None):
     il=lift.il
     result={}
     if not HAVE_ICED or pads or not isinstance(getattr(il,'bin',None),PE) or not il.bin.is64:return result
@@ -51,7 +52,14 @@ def closed_lookup_sites(lift,method,blocks,pads):
     for b in blocks:
         for j,call in enumerate(b.insns):
             if not j or call.mnemonic!=M.CALL or call.op0_kind!=K.NEAR_BRANCH64:continue
-            k=j-1;recv=b.insns[k]
+            k=j-1
+            # Saving a nonvolatile in the caller's home area is independent
+            # of the register arguments. Keep the actual store in the lift.
+            park=b.insns[k]
+            if (park.mnemonic==M.MOV and park.op0_kind==K.MEMORY and park.memory_base==R.RSP and park.memory_index==R.NONE and
+                    not park.has_segment_prefix and park.op1_register in _SAVED):k-=1
+            if k<0:continue
+            recv=b.insns[k]
             if (recv.mnemonic==M.MOV and recv.op0_register==R.RCX and recv.op1_kind==K.REGISTER and
                     RegisterExt.is_gpr64(recv.op1_register) and recv.op1_register!=R.RDX):k-=1
             if k<0:continue
@@ -59,7 +67,7 @@ def closed_lookup_sites(lift,method,blocks,pads):
             if (slot.mnemonic==M.MOV and slot.op0_register==R.RDX and slot.op1_kind==K.MEMORY and slot.memory_base==R.RIP and
                     not slot.has_segment_prefix):possible.append(b.insns[k:j+1])
     if not possible:return result
-    seq=[i for b in blocks for i in b.insns];graph=_graph(il,seq,allow_tail=True,runtime_tails=lift.rt_wbarrier)
+    seq=[i for b in blocks for i in b.insns];graph=_graph(il,seq,allow_tail=True,runtime_tails=lift.rt_wbarrier,chained=True)
     if not graph:return result
     pred,_=graph;byip={i.ip:i for i in seq}
     for setup in possible:
@@ -82,5 +90,20 @@ def closed_lookup_sites(lift,method,blocks,pads):
             # No concrete registration is usual for a reference specialization;
             # a conflicting/invalid row is not the same as an absent row.
             if si in il._awaiter_spec_indices[mi] or object_shared_entry(il,mi)!=target:continue
-        if _receiver(il,method,byip,pred,call.ip,md.declaring):result[call.ip]=(si,md.declaring,args[0],md.name,False)
+        sources={}
+        if _receiver(il,method,byip,pred,call.ip,md.declaring,producers=sources):
+            result[call.ip]=(si,md.declaring,args[0],md.name,False)
+            if producers is not None:producers.update(sources)
+    if result and conversions is not None:
+        from il2cpp.truth_operator import truth_owner
+        for i in seq:
+            if i.mnemonic!=M.CALL or i.op0_kind!=K.NEAR_BRANCH64:continue
+            ids=il.addr_candidates.get(i.near_branch_target,())
+            if len(ids)!=1 or ids[0][0]!='method' or not 0<=ids[0][1]<len(il.meta.methods):continue
+            m=il.meta.methods[ids[0][1]]
+            if m.addr!=i.near_branch_target or not truth_owner(il,m):continue
+            defs=_definitions(byip,pred,method.addr,i.ip,R.RCX)
+            if len(defs)==1:
+                p,r=defs.pop()
+                if r==R.RAX and p in result and m.declaring in il.base_chain_tds(result[p][2][0]):conversions[i.ip]=p
     return result

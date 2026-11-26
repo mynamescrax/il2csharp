@@ -656,6 +656,9 @@ class Emitter:
                 _conv = self.il.op_collision_conv(m.declaring, m.name, _pts)
             except Exception:
                 _conv = None
+            if _conv is None and m.name=='op_Implicit':
+                from il2cpp.truth_operator import truth_owner
+                if truth_owner(self.il,m):_conv='implicit'
             if _conv is not None:
                 _umods = mods
                 _ops = [s[4:] if s.startswith('ref ') else s for s in ps]
