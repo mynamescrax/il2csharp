@@ -14,6 +14,7 @@ from il2cpp.simd_getter import keep_scalars, snapshot_plans
 from il2cpp.simd_return import capture_return, emit_return, return_plans
 from il2cpp.ref_vectors import fold_ref_vectors
 from il2cpp.vector_field_copy import copy_via_getter, vector_field_getter
+from il2cpp.decrement_getter import decrement_body
 from il2cpp.module_getter import signed_module_slots
 from il2cpp.module_curve import emit_update, fixed_frame, fold_update, probed_frame
 from il2cpp.converted_module import conversion_uses
@@ -28,6 +29,7 @@ class _AnalyzeMixin:
         L = self.L
         L._saved_fp_consumers = saved_fp_consumers(blocks)
         vector_getter = vector_field_getter(L,m) if len(blocks)==1 and len(blocks[0].insns)==6 and not self._pad_bids else None
+        dec_getter = decrement_body(L,m) if len(blocks)==1 and len(blocks[0].insns)==3 and not self._pad_bids else None
         # _rpo appends the unreachable tail (the EH pads, entered only by the
         # exception dispatcher) after the reachable order, so they lift too
         rpo = self._rpo(blocks)
@@ -150,9 +152,9 @@ class _AnalyzeMixin:
                     L.regs['RDI'] = Expr(snapshot, capture[2], 'obj')
                     continue
                 mn = ins.mnemonic
-                if vector_getter:
+                if vector_getter or dec_getter:
                     if mn == Mnemonic.RET:
-                        b.term=('ret',); b.ret=vector_getter[0]
+                        b.term=('ret',); b.ret=dec_getter or vector_getter[0]
                     continue
                 if idx==0 and mn==Mnemonic.MOVSD and not self._pad_bids and copy_via_getter(L,b):
                     copied_until=3

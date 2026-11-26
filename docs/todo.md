@@ -866,6 +866,16 @@ unchanged. Shared calls 430 → 419; `object objN` 3,274 → 3,271. The strict
 build lifted 6,791 bodies; all 503 files passed brace and syntax checks.
 Report: `work/shift_vector_owner_census.json`.
 
+**PlayerRef index reads:** At `0x1808a4940` EAX loads the one signed dword
+from unboxed RCX and decrements it. `PlayerRef.AsIndex` and `PlayerId` share
+these bytes with unrelated struct getters. Three calls pass proved inbound
+parameter homes; four pass the async state machine's `player` field. The
+compiled comparison covered 64 pairs including `int.MinValue`: decrementing
+that sentinel wraps to `int.MaxValue` even in a checked compilation. Across
+the strict tree: 419 → 412 shared calls, `object objN` unchanged at 3,271;
+only FusionNetworkManager.cs and PerPlayerVolumeUI.cs changed.
+Report: `work/shift_player_index_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;

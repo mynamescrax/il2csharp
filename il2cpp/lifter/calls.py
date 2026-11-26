@@ -10,6 +10,7 @@ from il2cpp.shared_icall import shared_icall
 from il2cpp.shared_getter import shared_getter
 from il2cpp.module_getter import module_getter
 from il2cpp.material_setter import material_read
+from il2cpp.decrement_getter import decrement_read
 from il2cpp.copied_getter import copied_struct_getter
 from il2cpp.indexed_particle import indexed_particle
 from il2cpp.reparent import reparent_call
@@ -3802,7 +3803,7 @@ class _CallsMixin:
         elif shared_rty and short is None and '/*shared body,' in name:
             # Keep the original unresolved-call evaluation and result binding.
             # Only the spelling changes, with no claim about MethodDef identity.
-            call = (material_read(self, ins, gpr_exprs) or reparent_call(self, ins, args, gpr_exprs, xmm_exprs) or
+            call = (decrement_read(self, ins, gpr_exprs) or material_read(self, ins, gpr_exprs) or reparent_call(self, ins, args, gpr_exprs, xmm_exprs) or
                     shared_icall(self, target, args, gpr_exprs) or
                     shared_getter(self, target, args, gpr_exprs, xmm_exprs) or
                     shared_coroutine(self, target, args, gpr_exprs, xmm_exprs) or call)
