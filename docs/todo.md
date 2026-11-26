@@ -1099,6 +1099,20 @@ are UIDService.cs and the generated codegen reader. This removes a wrongly
 named constructor, leaving 391 shared markers and 3,184 `object objN`.
 Report: `work/shift_uid_actor_census.json`.
 
+**UIDService.OnUserJoined (26520):** MethodSpec 151567 at `0x1805948cd`
+registers `AsyncVoidMethodBuilder.Start<UIDService.<OnUserJoined>d__15>`.
+RDX addresses the 80-byte machine at RSP+0x40; RCX addresses its builder
+at RSP+0x48. Five 16-byte zero stores cover the full machine before `Create`;
+its separate 32-byte result is copied into the builder field. The receiver,
+two strings, signed actor ID and initial state −1 are written before the
+by-reference Start. The emitted OnUserJoined compiled with the BCL builder
+and its actual state field declarations. An instrumented MoveNext observed
+the original references, signed actor IDs (including both Int32 extremes),
+default awaiter and state −1; a throwing OperationStarted prevented MoveNext.
+Seventeen kickoff methods across twelve generated files now use concrete
+machines. The 503-file strict census held at 391 shared markers and reduced
+`object objN` from 3,184 to 3,167. Report: `work/shift_async_start_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;
