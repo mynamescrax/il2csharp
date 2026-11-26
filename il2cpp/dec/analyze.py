@@ -6,7 +6,7 @@ from il2cpp.expr import Expr, _BARE_TOKEN_RX, _INT_TY, _R8_TY, _mentions, _merge
 from il2cpp.expr import _tile_proof_for as _dry_tile_proof
 from il2cpp.text import imm_of, reg_name
 from il2cpp.x64 import ARG_REGS, GPRS, VOLATILE, flag_cond
-from il2cpp.shared_field import saved_fp_consumers
+from il2cpp.shared_field import nested_field_tail, saved_fp_consumers
 from il2cpp.shared_action import shared_action_tail
 from il2cpp.shared_coroutine import shared_coroutine
 from il2cpp.sret_copy import copied_sret_before_getter
@@ -598,7 +598,8 @@ class _AnalyzeMixin:
                                         args = args[:L.RT_ARITY[_eff_nm]]
                                     elif tail_nm is None and re.fullmatch(r'sub_[0-9a-f]+', nm) and len(args) > 4:
                                         args = args[:4]
-                                    alias = ((shared_coroutine(L, t, args, arg_exprs) or shared_action_tail(L, ins, b.insns, args, arg_exprs)) if
+                                    alias = ((nested_field_tail(L, ins, args) or shared_coroutine(L, t, args, arg_exprs) or
+                                              shared_action_tail(L, ins, b.insns, args, arg_exprs)) if
                                              tail_nm is None and '/*shared body,' in _eff_nm else None)
                                     L._emit_tail(ins.ip, alias or '%s(%s)' % (_eff_nm, ', '.join(args)), None,
                                                  marker=False)

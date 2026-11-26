@@ -842,6 +842,17 @@ instance reads 12 → 0, shared reads 1 → 0, all shared markers 470 → 431;
 `object objN` remains 3,274. All 6,791 bodies lifted with no failures or
 fallbacks, and all 503 files parsed. Report: `work/shift_renderer_material_census.json`.
 
+**Nested owner getter:** `LegRedirectHelper.get_LA` (30190) loads its `parent`
+field into RCX, throws on null, clears EDX and tail-jumps to `0x180513390`.
+The leaf returns the reference at +0x18. Of the 1,022 registered candidates,
+three getters on the parent's base class return this field. The protected,
+nonvirtual `Owner` getter is accessible through the enclosing type and no
+derived member hides it. The recovered getter compiled and returned the
+original owner, a replacement on a second call, and a null owner; a null
+parent threw. Only `LAM_DirectionalMovement.cs` changed. The strict rebuild
+and syntax gates passed: shared calls 431 → 430; `object objN` still 3,274.
+Report: `work/shift_nested_field_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;
