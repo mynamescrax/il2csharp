@@ -1468,7 +1468,9 @@ class _StateMixin:
         self._signed_module_slots = set()
         self._converted_modules = {}
         self._hierarchy_bindings = {}
-        self._material_lookups = {}
+        self._component_lookups = {}
+        self._parent_lookup_sites = {}
+        self._parent_lookup_windows = {}
         self._material_sites = {}
         self._material_captures = {}
         self._material_reads = {}

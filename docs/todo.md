@@ -993,6 +993,23 @@ TurnOffIfMultiplayer. The constructor evidence covered 50 factories and
 503 files passed syntax and brace checks. Shared markers 398 → 396;
 `object objN` 3,190 → 3,188. Report: `work/shift_spawn_ctor_census.json`.
 
+**PurchaseNode.Spawned (26973):** The shared call at `0x180595ece` takes
+`this` and a zero MethodInfo. Slot 25 selects `NetworkBehaviour.Spawned`.
+Next, the caller loads MethodRef 174173 into RDX, restores `this` from RBX
+into RCX, and calls the registered reference-sharing entry for
+`Component.GetComponentInParent<T>` at `0x180b5d000`. Here T is `Animator`.
+The lookup returns its own RAX and has no FP input; subsequent use of XMM0
+is checked separately. Bind the animator once for the Unity null test,
+`Contains`, and `Add`. The local Add body at `0x180002410` matches registered
+`List<object>.Add` including its resize and write-barrier targets. Its
+MethodInfo closes the list over Animator. The manager is reloaded after
+`Contains` returns false. The compiled override appended the original animator
+to a replacement manager's list and skipped the append for existing, null,
+or destroyed animators. Exceptions stopped at the base call, lookup or
+comparison. The strict 503-file census changed only PurchaseNode.cs:
+396 → 395 shared calls, 3,188 → 3,187 `object objN`. Report:
+`work/shift_purchase_lookup_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;

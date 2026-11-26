@@ -369,6 +369,13 @@ def _unused_return(lift, after_call):
             return False
         seen.add((ip, live))
         i = by_ip[ip]
+        end = getattr(lift, '_parent_lookup_windows', {}).get(ip)
+        if end is not None:
+            # Fresh RDX MethodInfo + RCX receiver; the reference result is
+            # the lookup's own RAX. Continue checking subsequent instructions
+            # for an old XMM0 read rather than assuming the lookup kills it.
+            work.append((end, live & 2))
+            continue
         null = _nullary_dispatch_exit(lift, by_ip, i)
         if null is not None:
             # The non-null path reaches a proved instance call (Win64 RCX:

@@ -2878,7 +2878,7 @@ class _CallsMixin:
         if copied_getter and info is not None and info != ('method',copied_getter[0]):
             copied_getter = None
         indexed_setter = None
-        lookup = getattr(self,'_material_lookups',{}).get(ins.ip)
+        lookup = getattr(self,'_component_lookups',{}).get(ins.ip)
         if lookup and (info != ('generic',lookup[0]) or not recv or not recv.ty or recv._unk or
                        self.il._closed_type_key(recv.ty) != (0x12,recv.ty[0],0) or lookup[1] not in self.il.base_chain_tds(recv.ty[0]) or
                        getattr(gpr_exprs[1],'_usg_idx',None) != lookup[0]):
@@ -3917,6 +3917,8 @@ class _CallsMixin:
             self.regs[dstreg] = result
             if lookup and self.il._closed_type_key(rty) == self.il._closed_type_key(lookup[2]):
                 self._bind(result)
+                # A consumer accepting Object does not widen the closed result.
+                self._type_hints.setdefault(result.text,rty)
                 self._material_values[ins.ip] = result
                 if lookup[4]:
                     self.emit(ins.ip,'if (%s is null) { throw new System.NullReferenceException(); }' % result.text,None)

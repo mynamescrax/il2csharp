@@ -23,6 +23,7 @@ from il2cpp.curve_join import joined_updates
 from il2cpp.curve_bridge import prefixes_before_join
 from il2cpp.reparent import bind_array_operand, hierarchy_sites
 from il2cpp.material_setter import assignment as material_assignment, material_sites, snapshot as material_snapshot
+from il2cpp.parent_lookup import parent_lookup_sites
 
 class _AnalyzeMixin:
     def _analyze(self, m, td, blocks, bmap):
@@ -47,7 +48,9 @@ class _AnalyzeMixin:
         curve_arms, curve_joins = joined_updates(L, m, td, blocks, module_frame)
         curve_prefixes, curve_refs = prefixes_before_join(L, m, td, blocks, module_frame, curve_arms)
         L._hierarchy_bindings, L._reparent_sites = hierarchy_sites(L, m, blocks, self._pad_bids)
-        (L._material_lookups,L._material_sites,L._material_captures,L._material_reads) = material_sites(L,m,blocks,self._pad_bids)
+        L._parent_lookup_sites,L._parent_lookup_windows = parent_lookup_sites(L.il,blocks,self._pad_bids)
+        (L._component_lookups,L._material_sites,L._material_captures,L._material_reads) = material_sites(L,m,blocks,self._pad_bids)
+        L._component_lookups.update(L._parent_lookup_sites)
         L._snapshot_srets, packed_loads, snapshot_getters = snapshot_plans(L, td, blocks, self._pad_bids)
         packs, extra_srets = return_plans(L, m, blocks, self._pad_bids, snapshot_getters)
         L._snapshot_srets.update(extra_srets)
