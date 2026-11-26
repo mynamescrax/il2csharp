@@ -2875,6 +2875,11 @@ class _CallsMixin:
         void_action = None
         copied_getter = (copied_struct_getter(self,ins,gpr_exprs)
                          if target and cands and len(cands)>1 else None)
+        joined=getattr(self,'_joined_getters',{}).get(ins.ip)
+        if joined is not None and len(gpr_exprs)>1:
+            r=gpr_exprs[1]
+            if r and r.kind=='ptr' and re.fullmatch(r'&s_[0-9a-fA-F]+',r.text):
+                copied_getter=(joined,r.text[1:]+'.'+self._accessor_prop(joined)[1])
         if copied_getter and info is not None and info != ('method',copied_getter[0]):
             copied_getter = None
         indexed_setter = None

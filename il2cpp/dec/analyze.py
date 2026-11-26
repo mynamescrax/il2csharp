@@ -24,6 +24,7 @@ from il2cpp.curve_bridge import prefixes_before_join
 from il2cpp.reparent import bind_array_operand, hierarchy_sites
 from il2cpp.material_setter import assignment as material_assignment, material_sites, snapshot as material_snapshot
 from il2cpp.inline_task import inline_tasks, emit_kickoff
+from il2cpp.joined_sret import joined_srets, copied_argument
 from il2cpp.parent_lookup import parent_lookup_sites
 
 class _AnalyzeMixin:
@@ -40,6 +41,7 @@ class _AnalyzeMixin:
         # CFG (reachable-from-the-declaration check); blocks[bid] and
         # Block.bid line up by construction
         L._blocks = blocks
+        result_homes,result_copies,L._joined_getters=joined_srets(L,m,blocks,self._pad_bids)
         kickoffs,owner_loads,task_getters,task_zeroes = inline_tasks(L,m,td,blocks,self.eh)
         kickoff_values = {}
         L._array_module_frames = {}
@@ -132,12 +134,15 @@ class _AnalyzeMixin:
             L._jcc_flags = None
             copied_until = -1
             receiver_stores = {}
+            joined_echo = None
             packed_homes = {}
             packed_return = {}
             carried = jcc_fallthrough_flags.get(b.bid)
             if carried is not None:
                 L.flags, L._flags_mn = carried
             for idx, ins in enumerate(b.insns):
+                if ins.ip in result_homes:
+                    ins=ins.copy();ins.memory_displacement=result_homes[ins.ip]
                 # the branch/return/jmp handlers below render at THIS
                 # instruction's ip but run here, not through L._insn;
                 # without this their note_use counts under the previous
@@ -160,6 +165,13 @@ class _AnalyzeMixin:
                     L.regs['RDI'] = Expr(snapshot, capture[2], 'obj')
                     continue
                 mn = ins.mnemonic
+                if ins.ip in result_copies:
+                    echo=dict.get(L.regs,'RAX')
+                    if (echo and echo.kind=='ptr' and re.fullmatch(r'&t\d+',echo.text) and
+                            L.il._closed_type_key(echo.ty)==result_copies[ins.ip] and L.slot_types.get(echo.text[1:])==echo.ty):joined_echo=echo
+                if idx==5 and joined_echo is not None:
+                    copied_argument(L,ins,joined_echo);copied_until=idx+1
+                    continue
                 if ins.ip in task_zeroes:continue
                 if ins.ip in task_getters:
                     member,ty=task_getters[ins.ip];name=L.new_var();L._var_types[name]=ty

@@ -1227,6 +1227,25 @@ shared-stub file changed. Shared markers fell **382 → 379** (64 → 63 native
 addresses); untyped locals fell **3,149 → 3,144**. No marker at the folded
 builder factory remains. Report: `work/shift_reused_frames_census.json`.
 
+**Shared struct getter at a return-buffer join:** In `InventoryManager.Update`,
+the registered `Physics.Raycast` call at `0x1806fab3c` takes `out RaycastHit`
+in R8 (`[rbp+0x18]`). On its success path the call at `0x1806fb670` takes
+that address in RDX. RCX comes from one of two private result homes:
+`[rbp+0x1798]` or `[rbp+0x1828]`. The shared leaf copies 8+4 bytes from the
+beginning of the receiver and returns the destination address. Of nine
+candidates only `RaycastHit.get_point` matches that receiver and the
+registered `Vector3` field. The following setter takes all 12 copied bytes.
+
+The rule checks the out signature, successful branch, stack accesses, frame,
+each incoming return address, getter metadata and by-value setter use.
+Four native joins rendered twelve markers. All twelve emitted getter/setter
+slices compiled and ran with bit-exact XYZ values, destination replacement,
+null and throwing-getter checks. Changed out storage, a missing candidate,
+a bad edge, an incomplete copy or a later result-home read declined.
+Only `InventoryManager.cs` changed in the strict 503-file rebuild: 379 → 367
+shared markers (63 addresses) and 3,144 → 3,136 untyped locals. Report:
+`work/shift_out_point_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;
