@@ -8,6 +8,7 @@ sources are untouched by the move. All repo paths below are root-relative.
 
 ## Start here (live)
 
+- [Keep temporary .NET tool directories out of the Windows PATH](windows-dotnet-path.md) — machine setting, test-runner safeguard, and a one-test verification.
 - `docs/todo.md` — current work (codegen-intrinsic landing 1, r10
   promoted tree), validation status, next priorities, replacement
   records.

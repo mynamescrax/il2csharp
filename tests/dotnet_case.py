@@ -11,7 +11,8 @@ def run_case(root, runner, references=()):
     dotnet = shutil.which('dotnet')
     if not dotnet:
         pytest.skip('behavior check requires a .NET 8+ SDK')
-    env = dict(os.environ, DOTNET_CLI_HOME=str(root / 'home'), DOTNET_NOLOGO='1',
+    # A fresh CLI home must never append its temporary tools directory to the user's PATH.
+    env = dict(os.environ, DOTNET_CLI_HOME=str(root / 'home'), DOTNET_ADD_GLOBAL_TOOLS_TO_PATH='false', DOTNET_NOLOGO='1',
                DOTNET_CLI_TELEMETRY_OPTOUT='1', DOTNET_SKIP_FIRST_TIME_EXPERIENCE='1')
     version = subprocess.run([dotnet, '--version'], cwd=root, env=env, text=True,
                              capture_output=True, timeout=30)
