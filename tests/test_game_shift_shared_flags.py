@@ -2356,9 +2356,9 @@ def test_computer_search_token_uses_string_equality(body, tmp_path):
 
     text = body('Computer', 'GetAdvancedSearchScore', 0x1806a59b0)
     assert 'sub_181b0a390' not in text
-    comparison, = re.findall(r'if \((\w+\[\w+\] == search)\)', text)
-    array, index = re.match(r'(\w+)\[(\w+)\]', comparison).groups()
+    decl,token,array,index,comparison = re.search(r'(string (\w+) = (\w+)\[(\w+)\];)\s+if \((\2 == search)\)',text).groups()
     assert f'string[] {array} = candidate.Split(' in text
+    assert text.count('.Split(')==2  # separate query and candidate arrays, including the loop bounds
     second, = re.findall(r'bool \w+ = (text\d+ == text\d+);', text)
     left, right = second.split(' == ')
     runner = tmp_path / 'runner'
@@ -2375,6 +2375,6 @@ foreach (var (label, token, query, want) in new[] {
         throw new Exception(label);
     Console.WriteLine($"{label}: {want}");
 }
-''' + f'static bool First(string[] {array}, int {index}, string search) => {comparison};\n' +
+''' + f'static bool First(string[] {array}, int {index}, string search) {{ {decl} {array}[{index}]="replacement"; return {comparison}; }}\n' +
         f'static bool Second(string {left}, string {right}) => {second};\n', encoding='utf-8')
     print(run_case(tmp_path, runner).strip())

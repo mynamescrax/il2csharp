@@ -1508,6 +1508,16 @@ partial/misplaced hidden argument cannot establish the forward. Payload
 decoding in RPC invokers is separate. Boolean restore batch: `b56ca4d`
 (12 targeted, 2,324 single-worker portable).
 
+**Saved search tokens.** A 77-test exact-build regression run exposed one
+search-token comparison that rendered a live array read. The native loads
+at `0x1806a5be2` and `0x1806a5e9e` both keep a string element in a saved
+register. Each comparison now consumes a typed snapshot. The two `Split`
+calls returning the candidate/query arrays are no longer replayed at loop
+bounds, joins, or reloads. The comparison slices cover ordinal, null and
+distinct-equal strings, including mutation of the array after the load.
+This does not establish the complete scoring algorithm. Previous by-value
+forward batch: `372deb5` (10 targeted, 2,324 single-worker portable).
+
 **Whole-method behavior gate: `GasCollisionSpawner.OnParticleCollision`.**
 At `0x1806efcda` the RPC takes two different by-value arguments: the saved
 intersection (XMM6 + EBX, 8+4 bytes copied through RDX) and the full 16-byte

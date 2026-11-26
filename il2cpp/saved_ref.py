@@ -6,8 +6,27 @@ from il2cpp.prelude import HAVE_ICED
 from il2cpp.x64 import KLASS_INITIALIZED, KLASS_VTABLE
 
 if HAVE_ICED:
-    from iced_x86 import Mnemonic as M, OpKind as K, Register as R, RegisterExt
+    from iced_x86 import FlowControl as F, InstructionInfoFactory, Mnemonic as M, OpAccess, OpKind as K, Register as R, RegisterExt
     _SAVED={R.RBX,R.RDI,R.RSI,R.RBP,R.R12,R.R13,R.R14,R.R15}
+    _INFO=InstructionInfoFactory();_WRITE={OpAccess.WRITE,OpAccess.READ_WRITE,OpAccess.COND_WRITE,OpAccess.READ_COND_WRITE}
+
+
+def _saved_array(il,call,after):
+    if call.op0_kind!=K.NEAR_BRANCH64:return False
+    ids=il.addr_candidates.get(call.near_branch_target,())
+    if len(ids)!=1 or ids[0][0]!='method' or not 0<=ids[0][1]<len(il.meta.methods):return False
+    m=il.meta.methods[ids[0][1]]
+    if not 0<=m.return_type<len(il.types):return False
+    rt=il.types[m.return_type]
+    if not rt or il._type_enum(rt)!=0x1d or il._closed_type_key(rt)!=(0x1d,(14,0),0):return False
+    ip=call.next_ip
+    for i in after:
+        if i.ip!=ip or i.flow_control!=F.NEXT or i.has_segment_prefix or i.has_lock_prefix:return False
+        if i.mnemonic==M.MOV and i.op1_register==R.RAX:
+            if i.op0_register in _SAVED or i.op0_kind==K.MEMORY and i.memory_base==R.RSP and i.memory_index==R.NONE:return True
+        if any(u.access in _WRITE and RegisterExt.full_register(u.register)==R.RAX for u in _INFO.info(i).used_registers()):return False
+        ip=i.next_ip
+    return False
 
 
 def saved_references(lift,blocks):
@@ -17,6 +36,8 @@ def saved_references(lift,blocks):
         seq=b.insns
         for j,call in enumerate(seq[:-2]):
             if call.mnemonic!=M.CALL:continue
+            if _saved_array(il,call,seq[j+1:j+7]):
+                sites[call.ip]=il.addr_candidates[call.near_branch_target][0];continue
             a,b2=seq[j+1:j+3]
             if (a.mnemonic!=M.MOV or call.next_ip!=a.ip or a.next_ip!=b2.ip or
                     any(i.has_segment_prefix or i.memory_index!=R.NONE or i.has_lock_prefix for i in (a,b2))):continue
@@ -48,10 +69,9 @@ def capture_saved_reference(lift,ins,mi,recv,result,dispatch):
     fact=getattr(lift,'_saved_references',{}).get(ins.ip)
     if not fact or mi is None or not 0<=mi<len(lift.meta.methods):return False
     il=lift.il;m=il.meta.methods[mi];key=il._closed_type_key;rt=result.ty
-    if (not rt or key(rt)!=(0x12,rt[0],0) or m.generic_container!=-1 or not 0<=m.return_type<len(il.types) or
-            key(il.types[m.return_type])!=key(rt) or m.flags&0x800 or not 0<=m.declaring<len(il.meta.typedefs) or
-            il.meta.typedefs[m.declaring].generic_container!=-1 or not 0<=rt[0]<len(il.meta.typedefs) or
-            il.meta.typedefs[rt[0]].generic_container!=-1):return False
+    if (not rt or m.generic_container!=-1 or not 0<=m.return_type<len(il.types) or key(il.types[m.return_type])!=key(rt) or
+            m.flags&0x800 or not 0<=m.declaring<len(il.meta.typedefs) or il.meta.typedefs[m.declaring].generic_container!=-1):return False
+    if key(rt)!=(0x1d,(14,0),0) and (key(rt)!=(0x12,rt[0],0) or not 0<=rt[0]<len(il.meta.typedefs) or il.meta.typedefs[rt[0]].generic_container!=-1):return False
     if fact[0]=='method':
         if (fact[1]!=mi or m.addr!=ins.near_branch_target or
                 m.flags&0x40 and not (m.flags&0x20 or il.meta.typedefs[m.declaring].flags&0x100)):return False

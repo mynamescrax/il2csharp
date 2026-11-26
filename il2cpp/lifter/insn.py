@@ -1,7 +1,7 @@
 from il2cpp.prelude import *  # noqa: F401,F403
 from il2cpp.common import csharp_type_name
 from il2cpp.boolmask import enum_mask, mask_step
-from il2cpp.expr import Expr, _ARR_BIAS_RX, _BARE_TOKEN_RX, _BOOL_TY, _INT_TY, _R4_TY, _R8_TY, _USE_BIND_MIN, _recv_fold, _recv_shaped
+from il2cpp.expr import Expr, acc_get, _ARR_BIAS_RX, _BARE_TOKEN_RX, _BOOL_TY, _INT_TY, _R4_TY, _R8_TY, _USE_BIND_MIN, _recv_fold, _recv_shaped
 from il2cpp.names import repr_f32, repr_f64
 from il2cpp.runtime.meta import IMM_OPS, meta_lit_repr
 from il2cpp.shared_coroutine import shared_coroutine
@@ -1935,6 +1935,13 @@ class _InsnMixin:
                 if element and not element[1] & (1 << 29):
                     indexed = '%s[%s]' % (_recv_fold(be.text), ie.text)
                     if self.il._type_enum(element) == 0x0e:
+                        # A callee-saved register holds the *loaded string*,
+                        # not a live array[index] expression. Later calls or
+                        # another iteration may replace the element.
+                        if (not self.dry and ins.op0_register in (IReg.RBX,IReg.RDI,IReg.RSI,IReg.R12,IReg.R13,IReg.R14,IReg.R15) and
+                                getattr(getattr(self,'out',None),'block',None) is not None):
+                            local=self.new_var();self._var_types[local]=element;self._type_hints[local]=element
+                            self.emit(ins.ip,f'var {local} = {acc_get(indexed)};',None);return Expr(local,element,'str')
                         return Expr(indexed, element, 'str')
                     if self.il._type_enum(element) == 0x12 and getattr(self, '_ref_array_loads', {}).get(ins.ip) == be.ty:
                         value = Expr(indexed, element, 'obj')
