@@ -1382,8 +1382,14 @@ equivalent public wrapper when the managed names share code but the wrapper
 and runtime resolver signature identify the operation (see `shared_icall.py`
 and `ref_vectors.py`). It is a comment on a recovered call, not a throwing
 `sub_…/*shared body,…*/` stub or a shared-marker census entry. Cache-cell
-signatures are inferred statically; conflicting observations at one cell
-are a separate validation concern.
+signatures are inferred statically. The scanner now rejects conflicting
+fills instead of letting the last signature win, declines a tied resolver
+vote, and invalidates stale annotations (including cached misses) on a new
+scan. In the Downloads fixture **2,296 cells agreed, zero conflicted**;
+`AddRandomVelocity.Update` still renders the verified `Input.GetKeyDown`
+call. A synthetic rescan with fills `A, B, A` leaves that cell unresolved
+while repeated `A, A` at another cell remains valid. No census change is
+claimed for this proof hardening. Virtual-forward batch: `10450f1`.
 
 **Terminal virtual forwarding.** `Hittable.DealStunDamage` now emits
 `this.Hit(3.0f, UnityEngine.Vector3.zero, true, false, "Normal");`.

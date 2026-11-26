@@ -49,13 +49,13 @@ class _FieldsMixin:
                         r['text'] = meta_lit_repr(self.meta.string_literal(idx))
                 elif kind == 6:  # MethodRef
                     r['text'] = self.generic_method_name(idx)
-        elif q is None:
+        elif q is None and slot_va not in getattr(self,'_icall_conflicts',()):
             # BSS cell filled at runtime by the il2cpp startup (see
             # scan_runtime_class_cache): the cell caches a well-known
             # Il2CppClass looked up by name
             m = getattr(self, 'bss_usage_map', None)
             r = m.get(slot_va) if m else None
-            if r is None:
+            if r is None or r.get('icall'):
                 ic = getattr(self, 'icall_cells', None)
                 sig = ic.get(slot_va) if ic else None
                 if sig:
@@ -106,19 +106,30 @@ class _FieldsMixin:
                     data[p + 15:p + 19], 'little', signed=True)
                 raw_hits.append((sig_va, call_tgt, cell))
                 cnt[call_tgt] += 1
-        if not raw_hits:
-            self.icall_cells = {}
-            return
-        helper = cnt.most_common(1)[0][0]
-        self.rt_icall_resolve = helper
-        cells = {}
+        best = cnt.most_common(2)
+        helper = best[0][0] if best and (len(best)==1 or best[0][1]>best[1][1]) else None
+        cells = {}; conflicts = set(); other_writers = set()
         for sig_va, tgt, cell in raw_hits:
             if tgt != helper:
+                other_writers.add(cell)
                 continue
             s = b.cstr(sig_va, 512)
-            if not s or '::' not in s or len(s) < 5:
+            if (not s or '::' not in s or len(s) < 5 or
+                    cell in cells and cells[cell]!=s):
+                conflicts.add(cell)
                 continue
             cells[cell] = s
+        conflicts |= (cells.keys() & other_writers) if helper is not None else other_writers
+        for cell in conflicts:cells.pop(cell,None)
+        # decode_slot also caches misses, and the independent class-cache
+        # scan can have inferred the first signature at a disputed cell.
+        old=set(getattr(self,'icall_cells',{})) | set(getattr(self,'_icall_conflicts',()))
+        cache=self.__dict__.get('_slot_cache',{});bss=getattr(self,'bss_usage_map',{})
+        for cell in old|cells.keys()|conflicts:
+            cache.pop(cell,None)
+            if cell not in cells and bss.get(cell,{}).get('icall'):bss.pop(cell)
+        self.rt_icall_resolve = helper
+        self._icall_conflicts = conflicts
         self.icall_cells = cells
 
     def scan_runtime_class_cache(self):
