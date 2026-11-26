@@ -5,7 +5,7 @@ from iced_x86 import Decoder
 import pytest
 
 from il2cpp.captured_home import _predecessors
-from il2cpp.inline_task import _frame_isolated
+from il2cpp.inline_task import _frame_isolated, _kickoff_frame
 
 
 @pytest.mark.parametrize('base,frame,home',[(0x14000,0x50,0x28),(0x820000,0x70,0x38)])
@@ -26,3 +26,17 @@ def test_protected_local_bytes(base,frame,home,change):
     image=NS(image_base=base,read=lambda a,n:unwind[:n] if a==base+ui else b'')
     il=NS(bin=image,_eh4_begins=[0],_eh4_entries=[(0,seq[-1].next_ip-base,ui)])
     assert _frame_isolated(NS(il=il),NS(addr=base),seq,eh,start,end,[(home,home+24)],pred)==(change=='disjoint')
+
+
+@pytest.mark.parametrize('base,alloc',[(0xA000,64),(0x220000,96)])
+@pytest.mark.parametrize('change',['valid','register','offset','code offset'])
+def test_nonvolatile_save_must_match_its_unwind_row(base,alloc,change):
+    # R12 stored in caller home 3 before pushing RSI. Unwind offsets instead
+    # count from the bottom of the completed allocation, in qwords.
+    pro=bytes.fromhex('4c89642418 48894c2408 56 4883ec')+bytes([alloc]);end=len(pro)
+    row=[end,0xc4,(alloc+8+24)//8,0]
+    if change=='register':row[1]=0xd4
+    if change=='offset':row[2]-=1
+    if change=='code offset':row[0]-=1
+    raw=bytes([0x19,end,4,0,*row,end,(alloc//8-1)*16+2,11,0x60]);seq=list(Decoder(64,pro,ip=base))
+    assert bool(_kickoff_frame(seq,raw))==(change=='valid')

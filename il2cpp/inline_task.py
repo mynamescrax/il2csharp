@@ -16,16 +16,24 @@ from il2cpp.x64 import KLASS_INITIALIZED, VOLATILE
 
 if HAVE_ICED:
     from iced_x86 import FlowControl as F, InstructionInfoFactory, MemorySizeExt, Mnemonic as M, OpAccess, OpKind as K, Register as R, RegisterExt
+    _NONVOL={R.RBX,R.RBP,R.RDI,R.RSI,R.R12,R.R13,R.R14,R.R15}
 
 
 def _awaiter_borrow(il,seq,k,pred):
     """Other stack byref in an async continuation: sized by the MethodRef's
     first byref MVAR, not just by the displacement of its LEA."""
     if k<2 or k+1>=len(seq):return False
-    slot,machine,addr,call=seq[k-2:k+2]
-    if (any(pred[b.ip]!={a.ip} for a,b in zip(seq[k-2:k+1],seq[k-1:k+2])) or slot.mnemonic!=M.MOV or slot.memory_base!=R.RIP or
-            slot.op0_register!=R.R9 or machine.mnemonic!=M.MOV or machine.op0_register!=R.R8 or
-            machine.op1_kind!=K.REGISTER or not _addr(addr,R.RDX) or call.op0_kind!=K.NEAR_BRANCH64):return False
+    slot,machine,addr=seq[k-2:k+1];j=k+1
+    # MSVC may form the builder receiver after the stack byref. It cannot
+    # change the awaiter, machine, or hidden MethodRef on this path.
+    if seq[j].mnemonic==M.LEA:
+        recv=seq[j];j+=1
+        if (j>=len(seq) or recv.op0_register!=R.RCX or recv.memory_base not in _NONVOL or recv.memory_base!=machine.op1_register or
+                recv.memory_index!=R.NONE or recv.has_segment_prefix):return False
+    call=seq[j]
+    if (any(pred[b.ip]!={a.ip} for a,b in zip(seq[k-2:j],seq[k-1:j+1])) or slot.mnemonic!=M.MOV or slot.memory_base!=R.RIP or
+             slot.op0_register!=R.R9 or machine.mnemonic!=M.MOV or machine.op0_register!=R.R8 or
+            machine.op1_kind!=K.REGISTER or not _addr(addr,R.RDX) or call.mnemonic!=M.CALL or call.op0_kind!=K.NEAR_BRANCH64):return False
     u=il.decode_slot(slot.ip_rel_memory_address) or {};si=u.get('idx',-1)
     if u.get('kind')!=6 or not 0<=si<len(il.method_specs):return False
     mi,ci,gi=il.method_specs[si];args=il._method_spec_type_args(gi)
@@ -39,6 +47,31 @@ def _awaiter_borrow(il,seq,k,pred):
             _spec_entry(il,si,mi)==call.near_branch_target)
 
 
+def _kickoff_frame(seq,raw):
+    """Match home saves encoded by UWOP_SAVE_NONVOL at the end of the
+    allocation. Their scaled offsets refer to final RSP, not entry RSP."""
+    if len(raw)<4 or len(raw)!=4+2*raw[2]:return None
+    pro=[i for i in seq if i.next_ip<=seq[0].ip+raw[1]]
+    if (not pro or pro[-1].mnemonic!=M.SUB or pro[-1].op0_register!=R.RSP or
+            pro[-1].op1_kind not in (K.IMMEDIATE8TO64,K.IMMEDIATE32TO64)):return None
+    depth=pro[-1].immediate(1)+8*sum(i.mnemonic==M.PUSH for i in pro)
+    rows=set();j=4
+    while j+4<=len(raw) and raw[j+1]&15==4:
+        reg=R.RAX+(raw[j+1]>>4);off=8*int.from_bytes(raw[j+2:j+4],'little')-depth
+        if raw[j]!=raw[1] or reg not in _NONVOL or off not in (16,24,32) or (reg,off) in rows:return None
+        rows.add((reg,off));j+=4
+    if rows:
+        # Each save must actually precede any push or change of stack base.
+        stores=set()
+        for i in pro:
+            if i.mnemonic!=M.MOV or i.memory_base!=R.RSP:break
+            if i.op0_kind!=K.MEMORY or i.memory_index!=R.NONE or i.has_segment_prefix:return None
+            if i.op1_register!=R.RCX:stores.add((i.op1_register,sdisp(i.memory_displacement)))
+        if stores!=rows or len({off for _,off in rows})!=len(rows) or len({r for r,_ in rows})!=len(rows):return None
+        raw=raw[:2]+bytes([raw[2]-(j-4)//2])+raw[3:4]+raw[j:]
+    return _fixed_frame(seq,raw)
+
+
 def _frame_isolated(lift,m,seq,eh,start,end,ranges,pred):
     """Verify local extents, all normal entries and EH boundaries. Do not
     erase storage shared with surrounding code or cross a protected span."""
@@ -50,7 +83,7 @@ def _frame_isolated(lift,m,seq,eh,start,end,ranges,pred):
     if not m.addr<=start<end<=il.bin.image_base+finish:return False
     raw=il.bin.read(il.bin.image_base+ui,4) or b''
     if len(raw)!=4:return False
-    frame=_fixed_frame(seq,il.bin.read(il.bin.image_base+ui,4+2*raw[2]) or b'')
+    frame=_kickoff_frame(seq,il.bin.read(il.bin.image_base+ui,4+2*raw[2]) or b'')
     if not frame or frame[2]:return False
     pro=[i for i in seq if i.next_ip<=m.addr+raw[1]]
     if not pro or pro[-1].mnemonic!=M.SUB:return False
@@ -67,7 +100,13 @@ def _frame_isolated(lift,m,seq,eh,start,end,ranges,pred):
             if i.flow_control==F.CALL:
                 if m.addr<=i.near_branch_target<seq[-1].next_ip:return False
                 if (i.ip not in bounds and i.near_branch_target!=lift.rt_init_meta and
-                        il.bin.exports.get(i.near_branch_target)!='il2cpp_runtime_class_init' and not _register_arguments(il,i.near_branch_target)):return False
+                        il.bin.exports.get(i.near_branch_target)!='il2cpp_runtime_class_init' and not _register_arguments(il,i.near_branch_target)):
+                    # A one-argument metadata helper may also be reached via
+                    # a jump thunk. Require the registered input slot here.
+                    prev=seq[k-1]
+                    if (pred[i.ip]!={prev.ip} or prev.mnemonic!=M.LEA or prev.op0_register!=R.RCX or prev.memory_base!=R.RIP or
+                            not il.decode_slot(prev.ip_rel_memory_address) or
+                            lift.rt_names.get(lift._thunk_final(i.near_branch_target))!='il2cpp_codegen_initialize_runtime_metadata'):return False
                 continue
         if i.mnemonic==M.ADD and i.op0_register==R.RSP:
             tail=seq[k+1:k+len(pop)+2]
@@ -79,7 +118,7 @@ def _frame_isolated(lift,m,seq,eh,start,end,ranges,pred):
             if i.memory_index!=R.NONE:return False  # displacement alone cannot bound a dynamic access
             off=sdisp(i.memory_displacement);width=MemorySizeExt.size(i.memory_size)
             if i.mnemonic==M.LEA:
-                if (off<max(b for _,b in ranges) or k+1>=len(seq) or seq[k+1].flow_control!=F.CALL or
+                if (off<max(b for _,b in ranges) or k+1>=len(seq) or
                         not (i.op0_register==R.RCX and seq[k+1].ip in bounds or _awaiter_borrow(il,seq,k,pred))):return False
             elif not width or any(off<b and off+width>a for a,b in ranges):return False
         elif any(RegisterExt.full_register(r.register)==R.RSP for r in fac.info(i).used_registers()):return False
@@ -144,15 +183,19 @@ def _region(lift,m,td,blocks,b,seq,eh):
     region=h+init+g+cl.insns+ins[:get+1]
     if any(x.next_ip!=y.ip for x,y in zip(region,region[1:])) or any(i.has_segment_prefix or i.has_lock_prefix or i.has_rep_prefix or i.has_repne_prefix or i.memory_index!=R.NONE for i in region):return None
     cmp,branch=h;ready=init[-1];klass,guard,hot=g[-3:];kslot=_slot_load(klass,R.RCX);u=il.decode_slot(kslot) if kslot else None
+    tiles=_zero_tiles(g[:-3],None)
+    if tiles is None or not _covers(tiles[0],home,width):return None
+    # The class load only writes RCX. A scalar zero produced while clearing
+    # the machine survives into the guard if it is a different register.
     if (not u or u.get('kind')!=1 or il._closed_type_key(u.get('type'))!=bk or cmp.mnemonic!=M.CMP or cmp.memory_base!=R.RIP or
             cmp.memory_size!=1 or cmp.op1_kind!=K.IMMEDIATE8 or cmp.immediate8 or branch.mnemonic!=M.JNE or branch.near_branch_target!=g[0].ip or
             ready.mnemonic!=M.MOV or ready.memory_base!=R.RIP or ready.ip_rel_memory_address!=cmp.ip_rel_memory_address or ready.op1_kind!=K.IMMEDIATE8 or ready.immediate8!=1 or
             {x.ip_rel_memory_address for x in init[:-1:2]}!={slot,kslot} or any(x.mnemonic!=M.LEA or x.op0_register!=R.RCX or x.memory_base!=R.RIP for x in init[:-1:2]) or
             not all(_call(x,lift.rt_init_meta) for x in init[1:-1:2]) or guard.mnemonic!=M.CMP or guard.memory_base!=R.RCX or guard.memory_displacement!=KLASS_INITIALIZED or
-            guard.op1_kind!=K.IMMEDIATE8TO32 or guard.immediate8to32 or hot.mnemonic!=M.JNE or hot.near_branch_target!=ins[0].ip or
+            not (guard.op1_kind==K.IMMEDIATE8TO32 and guard.immediate8to32==0 or guard.op1_kind==K.REGISTER and
+                 RegisterExt.is_gpr32(guard.op1_register) and guard.op1_register!=R.ECX and RegisterExt.full_register(guard.op1_register) in tiles[1]) or
+            hot.mnemonic!=M.JNE or hot.near_branch_target!=ins[0].ip or
             cl.insns[0].mnemonic!=M.CALL or cl.insns[0].op0_kind!=K.NEAR_BRANCH64 or il.bin.exports.get(cl.insns[0].near_branch_target)!='il2cpp_runtime_class_init'):return None
-    tiles=_zero_tiles(g[:-3],None)
-    if tiles is None or not _covers(tiles[0],home,width):return None
     pred=_predecessors(seq,eh)
     if not pred or not _frame_isolated(lift,m,seq,eh,cmp.ip,ins[get].next_ip,[(home,home+width),(src,src+w)],pred):return None
     group=ins[wb+1:cap];reg=next((i.op1_register for i in group if i.op0_kind==K.MEMORY and i.memory_base==R.RSP),R.NONE)

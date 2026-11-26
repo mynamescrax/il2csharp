@@ -1171,6 +1171,20 @@ compile the entire enclosing method. Only `FusionNetworkManager.cs` changed
 in the strict 503-file tree: 385 → 384 shared markers (64 addresses),
 3,155 → 3,153 untyped locals. Report: `work/shift_nested_kickoff_census.json`.
 
+**Second protected branch:** `LeaveGame.MoveNext` captures the manager at
+`0x18056d06b`. Its shared call at `0x18056d0f5` supplies the entire builder
+used by `Start<…ShutdownSession…>` (MethodSpec 151390, `0x18056d144`).
+`get_Task` at `0x18056d150` reads the same RSP+0x50 receiver. The guard's
+zero comes from an earlier register definition. The frame proof matches
+the saved register and offset in Win64 unwind data to the actual home store;
+portable tests change the saved register, offset and unwind-code position.
+Both extracted kickoffs and awaiter consumers compiled and ran with the
+same manager and task through synchronous completion, suspension and fault.
+The strict rebuild changed only `FusionNetworkManager.cs`: 384 → 383 shared
+markers (64 addresses), 3,153 → 3,151 untyped locals. Four markers at the
+shared factory remain in the iterator and Steam scripts. Report:
+`work/shift_inline_shutdown_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;
