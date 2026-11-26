@@ -1,7 +1,7 @@
 import pytest
 from iced_x86 import Decoder,Register as R
 
-from il2cpp.async_start import _covers,_frame,_stack_copy24
+from il2cpp.async_start import _covers,_frame,_stack_copy24,_task_frame
 
 
 @pytest.mark.parametrize('change',['none','wrong restore displacement','different stack reset','overlapping home','wrong saved reg'])
@@ -34,3 +34,18 @@ def test_live_builder_copy_preserves_both_pieces(change):
     if change=='swapped high store':code=code.replace('5c2470','542470')
     seq=list(Decoder(64,bytes.fromhex(code)))
     assert _stack_copy24(seq,0x30,0x60)==(change=='none')
+
+
+@pytest.mark.parametrize('change',['ok','wrong frame register','changed R11 anchor','different high half'])
+def test_builder_alias_across_stack_bases(change):
+    # BP = adjusted SP+0x60. A result at BP+0x10 and a field at SP+0x28
+    # are disjoint. Its high eight bytes are written through BP-0x28.
+    pro='48895c2408 55 488d6c24e0 4881ec80000000'; epi='4c8d9c2480000000 498b5b10 498be3 5d c3'
+    copy='0f104510 488d4c2428 31d2 f20f104d20 0f11442428 f20f114dd8'
+    if change=='wrong frame register':pro=pro.replace('488d6c','488d74')
+    if change=='changed R11 anchor':epi=epi.replace('9c248000','9c247000')
+    if change=='different high half':copy=copy.replace('4dd8','4de0')
+    seq=lambda raw:list(Decoder(64,bytes.fromhex(raw)))
+    f=_task_frame(seq(pro),seq(epi))
+    ok=f and f[1]=={R.RBX} and _stack_copy24(seq(copy),0x70,0x28,f[2])
+    assert bool(ok)==(change=='ok')

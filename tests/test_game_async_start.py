@@ -69,14 +69,19 @@ def test_async_start_requires_exact_homes_and_abi(shift_runtime,monkeypatch,chan
     assert async_void_start(d.L,m,td,seq,d.eh) is None
 
 
-def test_solo_returns_the_task_of_the_started_builder(shift_runtime,tmp_path):
-    meta,il=shift_runtime;md=meta.methods[26428];td=meta.typedefs[md.declaring];out=tmp_path/'out'
+@pytest.mark.parametrize('mi,name,last_field',[(26428,'StartAsSolo','__u__1'),(26443,'StartGame','__u__2')])
+def test_kickoff_returns_the_task_of_the_started_builder(shift_runtime,tmp_path,mi,name,last_field):
+    meta,il=shift_runtime;md=meta.methods[mi];td=meta.typedefs[md.declaring];out=tmp_path/'out'
     Emitter(il,str(out))._emit_one_top(td,meta.images[md.image],td.name)
     source=next(out.rglob('FusionNetworkManager.cs')).read_text(encoding='utf-8')
-    method=re.search(r'public Task_1<bool> StartAsSolo\(\)\s*\{.*?^    }',source,re.S|re.M)
-    sm=re.search(r'private partial struct _StartAsSolo_d__42 : IAsyncStateMachine\s*\{\s*public int __1__state;.*?private TaskAwaiter_1<bool> __u__1;',source,re.S)
+    method=re.search(r'(?:public|private) Task_1<bool> '+name+r'\([^)]*\)\s*\{.*?^    }',source,re.S|re.M)
+    sm=re.search(r'private partial struct _'+name+r'_d__\d+ : IAsyncStateMachine\s*\{\s*public int __1__state;.*?private TaskAwaiter_1<\w+> '+last_field+';',source,re.S)
     assert method and sm and 'TStateMachine' not in method[0]
     runner=tmp_path/'runner';runner.mkdir()
+    invoke='StartGame(Check.Input,Check.Session,Check.Region)' if name=='StartGame' else 'StartAsSolo()'
+    captures='''if(mode!=Check.Input || !ReferenceEquals(sessionName,Check.Session) || !ReferenceEquals(region,Check.Region) ||
+            _runnerGO_5__2!=null || _photonSettings_5__4!=null || _sceneInfo_5__3.Probe!=0 || _elapsed_5__5!=0 ||
+            __7__wrap6!=null || __7__wrap7!=0 || !__u__1.Equals(default(TaskAwaiter)))throw new Exception("bad captures/defaults");''' if name=='StartGame' else ''
     # Adapters give the BCL types the recovered `_1<T>` spellings. Start,
     # SetResult, SetException and task identity come from the real BCL builder.
     (runner/'Program.cs').write_text('''using System;
@@ -85,7 +90,9 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 foreach(var mode in new[]{"pending","false","true","fault"}) {
     var manager=new FusionNetworkManager();Check.Mode=mode;Check.Manager=manager;Check.Log.Clear();Check.Seen=null;Check.Finish=null;
-    var returned=manager.StartAsSolo();
+    Check.Input=(GameMode)(mode=="pending"?int.MinValue:mode=="true"?int.MaxValue:5);
+    Check.Session=mode=="false"?null:new string('s',2);Check.Region=mode=="fault"?null:new string('r',3);
+    var returned=manager.Run();
     string trace=(mode=="pending"?"class-init;":"")+"create;start;move;task;task";
     if(string.Join(";",Check.Log)!=trace || !ReferenceEquals(Check.Seen,returned))throw new Exception(mode+": "+string.Join(";",Check.Log));
     if(mode=="pending") {if(returned.Inner.IsCompleted)throw new Exception("completed too early");Check.Finish();}
@@ -93,7 +100,8 @@ foreach(var mode in new[]{"pending","false","true","fault"}) {
     else if(!returned.Inner.IsCompletedSuccessfully || returned.Inner.Result!=(mode!="false"))throw new Exception("wrong completion");
     Console.WriteLine(mode+": same task; "+trace);
 }
-static class Check {public static string Mode;public static FusionNetworkManager Manager;public static Task_1<bool> Seen;
+enum GameMode:int { } class GameObject { } class FusionAppSettings { } struct NetworkSceneInfo {public int Probe;} struct StartGameResult { }
+static class Check {public static string Mode,Session,Region;public static GameMode Input;public static FusionNetworkManager Manager;public static Task_1<bool> Seen;
     public static Action Finish;public static List<string> Log=new();}
 class Task_1<T> {internal Task<T> Inner;static ConditionalWeakTable<Task<T>,Task_1<T>> wrappers=new();
     public static Task_1<T> From(Task<T> t)=>wrappers.GetValue(t,x=>new Task_1<T>{Inner=x});}
@@ -107,8 +115,9 @@ struct AsyncTaskMethodBuilder_1<T> {
     public Task_1<T> Task {get{Check.Log.Add("task");if(Tag!=3)throw new Exception("detached builder");return Task_1<T>.From(inner.Task);}}
 }
 class FusionNetworkManager {
-'''+method[0]+'\n'+sm[0]+'''
-        public void MoveNext(){Check.Log.Add("move");if(__1__state!=-1 || !ReferenceEquals(__4__this,Check.Manager) || __u__1.Probe!=0 || __t__builder.Tag!=2)throw new Exception("wrong machine");
+'''+f'public Task_1<bool> Run()=>{invoke};\n'+method[0]+'\n'+sm[0]+'''
+        public void MoveNext(){Check.Log.Add("move");if(__1__state!=-1 || !ReferenceEquals(__4__this,Check.Manager) || '''+last_field+'''.Probe!=0 || __t__builder.Tag!=2)throw new Exception("wrong machine");
+            '''+captures+'''
             __t__builder.Tag=3;if(Check.Mode=="fault")__t__builder.SetException(new ApplicationException());
             else if(Check.Mode!="pending")__t__builder.SetResult(Check.Mode=="true");
             Check.Seen=__t__builder.Task;var after=__t__builder;if(Check.Mode=="pending")Check.Finish=()=>after.SetResult(true);}
@@ -136,4 +145,21 @@ def test_solo_requires_three_closed_bindings_and_live_task_result(shift_runtime,
         elif change=='wrong owner':raw[-1]^=1
         else:raw[-1]^=8
         seq=seq[:k]+list(Decoder(64,bytes(raw),ip=i.ip))+seq[k+1:]
+    assert async_task_start(d.L,md,td,seq,d.eh) is None
+
+
+@pytest.mark.parametrize('ip,change',[
+    (0x18055c3a5,'frame bias'), (0x18055c407,'nonzero RAX'), (0x18055c426,'unaligned zero tile'),
+    (0x18055c468,'high chunk'), (0x18055c485,'wrong enum field'), (0x18055c48d,'wrong string source'),
+    (0x18055c489,'wrong barrier'), (0x18055c4b2,'wrong Start builder'), (0x18055c4cb,'detached task')])
+def test_start_game_declines_mismatched_layout_or_capture(shift_runtime,ip,change):
+    from iced_x86 import Decoder
+    from il2cpp.async_start import async_task_start
+    meta,il=shift_runtime;d=Decompiler(Lifter(il));md=meta.methods[26443];td=meta.typedefs[md.declaring];d.eh=il.eh_regions(md.addr);seq,_=d._decode(md)
+    assert async_task_start(d.L,md,td,seq,d.eh)
+    k=next(k for k,i in enumerate(seq) if i.ip==ip);i=seq[k];raw=bytearray(il.bin.read(ip,i.len))
+    if change=='nonzero RAX':raw[-1]^=1
+    elif change=='wrong string source':raw[2]^=8 # saved sessionName no longer agrees with RDX
+    else:raw[-1]^=8
+    seq=seq[:k]+list(Decoder(64,bytes(raw),ip=ip))+seq[k+1:]
     assert async_task_start(d.L,md,td,seq,d.eh) is None

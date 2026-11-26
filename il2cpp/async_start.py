@@ -12,6 +12,7 @@ from il2cpp.metadata import source_params
 from il2cpp.names import safe_ident
 from il2cpp.prelude import HAVE_ICED
 from il2cpp.sret_copy import _own_field
+from il2cpp.text import sdisp
 
 if HAVE_ICED:
     from iced_x86 import Mnemonic as M, OpKind as K, Register as R, RegisterExt
@@ -106,6 +107,59 @@ def _covers(tiles,base,width):
     return pos==base+width
 
 
+def _task_frame(pro,epi):
+    # MSVC may establish RBP between PUSH RBP and the stack allocation.
+    # Everything after SUB uses one coordinate system: post-allocation RSP.
+    bias=None
+    if len(pro)>=3 and _addr(pro[-2],R.RBP):
+        if pro[-3].mnemonic!=M.PUSH or pro[-3].op0_register!=R.RBP:return None
+        bias=sdisp(pro[-2].memory_displacement)
+        pro=pro[:-2]+pro[-1:]
+    frame=_frame(pro,epi)
+    if not frame:return None
+    size,saved=frame
+    if bias is not None:
+        bias+=size
+        if not 0<bias<size:return None
+        saved=saved-{R.RBP}
+    return size,saved,bias
+
+
+def _home(i,bias):
+    if i.memory_base==R.RSP:return sdisp(i.memory_displacement)
+    if i.memory_base==R.RBP and bias is not None:return bias+sdisp(i.memory_displacement)
+    return None
+
+
+def _borrow(i,reg,bias):
+    return _home(i,bias) if i.mnemonic==M.LEA and i.op0_register==reg else None
+
+
+def _saved_inputs(il,method,td,moves,saved,*,enums=False):
+    inputs={R.RCX:('this',(0x12,td.index,0))}; regs={};used=set()
+    params=source_params(il.meta,method)
+    if len(params)!=method.param_count:return None
+    for p,gpr,dword in zip(params,(R.RDX,R.R8,R.R9),(R.EDX,R.R8D,R.R9D)):
+        if not 0<=p.type<len(il.types):return None
+        ty=il.types[p.type];key=il._closed_type_key(ty);name=safe_ident(p.name)
+        if not key or key[-1] or not name.isidentifier():return None
+        if enums and key[0]==0x11 and 0<=ty[0]<len(il.meta.typedefs):
+            enum=il.meta.typedefs[ty[0]]
+            if (not enum.is_enum or il._sf_field_size(ty,0)!=4 or not 0<=enum.element<len(il.types) or
+                    il._closed_type_key(il.types[enum.element]) not in ((8,0),(9,0))):return None
+            reg=dword
+        elif key==(8,0):reg=dword
+        elif key[0] in (0x0e,0x12):reg=gpr
+        else:return None
+        inputs[reg]=(name,key)
+    for i in moves:
+        src,dst=i.op1_register,i.op0_register
+        if (i.mnemonic!=M.MOV or src not in inputs or src in used or dst==R.NONE or RegisterExt.full_register(dst) not in saved or
+                any(RegisterExt.full_register(r)==RegisterExt.full_register(dst) for r in regs) or RegisterExt.size(src)!=RegisterExt.size(dst)):return None
+        used.add(src);regs[dst]=inputs[src]
+    return inputs,regs
+
+
 def _slot_load(i,reg):
     if i.mnemonic==M.MOV and i.op0_register==reg and i.memory_base==R.RIP:return i.ip_rel_memory_address
 
@@ -122,23 +176,50 @@ def _task_member(il,slot,call,bt,ci,name,ret):
             il._closed_type_key(il.candidate_return_type(('generic',si)))==ret and _call(call,_spec_entry(il,si,mi)))
 
 
-def _stack_copy24(seq,source,dest):
+def _stack_copy24(seq,source,dest,bias=None):
     """The 24-byte Create result is copied from its own home, not old RAX."""
     if len(seq)!=6:return False
     xy,home,zero,z,store,tail=seq
-    return (xy.mnemonic==M.MOVUPS and R.XMM0<=xy.op0_register<=R.XMM5 and xy.memory_base==R.RSP and xy.memory_displacement==source and
-            _addr(home,R.RCX) and home.memory_displacement==dest and _rr(zero,M.XOR,R.EDX,R.EDX) and
+    return (xy.mnemonic==M.MOVUPS and R.XMM0<=xy.op0_register<=R.XMM5 and _home(xy,bias)==source and
+            _borrow(home,R.RCX,bias)==dest and _rr(zero,M.XOR,R.EDX,R.EDX) and
             z.mnemonic==M.MOVSD and R.XMM0<=z.op0_register<=R.XMM5 and z.op0_register!=xy.op0_register and
-            z.memory_base==R.RSP and z.memory_displacement==source+16 and store.mnemonic==M.MOVUPS and
-            store.memory_base==R.RSP and store.memory_displacement==dest and store.op1_register==xy.op0_register and
-            tail.mnemonic==M.MOVSD and tail.memory_base==R.RSP and tail.memory_displacement==dest+16 and tail.op1_register==z.op0_register)
+            _home(z,bias)==source+16 and store.mnemonic==M.MOVUPS and _home(store,bias)==dest and store.op1_register==xy.op0_register and
+            tail.mnemonic==M.MOVSD and _home(tail,bias)==dest+16 and tail.op1_register==z.op0_register)
+
+
+def _task_captures(il,sm,base,width,bias,regs,groups):
+    """Record actual stores in order. Each barrier must describe the sole
+    reference store in its group; an interleaved scalar store needs no barrier."""
+    writes=[]; seen=set()
+    for group in groups:
+        source=addr=reference=None
+        for i in group:
+            if i.mnemonic==M.MOV and i.op0_register==R.RDX and source is None:
+                source=i.op1_register;continue
+            if i.mnemonic==M.LEA and i.op0_register==R.RCX and addr is None:
+                addr=_borrow(i,R.RCX,bias)
+                if addr is None:return None
+                continue
+            off=_home(i,bias); reg=i.op1_register
+            if off is None or i.mnemonic!=M.MOV or reg not in regs:return None
+            val,key=regs[reg];ref=key[0] in (0x0e,0x12);n=8 if ref else 4
+            if not base<=off<=base+width-n or RegisterExt.size(reg)!=n:return None
+            row=_own_field(il,sm,off-base+16,n)
+            if not row or row[0] in seen or row[1][1]&0x27!=6 or il._closed_type_key(row[1])!=key:return None
+            if row[0] in ('this.<>1__state','this.<>t__builder'):return None
+            if ref:
+                if reference is not None:return None
+                reference=(reg,off)
+            seen.add(row[0]);writes.append((row[0][5:],val))
+        if reference!=(source,addr):return None
+    return writes
 
 
 def async_task_start(lift,method,td,seq,eh):
-    """Parameterless Task<T> wrapper that captures this, starts the nested
+    """Task<T> wrapper that captures the entry arguments, starts the nested
     machine, then reads Task on exactly the same builder field."""
     il=lift.il
-    if (not HAVE_ICED or eh or len(seq)<42 or len(seq)>64 or method.is_static or method.param_count or td.is_valuetype or
+    if (not HAVE_ICED or eh or len(seq)<42 or len(seq)>96 or method.is_static or method.param_count>3 or td.is_valuetype or
             method.generic_container!=-1 or td.generic_container!=-1 or not isinstance(getattr(il,'bin',None),PE) or
             not il.bin.is64 or il.meta.version!=31 or not 0<=method.return_type<len(il.types)):return None
     result=il.types[method.return_type];key=il._closed_type_key
@@ -146,19 +227,24 @@ def async_task_start(lift,method,td,seq,eh):
     task=il.td_of_ty(result); rk=key(result)
     if task is None or il.typedef_full(task)!='System.Threading.Tasks.Task`1' or not rk:return None
     calls=[k for k,i in enumerate(seq) if i.mnemonic==M.CALL]
-    if (len(calls)!=10 or any(seq[k].op0_kind!=K.NEAR_BRANCH64 for k in calls) or seq[0].ip!=method.addr or
+    if (not 10<=len(calls)<=13 or any(seq[k].op0_kind!=K.NEAR_BRANCH64 for k in calls) or seq[0].ip!=method.addr or
             il.function_extent(method.addr)!=(method.addr,seq[-1].next_ip) or any(a.next_ip!=b.ip for a,b in zip(seq,seq[1:])) or
             any(i.has_segment_prefix or i.has_lock_prefix or i.has_rep_prefix or i.has_repne_prefix or i.memory_index!=R.NONE for i in seq)):return None
-    init=calls[0]; cl,create,wb,cap,start,get=calls[4:]
-    if (calls[:4]!=list(range(init,init+8,2)) or init<5 or cl-init<13 or create!=cl+3 or wb!=create+7 or cap!=wb+4 or
+    init=calls[0]; cl,create,wb,*captures,start,get=calls[4:];cap=captures[-1]
+    if (calls[:4]!=list(range(init,init+8,2)) or init<5 or cl-init<13 or create!=cl+3 or wb!=create+7 or
             start!=cap+5 or get!=start+3 or any(seq[k].near_branch_target!=lift.rt_init_meta for k in calls[:4]) or
-            seq[wb].near_branch_target not in lift.rt_wbarrier or seq[cap].near_branch_target!=seq[wb].near_branch_target):return None
-    cmp,save,branch=seq[init-4:init-1];ready=seq[init+7]; klass=seq[init+8];guard=seq[cl-2];hot=seq[cl-1]
-    frame=_frame(seq[:init-4],seq[get+1:]); parked=save.op0_register
-    if (not frame or parked not in frame[1] or not _rr(save,M.MOV,parked,R.RCX) or
-            cmp.mnemonic!=M.CMP or cmp.memory_base!=R.RIP or cmp.memory_size!=1 or cmp.op1_kind!=K.IMMEDIATE8 or cmp.immediate8 or
+            seq[wb].near_branch_target not in lift.rt_wbarrier or any(seq[k].near_branch_target!=seq[wb].near_branch_target for k in captures)):return None
+    p=next((j for j,i in enumerate(seq[:init-2]) if i.mnemonic==M.CMP),-1)
+    if p<0:return None
+    cmp=seq[p];branch=seq[init-2];ready=seq[init+7]; klass=seq[init+8];guard=seq[cl-2];hot=seq[cl-1]
+    frame=_task_frame(seq[:p],seq[get+1:])
+    if (not frame or cmp.memory_base!=R.RIP or cmp.memory_size!=1 or cmp.op1_kind!=K.IMMEDIATE8 or cmp.immediate8 or
             branch.mnemonic!=M.JNE or branch.near_branch_target!=klass.ip or ready.mnemonic!=M.MOV or ready.memory_base!=R.RIP or
             ready.ip_rel_memory_address!=cmp.ip_rel_memory_address or ready.op1_kind!=K.IMMEDIATE8 or ready.immediate8!=1):return None
+    size,saved,bias=frame
+    parked=_saved_inputs(il,method,td,seq[p+1:init-2],saved,enums=True)
+    if not parked:return None
+    inputs,regs=parked
     slots=[_slot_load(i,r) for i,r in ((klass,R.RCX),(seq[cl+1],R.RDX),(seq[cap+1],R.R8),(seq[start+1],R.RDX))]
     if not all(slots) or len(set(slots))!=4:return None
     inits=[seq[k-1] for k in calls[:4]]
@@ -174,43 +260,46 @@ def async_task_start(lift,method,td,seq,eh):
             not _task_member(il,slots[1],seq[create],bt,ci,'Create',bk) or not _task_member(il,slots[3],seq[get],bt,ci,'get_Task',rk)):return None
     get_spec=il.decode_slot(slots[3])['idx']
     if lift._accessor_prop(il.method_specs[get_spec][0])!=('get','Task',0):return None
-    if (guard.mnemonic!=M.CMP or guard.memory_base!=R.RCX or guard.memory_displacement!=0xe4 or guard.op1_kind!=K.IMMEDIATE8TO32 or
-            guard.immediate8to32 or hot.mnemonic!=M.JNE or hot.near_branch_target!=seq[cl+1].ip or
+    if (guard.mnemonic!=M.CMP or guard.memory_base!=R.RCX or guard.memory_displacement!=0xe4 or hot.mnemonic!=M.JNE or hot.near_branch_target!=seq[cl+1].ip or
             il.bin.exports.get(seq[cl].near_branch_target)!='il2cpp_runtime_class_init'):return None
 
     machine,builder,state=seq[cap+2:start];source=seq[create-1];after=seq[get-1]
-    if not (_addr(source,R.RCX) and _addr(machine,R.RDX) and _addr(builder,R.RCX) and _addr(after,R.RCX)):return None
-    buf,home,dest=(i.memory_displacement for i in (source,machine,builder)); width=il.value_type_size(sm.index)
-    if (not width or width<24 or not 32<=home<=frame[0]-width or not 32<=buf<=frame[0]-24 or not (buf+24<=home or home+width<=buf) or
-            not home<=dest<=home+width-24 or after.memory_displacement!=dest or not _stack_copy24(seq[create+1:wb],buf,dest)):return None
+    buf=_borrow(source,R.RCX,bias);home=_borrow(machine,R.RDX,bias);dest=_borrow(builder,R.RCX,bias);width=il.value_type_size(sm.index)
+    if (None in (buf,home,dest) or not width or width<24 or not 32<=home<=size-width or not 32<=buf<=size-24 or not (buf+24<=home or home+width<=buf) or
+            not home<=dest<=home+width-24 or _borrow(after,R.RCX,bias)!=dest or not _stack_copy24(seq[create+1:wb],buf,dest,bias)):return None
     bf=_own_field(il,sm,dest-home+16,24)
     if not bf or bf[0]!='this.<>t__builder' or key(bf[1])!=bk or bf[1][1]&0x27!=6:return None
     # Unlike the void wrapper, only the bytes *outside* the builder are
     # zeroed. Together with the Create copy they cover the entire machine.
     zero=seq[init+9]
     if not _rr(zero,M.XORPS,R.XMM0,R.XMM0):return None
-    tiles=[(dest,24)]
-    for i in seq[init+10:cl-2]:
-        if i.memory_base!=R.RSP:return None
-        if i.mnemonic==M.MOVDQU and i.op1_register==R.XMM0:n=16
-        elif i.mnemonic==M.MOV and i.op1_kind==K.IMMEDIATE32TO64 and i.immediate32to64==0:n=8
+    tiles=[(dest,24)];stores=seq[init+10:cl-2]
+    zero_rax=bool(stores and _rr(stores[0],M.XOR,R.EAX,R.EAX))
+    if not (guard.op1_kind==K.IMMEDIATE8TO32 and guard.immediate8to32==0 or zero_rax and guard.op1_register==R.EAX):return None
+    for i in stores[int(zero_rax):]:
+        off=_home(i,bias)
+        if off is None:return None
+        if i.mnemonic in (M.MOVDQU,M.MOVAPS) and i.op1_register==R.XMM0:
+            if i.mnemonic==M.MOVAPS and off%16:return None
+            n=16
+        elif i.mnemonic==M.MOV and (i.op1_kind==K.IMMEDIATE32TO64 and i.immediate32to64==0 or zero_rax and i.op1_register==R.RAX):n=8
         else:return None
-        tiles.append((i.memory_displacement,n))
+        tiles.append((off,n))
     if not _covers(tiles,home,width):return None
-    arg,store,ptr=seq[wb+1:cap];off=store.memory_displacement
-    if (not _rr(arg,M.MOV,R.RDX,parked) or store.mnemonic!=M.MOV or store.memory_base!=R.RSP or store.op1_register!=parked or
-            not _addr(ptr,R.RCX) or ptr.memory_displacement!=off or not home<=off<=home+width-8):return None
-    captured=_own_field(il,sm,off-home+16,8); sf=_own_field(il,sm,state.memory_displacement-home+16,4)
-    if (not captured or captured[0]!='this.<>4__this' or key(captured[1])!=(0x12,td.index,0) or captured[1][1]&0x27!=6 or
-            not sf or sf[0]!='this.<>1__state' or key(sf[1])!=(8,0) or sf[1][1]&0x27!=6 or
-            not home<=state.memory_displacement<=home+width-4 or state.mnemonic!=M.MOV or state.memory_base!=R.RSP or
+    writes=_task_captures(il,sm,home,width,bias,regs,(seq[a+1:b] for a,b in zip([wb]+captures,captures)))
+    if not writes or ('<>4__this','this') not in writes:return None
+    off=_home(state,bias)
+    if off is None or not home<=off<=home+width-4:return None
+    sf=_own_field(il,sm,off-home+16,4)
+    if (not sf or sf[0]!='this.<>1__state' or key(sf[1])!=(8,0) or sf[1][1]&0x27!=6 or state.mnemonic!=M.MOV or
             state.op1_kind!=K.IMMEDIATE32 or state.immediate32!=0xffffffff):return None
     tn=il.type_name(ty); builder_name=il.type_name(rt)
-    return [f'{tn} stateMachine = default;',
+    name='stateMachine'
+    while name in {v[0] for v in inputs.values()}:name+='Local'
+    return ([f'{tn} {name} = default;',
             f'System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof({builder_name}).TypeHandle);',
-            f'stateMachine.<>t__builder = {builder_name}.Create();','stateMachine.<>4__this = this;',
-            'stateMachine.<>1__state = -1;',f'stateMachine.<>t__builder.Start<{tn}>(ref stateMachine);',
-            'return stateMachine.<>t__builder.Task;']
+            f'{name}.<>t__builder = {builder_name}.Create();']+[f'{name}.{f} = {v};' for f,v in writes]+
+            [f'{name}.<>1__state = -1;',f'{name}.<>t__builder.Start<{tn}>(ref {name});',f'return {name}.<>t__builder.Task;'])
 
 
 def async_void_start(lift,method,td,seq,eh):
@@ -240,19 +329,9 @@ def async_void_start(lift,method,td,seq,eh):
     sm,ty,bt,rt=proof; width=il.value_type_size(sm.index)
     # Parameter names/types describe entry slots only. Track actual full-width
     # moves into callee-saves before the first metadata call can clobber them.
-    inputs={R.RCX:('this',(0x12,td.index,0))}; regs={}; used=set()
-    params=source_params(il.meta,method)
-    if len(params)!=method.param_count:return None
-    for p,gpr,dword in zip(params,(R.RDX,R.R8,R.R9),(R.EDX,R.R8D,R.R9D)):
-        if not 0<=p.type<len(il.types):return None
-        key=il._closed_type_key(il.types[p.type]); name=safe_ident(p.name)
-        if not key or key[0] not in (8,0x0e,0x12) or key[-1] or not name.isidentifier():return None
-        inputs[dword if key==(8,0) else gpr]=(name,key)
-    for i in seq[cmp_pos+1:init-2]:
-        src,dst=i.op1_register,i.op0_register
-        if (i.mnemonic!=M.MOV or src not in inputs or src in used or dst==R.NONE or RegisterExt.full_register(dst) not in saved or
-                any(RegisterExt.full_register(r)==RegisterExt.full_register(dst) for r in regs) or RegisterExt.size(src)!=RegisterExt.size(dst)):return None
-        used.add(src);regs[dst]=inputs[src]
+    parked=_saved_inputs(il,method,td,seq[cmp_pos+1:init-2],saved)
+    if not parked:return None
+    inputs,regs=parked
 
     # Find the actual byref borrows, not just two equal-looking local names.
     k=barriers[-1]+1

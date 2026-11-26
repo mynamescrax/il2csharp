@@ -1126,6 +1126,19 @@ true/false, and faulted completions. Only FusionNetworkManager.cs changed;
 the 503-file census remains 391 shared calls and 3,167 `object objN`.
 Report: `work/shift_solo_task_census.json`.
 
+**FusionNetworkManager.StartGame (26443):** MethodSpec 7740 identifies the
+closed `Start` at `0x18055c4bf`. With RBP at post-allocation RSP+0xb1, the
+184-byte machine starts at RSP+0x20. The copy from `Create` (7789) puts all
+24 builder bytes at RSP+0x28. The signed GameMode from EDX lands at +0x40,
+`this` at +0x48, region (R9) at +0x50 and sessionName (R8) at +0x58. After
+state −1 and `Start(ref stateMachine)`, `get_Task` (7795) receives RSP+0x28
+again; the R11 epilogue leaves its returned RAX intact. The compiled kickoff
+preserved both string identities, enum edge values, and the task seen in
+MoveNext for pending, synchronous true/false and faulted completion. Only
+FusionNetworkManager.cs changed in the strict tree. The 503-file census is
+still 391 shared calls across 64 addresses and 3,167 `object objN`.
+Report: `work/shift_start_game_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;
