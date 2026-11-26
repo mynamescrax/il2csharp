@@ -1518,6 +1518,16 @@ distinct-equal strings, including mutation of the array after the load.
 This does not establish the complete scoring algorithm. Previous by-value
 forward batch: `372deb5` (10 targeted, 2,324 single-worker portable).
 
+**Mixed scalar/aggregate forwarding.** `Hittable.Hit` now forwards the
+original vector to the damage RPC instead of assigning `hitFrom.x` to a
+`Vector3`. The incoming float stays in XMM1 while XMM0 carries eight bytes
+of the vector. The fifth argument copies one byte through AL; the sixth
+copies a full string pointer. The complete emitted `DealStunDamage` now
+runs through the complete emitted `Hit`, with one RPC call. The tests vary
+both flags independently and reject the same vector copy routed through
+XMM1, an AH store, or an adjacent stack byte. Search-token batch:
+`c32c462` (85 exact-build checks and 2,328 single-worker portable checks).
+
 **Whole-method behavior gate: `GasCollisionSpawner.OnParticleCollision`.**
 At `0x1806efcda` the RPC takes two different by-value arguments: the saved
 intersection (XMM6 + EBX, 8+4 bytes copied through RDX) and the full 16-byte

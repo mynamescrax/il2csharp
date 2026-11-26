@@ -35,6 +35,7 @@ def byval_forward(lift,m,td,s,eh):
             [key(il.types[p.type]) for p in ps]!=[key(il.types[p.type]) for p in qs]):return None
     names=['this']+[safe_ident(p.name) for p in ps];regs={R.RCX:('param',0)};incoming={};aggregate={};homes={};writes={}
     if len(set(names))!=len(names) or any(not n.isidentifier() for n in names):return None
+    widths={0:8};fp=set()
     for n,p in enumerate(ps,1):
         ty=il.types[p.type];k=key(ty)
         if not k:return None
@@ -43,8 +44,12 @@ def byval_forward(lift,m,td,s,eh):
             width=il.value_type_size(ty[0])
             if width not in (12,16):return None
             aggregate[n]=width
+        elif k==(0x0c,0):
+            if n>=4:return None
+            fp.add(n)
         elif k not in ((2,0),(8,0),(9,0),(14,0),(28,0)) and k!=(0x12,ty[0],0):return None
-        if n<4:regs[_ARG[n]]=('param',n)
+        widths[n]={2:1,8:4,9:4,0x0c:4}.get(k[0],8)
+        if n<4:regs[RegisterExt.full_register(R.XMM0+n) if n in fp else _ARG[n]]=('param',n)
         else:incoming[size+8+8*n]=('param',n)
     if not aggregate:return None
     hidden=len(ps)+1;start=max(32,8*(hidden+1)) if hidden>=4 else 32
@@ -59,7 +64,10 @@ def byval_forward(lift,m,td,s,eh):
                 if off<start or (i.mnemonic,width) not in ((M.MOV,4),(M.MOVSD,8),(M.MOVAPS,16),(M.MOVUPS,16)) or width!=v[3]:return None
                 if i.mnemonic==M.MOVAPS and off%16:return None
                 for k in range(width):writes[off+k]=(v[1],v[2]+k)
-            elif width==8 and i.mnemonic==M.MOV and off%8==0 and v[0] in ('home','zero','param'):
+            elif (v[0]=='param' and widths[v[1]]==1 and width==1 and i.mnemonic==M.MOV and off%8==0 and
+                  src not in (R.AH,R.BH,R.CH,R.DH) and RegisterExt.is_gpr8(src)):
+                homes[off]=v;writes[off]=None
+            elif width==8 and i.mnemonic==M.MOV and off%8==0 and (v[0] in ('home','zero') or v[0]=='param' and widths[v[1]]==8):
                 homes[off]=v
                 for k in range(8):writes[off+k]=None
             else:return None
@@ -69,13 +77,15 @@ def byval_forward(lift,m,td,s,eh):
         if r not in _TMP and not R.XMM0<=dst<=R.XMM5:return None
         if i.mnemonic==M.LEA and RegisterExt.is_gpr64(dst) and base==R.RSP and start<=off<size:regs[r]=('home',off)
         elif i.mnemonic==M.XOR and dst==src and (RegisterExt.is_gpr32(dst) or RegisterExt.is_gpr64(dst)):regs[r]=('zero',)
-        elif i.mnemonic==M.MOV and RegisterExt.is_gpr64(dst) and base==R.RSP and off in incoming:regs[r]=incoming[off]
+        elif i.mnemonic==M.MOV and RegisterExt.is_gpr64(dst) and base==R.RSP and off in incoming and widths[incoming[off][1]]==8:regs[r]=incoming[off]
+        elif (i.mnemonic==M.MOVZX and RegisterExt.is_gpr32(dst) and base==R.RSP and width==1 and
+              off in incoming and widths[incoming[off][1]]==1):regs[r]=incoming[off]
         elif i.op1_kind==K.MEMORY and (i.mnemonic,width) in ((M.MOV,4),(M.MOVSD,8),(M.MOVUPS,16)):
             p=regs.get(base);n=p[1] if p and p[0]=='param' else None
             if n not in aggregate or off<0 or off+width>aggregate[n]:return None
             regs[r]=('bytes',n,off,width)
         else:return None
-    arg=lambda k:regs.get(_ARG[k]) if k<4 else homes.get(8*k)
+    arg=lambda k:regs.get(RegisterExt.full_register(R.XMM0+k) if k in fp else _ARG[k]) if k<4 else homes.get(8*k)
     if arg(0)!=('param',0) or arg(hidden)!=('zero',):return None
     expected=set();bases=set()
     for n in range(1,hidden):
@@ -87,6 +97,6 @@ def byval_forward(lift,m,td,s,eh):
             bases.add(v[1]);data=range(v[1],v[1]+aggregate[n])
             if any(writes.get(p)!=(n,p-v[1]) for p in data):return None
             expected.update(data)
-    for n in range(4,hidden+1):expected.update(range(8*n,8*n+8))
+    for n in range(4,hidden+1):expected.update(range(8*n,8*n+widths.get(n,8)))
     if expected!=writes.keys():return None
     return [f'this.{sink.name}({", ".join(names[1:])});']

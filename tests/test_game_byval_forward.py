@@ -45,3 +45,34 @@ def test_forward_declines_incomplete_or_aliased_copy(shift_runtime,monkeypatch,d
                 'wrong stack input':i.op0_register==R.RAX and i.memory_displacement==0x80}[defect]);i=s[j];alt=i.copy()
         alt.memory_displacement={'repeated lane':0,'overlapping homes':0x30,'wrong hidden slot':0x20,'wrong stack input':0x88}[defect];s[j]=alt
     assert prove() is None
+
+
+def test_hittable_forward_with_real_stun_entry(shift_runtime,tmp_path):
+    meta,il=shift_runtime;em=Emitter(il,str(tmp_path/'out'));td=meta.typedefs[meta.methods[25441].declaring];lines=[]
+    for j in (25441,25436):em.emit_method(meta.methods[j],td,lines,'    ')
+    runner=tmp_path/'runner';runner.mkdir();(runner/'Program.cs').write_text('''using System;using UnityEngine;
+var target=new Hittable();int count=0;var fail=new ApplicationException();
+var pt=new Vector3(2.25f,-17,33);var tag=new string("damage".ToCharArray());
+foreach(bool a in new[]{false,true})foreach(bool b in new[]{false,true}){
+ target.Sink=(f,p,x,y,s)=>{count++;if(f!=7.25f||p!=pt||a!=x||b!=y||!ReferenceEquals(s,tag))throw new Exception("wrong forwarded arguments");};target.Hit(7.25f,pt,a,b,tag);
+}
+target.Sink=(f,p,x,y,s)=>{count++;if(f!=3||p!=Vector3.zero||!x||y||s!="Normal")throw new Exception("wrong stun chain");};target.Stun();
+target.Sink=(f,p,x,y,s)=>{count++;throw fail;};try{target.Stun();throw new Exception("lost fault");}catch(ApplicationException e)when(ReferenceEquals(e,fail)){}
+if(count!=6)throw new Exception("lost or duplicated RPC");Console.WriteLine("whole Hit and DealStunDamage chain: receiver, damage, XYZ, all flag pairs, string and fault passed");
+namespace UnityEngine{public record struct Vector3(float x,float y,float z){public static Vector3 zero=>new(12,-8,3);}}
+public class Hittable{public Action<float,Vector3,bool,bool,string> Sink;private void Rpc_CMD_Hit(float f,Vector3 p,bool x,bool y,string s)=>Sink(f,p,x,y,s);public void Stun()=>DealStunDamage();\n'''+ '\n'.join(lines)+'\n}',encoding='utf8');print(run_case(tmp_path,runner).strip())
+
+
+@pytest.mark.parametrize('defect',['clobber positional float','high byte','wrong incoming byte'])
+def test_mixed_forward_needs_live_scalar_positions(shift_runtime,defect):
+    meta,il=shift_runtime;d=Decompiler(Lifter(il));m=meta.methods[25441];td=meta.typedefs[m.declaring];d.eh=None;s,_=d._decode(m)
+    prove=lambda:byval_forward(d.L,m,td,s,None);assert prove()
+    for j,i in enumerate(s):
+        alt=i.copy()
+        if defect=='clobber positional float' and i.mnemonic==M.MOVSD:
+            if i.op0_register==R.XMM0:alt.op0_register=R.XMM1
+            elif i.op1_register==R.XMM0:alt.op1_register=R.XMM1
+        if defect=='high byte' and i.op1_register==R.AL:alt.op1_register=R.AH
+        if defect=='wrong incoming byte' and i.mnemonic==M.MOVZX:alt.memory_displacement+=1
+        s[j]=alt
+    assert prove() is None
