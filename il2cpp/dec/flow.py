@@ -1638,13 +1638,21 @@ class _FlowMixin:
                             reserved.update(safe_ident(p.name) for p in source_params(lifter.meta, method))
                         copy_types = {}
                         for ln in dtail:
-                            decl = self._TDEF_RX.fullmatch(ln.strip())
-                            if not decl or not ln.lstrip().startswith('var '):
+                            # Some materializations (notably struct returns)
+                            # and edge copies are assignments before declaration
+                            # rendering. Their new names need the same evidence.
+                            decl = re.fullmatch(r'(?:var )?([tv]\d+) = .+;', ln.strip())
+                            if not decl or decl[1] not in seen:
                                 continue
                             t = decl[1]
                             ty = self._var_types.get(t, bound.get(t))
+                            # IL2CPP packs parameter/field attributes in the
+                            # low word. 'out'-attributed SZARRAY by value and
+                            # the same SZARRAY local agree; a byref does not.
                             if (t not in blocked and isinstance(ty, tuple) and len(ty) == 2
-                                    and bound.get(t, ty) == ty and hints.get(t, ty) == ty):
+                                    and all(v == ty or (isinstance(v,tuple) and len(v)==2 and v[0]==ty[0] and
+                                                        isinstance(v[1],int) and isinstance(ty[1],int) and v[1]>>16==ty[1]>>16)
+                                            for v in (bound.get(t,ty),hints.get(t,ty)))):
                                 copy_types[t] = ty
                         into_set = set(into)
                         out = []

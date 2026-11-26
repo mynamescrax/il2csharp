@@ -1323,6 +1323,28 @@ and `SetParticles` receiving the filled array and original live count.
 This gate is scoped to the method; the published tree counts above are from
 the previous full census.
 
+**Whole-method behavior gate: `GasCollisionSpawner.OnParticleCollision`.**
+At `0x1806efcda` the RPC takes two different by-value arguments: the saved
+intersection (XMM6 + EBX, 8+4 bytes copied through RDX) and the full 16-byte
+`LookRotation` result (copied through R8). The next static call takes another
+copy of the same intersection in RCX, the filled particle array, the live
+count and the radius. Previously the first limb of the intersection spill
+lifted as `s_0`; the emitted RPC eventually read `obj29` twice. The rule
+now follows the reaching getter and transform returns, verifies both call
+signatures and non-overlapping argument homes, and forwards their snapshots.
+The tail duplicator also transfers uncontested struct-return and array types
+to its fresh branch-local names. A base-class comparison no longer widens
+the result of the closed parent-component lookup (MethodSpec 174901).
+
+`tests/test_game_gas_method.py` compiles the whole emitted method unchanged.
+The test covers server-only and unrestricted execution, authority denial,
+non-water, Water with a present, missing or Unity-null tank, and counts
+below, at and above the threshold. Equality is kill-only; exceeding the
+threshold resets the counter before the event query. The harness checks
+RPC position and rotation, helper point, the exact array and count written
+back, and exceptions at lookup, pump, RPC and later calls. The four emitted
+copies of the native spawn loop are exercised by the gate/terrain matrix.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;
