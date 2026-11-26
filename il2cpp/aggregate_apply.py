@@ -9,6 +9,7 @@ from il2cpp.module_curve import fixed_frame
 from il2cpp.material_setter import _component
 from il2cpp.array_member import element_reads
 from il2cpp.float_setter import float_setters
+from il2cpp.closed_class_read import closed_class_reads
 from il2cpp.static_getter import guarded_alias,alias_for_slot
 from il2cpp.sret_copy import _own_field
 from il2cpp.shared_action import _raises_on_null
@@ -237,6 +238,7 @@ def application_sites(lift,method,blocks,pads):
     if actions:_readers(lift,blocks,actions)
     actions.update(element_reads(lift,method,blocks,pads))
     actions.update(float_setters(lift,method,blocks,pads))
+    actions.update(closed_class_reads(lift,method,blocks,pads))
     return actions,fresh,counts
 
 
@@ -255,6 +257,15 @@ def application_step(lift,ins,action,values):
             values[ip]=Expr(e.text[1:],ty,'obj')
         return False
     if op=='low':return args[0] in values
+    if op=='class_result':
+        source,si,member,rt=args;recv=dict.get(lift.regs,'RCX');slot=dict.get(lift.regs,'RDX')
+        if recv and values.get(source) is recv and getattr(slot,'_usg_idx',None)==si:
+            clear();bind(acc_get(f'{recv.text}.{member}()'),rt,'RAX');lift._type_hints.setdefault(values[ins.ip].text,rt);return True
+    if op=='count_cmp':
+        from il2cpp.text import reg_name
+        source,prop,n=args;e=dict.get(lift.regs,reg_name(ins.memory_base))
+        if e and values.get(source) is e:
+            lift.flags=(Expr(acc_get(f'{e.text}.{prop}'),(0,8<<16),'int'),Expr(str(n),None,'int'));lift._flags_mn=M.CMP;return True
     if op=='field_value':
         (name,ty),reg,kind=args;bind(acc_get(name),ty,reg,kind);return True
     if op=='make_float':

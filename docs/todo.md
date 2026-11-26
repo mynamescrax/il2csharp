@@ -1444,6 +1444,20 @@ receiver. No general change to RET use-counting is claimed: an unused
 conversion can still contain a required effectful producer. Previous
 checked setter batch: `0cce8a4`.
 
+**One queue eviction per overflow.** In `SpeakingManager.Rpc_AddChatLogNode`
+the two rendered overflow arms previously each dequeued twice. There is one
+native producer at `0x1805c04f9`; its RDX MethodRef is a specialization of
+the declaring class, `Queue<ChatLogNode>.Dequeue`, not a generic method. Its
+canonical class registration agrees with the call target. Bind the queue at
+the post-enqueue field reload, and the typed result at the call. The `Count`
+alias has its own proof: its registered leaf reads exactly the same dword
+at +0x20 on that closed receiver. Both emitted arms now compare the removed
+head once and conditionally destroy its game object. `test_game_closed_class_read.py`
+compiles both slices and checks the runner-up, re-entry, Unity-null and two
+fault boundaries; five negative controls include conflicting registration
+and an incorrect Count leaf. The enclosing networking method has other
+unresolved code. Prior whole-method batch: `5cb3b57`.
+
 **Whole-method behavior gate: `GasCollisionSpawner.OnParticleCollision`.**
 At `0x1806efcda` the RPC takes two different by-value arguments: the saved
 intersection (XMM6 + EBX, 8+4 bytes copied through RDX) and the full 16-byte
