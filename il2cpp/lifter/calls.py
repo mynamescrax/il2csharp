@@ -2885,6 +2885,8 @@ class _CallsMixin:
             copied_getter = None
         indexed_setter = None
         lookup = getattr(self,'_component_lookups',{}).get(ins.ip)
+        ordinary = ins.ip in getattr(self,'_ordinary_lookups',())
+        if ordinary and (not recv or recv.kind!='obj'):lookup=None
         if lookup and (info != ('generic',lookup[0]) or not recv or not recv.ty or recv._unk or
                        self.il._closed_type_key(recv.ty) != (0x12,recv.ty[0],0) or lookup[1] not in self.il.base_chain_tds(recv.ty[0]) or
                        getattr(gpr_exprs[1],'_usg_idx',None) != lookup[0]):
@@ -3674,7 +3676,7 @@ class _CallsMixin:
                             self._direct_base_target(ins.near_branch_target, mi, recv)):
                         recv_txt = 'base'
                     cand = '%s.%s(%s)' % (_recv_fold(recv_txt), mdot, ', '.join(rest))
-                    if len(cand) < 150:
+                    if len(cand) < 150 or lookup and ordinary:
                         short = cand
                     elif (vt_slot is not None and self._call_class_args and
                           recv.kind == 'obj' and _BARE_TOKEN_RX.fullmatch(recv_txt) and
@@ -3923,6 +3925,7 @@ class _CallsMixin:
                           'obj' if te >= 0x10 else ('float' if isf else 'int'))
             self.regs[dstreg] = result
             if lookup and self.il._closed_type_key(rty) == self.il._closed_type_key(lookup[2]):
+                if ordinary:result.text=acc_get(result.text)  # an effectful call, even when its spelling ends in >()
                 self._bind(result)
                 # A consumer accepting Object does not widen the closed result.
                 self._type_hints.setdefault(result.text,rty)

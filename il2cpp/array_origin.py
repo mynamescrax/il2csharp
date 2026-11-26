@@ -22,7 +22,7 @@ def _reachable(edges, roots):
     return seen
 
 
-def _graph(il, seq):
+def _graph(il, seq, *, allow_tail=False, runtime_tails=()):
     """Instruction edges, including both arms of every skipped init guard."""
     lo, hi = seq[0].ip, seq[-1].next_ip
     if il.eh_regions(lo):
@@ -53,6 +53,9 @@ def _graph(il, seq):
             edges = (i.next_ip,)
         elif fc in (F.CONDITIONAL_BRANCH, F.UNCONDITIONAL_BRANCH) and i.op0_kind == K.NEAR_BRANCH64:
             edges = ((i.near_branch_target, i.next_ip) if fc == F.CONDITIONAL_BRANCH else (i.near_branch_target,))
+            if (allow_tail and fc==F.UNCONDITIONAL_BRANCH and not lo<=i.near_branch_target<hi and
+                    (i.near_branch_target in il.addr_candidates or i.near_branch_target in runtime_tails) and il.bin.is_exec_va(i.near_branch_target)):
+                edges=()  # known tail exit: it cannot feed a later lookup
         elif i.mnemonic in (M.RET, M.INT3, M.UD2):
             edges = ()
         else:

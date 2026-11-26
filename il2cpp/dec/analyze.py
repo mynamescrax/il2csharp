@@ -29,6 +29,7 @@ from il2cpp.joined_sret import joined_srets, copied_argument
 from il2cpp.indexed_binary import binary_sites, binary_use, echo_at, store_value, unary_argument
 from il2cpp.checked_element import element_sites,element_step
 from il2cpp.parent_lookup import parent_lookup_sites
+from il2cpp.closed_lookup import closed_lookup_sites
 
 class _AnalyzeMixin:
     def _analyze(self, m, td, blocks, bmap):
@@ -62,6 +63,10 @@ class _AnalyzeMixin:
         L._parent_lookup_sites,L._parent_lookup_windows = parent_lookup_sites(L.il,blocks,self._pad_bids)
         (L._component_lookups,L._material_sites,L._material_captures,L._material_reads) = material_sites(L,m,blocks,self._pad_bids)
         L._component_lookups.update(L._parent_lookup_sites)
+        L._ordinary_lookups=set()
+        for ip,lookup in closed_lookup_sites(L,m,blocks,self._pad_bids).items():
+            if ip not in L._component_lookups:
+                L._component_lookups[ip]=lookup;L._ordinary_lookups.add(ip)
         L._snapshot_srets, packed_loads, snapshot_getters = snapshot_plans(L, td, blocks, self._pad_bids)
         for site,_ in element_plans.values():L._snapshot_srets.update((*site.getters,site.rotate))
         binary_reads,binary_stores,binary_uses=binary_sites(L,m,blocks,self._pad_bids)

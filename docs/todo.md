@@ -1329,6 +1329,19 @@ and `SetParticles` receiving the filled array and original live count.
 This gate is scoped to the method; the published tree counts above are from
 the previous full census.
 
+**Closed nullary lookups.** Native `0x1805a300b` and `0x1805a302a` call the
+same registered reference-sharing entry but load different RDX MethodRefs
+(174129, 174086). `RuntimePathVisualizer.Awake` now requests `Seeker` then
+`LineRenderer`, rather than two uninferable `GetComponent()` calls. The proof
+checks the closed return parameter, actual receiver and uninterrupted setup;
+the `<object>` entry cannot override a conflicting concrete registration.
+Whole-method tests also compile and run `CursorController.OnEnable` and
+`CameraFOVChanger.OnEnable`. The tests exercise lookup order, component
+identity, a hidden derived method, and a throwing second lookup. See
+`tests/test_game_closed_lookup.py`. `FPSController.Start` still needs the
+public spelling of the authority receiver; a closed lookup alone does not
+validate that whole method. Previous checked-contact batch: `a81688d`.
+
 **Whole-method behavior gate: `GasCollisionSpawner.OnParticleCollision`.**
 At `0x1806efcda` the RPC takes two different by-value arguments: the saved
 intersection (XMM6 + EBX, 8+4 bytes copied through RDX) and the full 16-byte
