@@ -1483,6 +1483,18 @@ unaligned source or hidden return buffer declines. Projections involving
 arithmetic are a separate case. Saved reference batch: `a9af380` (17 targeted
 checks, 2,324 single-worker portable checks).
 
+**Restoring a Boolean property.** The normal paths of `CleanSpill` and
+`CleanSpillHose` save `Physics.queriesHitBackfaces`, set it to true, then
+restore its original value after the ray loop. Previously the getter was
+missing and the restore used an untyped value. The first method saves AL
+in an incoming home at `[rbp+0x40]` (normalized `[rsp+0x140]`), distinct
+from the `[rsp+0x40]` vector; the second zero-extends it into R12D.
+Compiled slices check both initial values and throws at the getter, first
+setter, intervening work and restore. No exceptional restore is present.
+Changing the byte home or the preserved register declines the pairing.
+Ray inputs and nearest-hit retention still need separate gates. Packed
+projection batch: `aed0623` (9 targeted, 2,324 single-worker portable).
+
 **Whole-method behavior gate: `GasCollisionSpawner.OnParticleCollision`.**
 At `0x1806efcda` the RPC takes two different by-value arguments: the saved
 intersection (XMM6 + EBX, 8+4 bytes copied through RDX) and the full 16-byte

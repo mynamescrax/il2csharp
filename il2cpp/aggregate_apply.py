@@ -10,6 +10,7 @@ from il2cpp.material_setter import _component
 from il2cpp.array_member import element_reads
 from il2cpp.float_setter import float_setters
 from il2cpp.closed_class_read import closed_class_reads
+from il2cpp.bool_restore import bool_state_sites
 from il2cpp.static_getter import guarded_alias,alias_for_slot
 from il2cpp.sret_copy import _own_field
 from il2cpp.shared_action import _raises_on_null
@@ -239,6 +240,7 @@ def application_sites(lift,method,blocks,pads):
     actions.update(element_reads(lift,method,blocks,pads))
     actions.update(float_setters(lift,method,blocks,pads))
     actions.update(closed_class_reads(lift,method,blocks,pads))
+    actions.update(bool_state_sites(lift,method,blocks,pads))
     return actions,fresh,counts
 
 
@@ -257,6 +259,17 @@ def application_step(lift,ins,action,values):
             values[ip]=Expr(e.text[1:],ty,'obj')
         return False
     if op=='low':return args[0] in values
+    if op=='bool_get':
+        member,ty=args;clear();bind(acc_get(member),ty,'RAX','int');return True
+    if op=='bool_park' and args[0] in values:
+        lift.regs[args[1]]=values[args[0]];return True
+    if op=='bool_home_store' and args[0] in values:
+        e=values[args[0]];off=args[1];name=lift.slot_var(off);lift._kill_stale(name)
+        lift.emit(ins.ip,f'{name} = {e.text};',None);lift._type_hints[name]=e.ty;lift.slot_types[name]=e.ty
+        lift._stack_store(lift.rsp_delta+off,1,e);values[ins.ip]=Expr(name,e.ty,'int');return True
+    if op=='bool_home_load' and args[0] in values:
+        e=values[args[0]]
+        if lift.slot_var(args[1])==e.text:lift.regs['RCX']=e;return True
     if op=='class_result':
         source,si,member,rt=args;recv=dict.get(lift.regs,'RCX');slot=dict.get(lift.regs,'RDX')
         if recv and values.get(source) is recv and getattr(slot,'_usg_idx',None)==si:
