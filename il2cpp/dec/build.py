@@ -354,6 +354,9 @@ class _BuildMixin:
         from il2cpp.virtual_forward import virtual_forward
         wrapper=virtual_forward(L,m,td,blocks,insns,self._pad_bids)
         if wrapper is not None:return wrapper
+        from il2cpp.affine_return import affine_return
+        scaled=affine_return(L,m,td,insns,self.eh)
+        if scaled is not None:return scaled
         kickoff = async_void_start(L,m,td,insns,self.eh) or async_task_start(L,m,td,insns,self.eh)
         if kickoff is not None: return kickoff
         dictionary = dictionary_constructor_body(L,m,td,insns,self.eh)

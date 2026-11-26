@@ -1430,6 +1430,20 @@ replacement, and inject getter/setter and playback failures. Three shared
 markers removed in this class. The indexed `PlayAudioArray` receiver still
 requires a separate proof. Light fade batch: `b3334ba`.
 
+**A single virtual RNG draw.** `MinMax.GetRandom` used to evaluate
+`NextDouble()` in a float temporary and then call it again in the return.
+There is only one indirect `call` at `0x18066ea08`. A verified public getter
+reads the exact private static RNG reference. The integer basis is loaded
+*before* class initialization, and both span fields are fetched *after*
+the draw. The recovered method preserves the wrapping integer subtraction,
+double-to-single narrowing, separate multiply/add and truncation (including
+the x64 indefinite value for unordered or out-of-range conversion). Tests
+alter the struct during both initialization and the draw, use samples that
+distinguish Single from Double, and exercise a throwing override and null
+receiver. No general change to RET use-counting is claimed: an unused
+conversion can still contain a required effectful producer. Previous
+checked setter batch: `0cce8a4`.
+
 **Whole-method behavior gate: `GasCollisionSpawner.OnParticleCollision`.**
 At `0x1806efcda` the RPC takes two different by-value arguments: the saved
 intersection (XMM6 + EBX, 8+4 bytes copied through RDX) and the full 16-byte

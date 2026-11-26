@@ -25,7 +25,7 @@ def _guarded_info(il,va,init):
     m=_GUARDED.fullmatch(il.bin.read(va,ex[1]-va) or b'')
     if not m:return None
     flag,slot,call,store,load,cl,reload=(va+m.end(j)+(j in (1,4))+int.from_bytes(m[j],'little',signed=True) for j in range(1,8))
-    if flag==store and slot==load==reload and call==init and il.bin.exports.get(cl)=='il2cpp_runtime_class_init':
+    if flag==store and not slot<=flag<slot+8 and slot==load==reload and call==init and il.bin.exports.get(cl)=='il2cpp_runtime_class_init':
         return slot,int.from_bytes(m[8] or b'\0','little',signed=True)
 
 
@@ -33,6 +33,39 @@ def guarded_alias(il,va,init):
     if il.addr_candidates.get(va) or il.addr_to_method.get(va):return None
     info=_guarded_info(il,va,init)
     if info:return alias_for_slot(il,info[0],init,info[1],guarded=True)
+
+
+def guarded_reference_property(lift,caller,slot,offset):
+    """Find a public getter with the same class guard and complete static
+    reference read. A property need not use a compiler-named backing field."""
+    il=lift.il;usage=il.decode_slot(slot) or {};ti=usage.get('td',-1);key=il._closed_type_key
+    if (usage.get('kind')!=1 or not 0<=ti<len(il.meta.typedefs) or key(usage.get('type'))!=(0x12,ti,0) or
+            ti>=len(il.field_offsets) or not 0<=offset<128 or offset%8):return None
+    td=il.meta.typedefs[ti];offsets=il.field_offsets[ti]
+    if (not offsets or len(offsets)!=td.field_count or td.is_valuetype or td.declaring!=-1 or
+            td.generic_container!=-1 or td.flags&7!=1 or td.flags&0x20):return None
+    field=None
+    for fi,pos in zip(il.meta.type_fields(td),offsets):
+        f=il.meta.fields[fi]
+        if not 0<=f.type<len(il.types) or not il.types[f.type]:return None
+        attr=field_attrs(il,f)
+        if not attr&FA_STATIC or attr&FA_LITERAL:continue
+        if pos<0:return None
+        if pos>=offset+8:continue
+        ty=il.types[f.type];width=il._sf_field_size(ty,0)
+        if not width or width<0:return None
+        if pos+width<=offset:continue
+        if field or pos!=offset or width!=8 or attr&7!=1 or key(ty)!=(0x12,ty[0],0):return None
+        field=ty
+    if not field:return None
+    aliases=[]
+    for j in il.meta.type_methods(td):
+        m=il.meta.methods[j]
+        if (j==caller.index or not m.addr or m.declaring!=ti or not m.is_static or m.param_count or m.flags&7!=6 or
+                m.generic_container!=-1 or m.flags&0x40 or not 0<=m.return_type<len(il.types) or key(il.types[m.return_type])!=key(field)):continue
+        p=lift._accessor_prop(j)
+        if p and p[0]=='get' and not p[2] and _guarded_info(il,m.addr,lift.rt_init_meta)==(slot,offset):aliases.append(safe_ident(p[1]))
+    if len(aliases)==1:return il.typedef_full(ti),aliases[0],field
 
 
 def _slot(il, va, init, offset=0):
