@@ -181,12 +181,24 @@ def _guarded_helper_forward(lift, block, ins):
 def _entry_forward(prefix, ip, ins, inputs, hidden_reg):
     """Straight-line prologue with untouched argument registers and a fresh hidden zero."""
     zero = False
+    entry_homes = set()
     for i in prefix:
         if i.ip != ip or i.has_segment_prefix:
             return False
         if i.ip == ins.ip:
             return zero
         ip = i.next_ip
+        # Before any stack adjustment, [entry RSP+8..+32] are the four
+        # caller-reserved Win64 homes. Parking a nonvolatile qword there
+        # changes neither RCX nor the hidden MethodInfo. Only admit leading
+        # saves in distinct homes on the nullary path (no stack arguments).
+        if (entry_homes is not None and len(inputs) == 1 and i.mnemonic == M.MOV and
+                i.op0_kind == K.MEMORY and i.memory_base == R.RSP and i.memory_index == R.NONE and
+                i.op1_register in _NONVOL and i.memory_displacement in (8,16,24,32) and
+                i.memory_displacement not in entry_homes and not (i.has_lock_prefix or i.has_rep_prefix or i.has_repne_prefix)):
+            entry_homes.add(i.memory_displacement)
+            continue
+        entry_homes = None
         if (i.mnemonic == M.PUSH and i.op0_register in _NONVOL or
                 i.mnemonic == M.SUB and i.op0_register == R.RSP and i.op1_kind in (K.IMMEDIATE8TO64, K.IMMEDIATE32TO64) and sdisp(i.immediate(1)) > 0 or
                 i.mnemonic == M.MOV and i.op0_register in _NONVOL and i.op1_register in inputs):

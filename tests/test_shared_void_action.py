@@ -6,7 +6,8 @@ import pytest
 
 from il2cpp.binary import PE
 from il2cpp.expr import Expr
-from il2cpp.shared_action import _bool_transfer, _guarded_helper_forward, _guarded_this_forward, shared_action_tail, shared_base_action, shared_bool_tail, shared_void_action
+from il2cpp.shared_action import _bool_transfer, _entry_forward, _guarded_helper_forward, _guarded_this_forward, shared_action_tail, shared_base_action, shared_bool_tail, shared_void_action
+from iced_x86 import Register as R
 
 
 def recover(change=None):
@@ -246,6 +247,23 @@ def guarded_helper(change=None, spill='', null_guard=False):
 
 def test_helper_is_saved_on_both_guard_paths():
     assert guarded_helper()
+
+
+@pytest.mark.parametrize('setup,ok',[
+    ('48895c2408 57 4883ec20',True),             # entry RSP+8: caller-reserved home
+    ('48895c2410 4c89642418 57 4883ec20',True), # two disjoint qwords
+    ('48891c24 57 4883ec20',False),              # return address
+    ('48895c2428 57 4883ec20',False),            # outside home space
+    ('48895c240c 57 4883ec20',False),            # unaligned, overlaps two homes
+    ('48895c2408 4889742408 57 4883ec20',False), # reused slot
+    ('57 4883ec20 48895c2408',False),            # displacement now relative to moved RSP
+    ('48894c2408 57 4883ec20',False),            # input argument, not a nonvolatile save
+    ('895c2408 57 4883ec20',False),              # partial register
+    ('488b4c2408 57 4883ec20',False),            # RCX reload, not a save
+])
+def test_nullary_forwarder_requires_leading_whole_nonvolatile_homes(setup,ok):
+    seq=list(Decoder(64,bytes.fromhex(setup+' 33d2 488bf9 e800100000'),ip=0x4000))
+    assert _entry_forward(seq,seq[0].ip,seq[-1],(R.RCX,),R.EDX)==ok
 
 
 @pytest.mark.parametrize('case',['hot and cold','linearized guard','wrong reload','different initializer','wrong flag','extra predecessor','EH pad'])

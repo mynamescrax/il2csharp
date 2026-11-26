@@ -974,6 +974,25 @@ files changed: EndOfDayReport, EndingScene, PickupObject and SaveManager.
 Strict census: 402 → 398 unresolved calls; 3,194 → 3,190 `object objN`.
 Report: `work/shift_inherited_spawn_census.json`.
 
+**StoryModeManager.Spawned (27944):** The leading qword save of RBX in
+`[entry RSP+8]` leaves RCX untouched. At `0x1805e69af`, RCX is `this` and
+EDX is zero; the base slot (25) resolves to `Fusion.NetworkBehaviour.Spawned`
+(59668), which shares the return-only body. Neither return register is
+consumed. The later call to the same address is on the newly allocated
+iterator, not the manager. The iterator's actual constructor calls the same
+base constructor and stores its Int32 parameter at +0x10. Recover the call
+with state 0 and the public owner capture, instead of printing a nonexistent
+parameterless constructor followed by an inaccessible private-field write.
+
+The emitted override, iterator factory and real constructor compiled
+together: `base;new;start` on success, `base` when the base threw, and
+`base;new` when construction threw. The factory produced a distinct iterator
+with state 0 and the original owner. The callback fix also applied to
+TurnOffIfMultiplayer. The constructor evidence covered 50 factories and
+18 coroutine starts. All 6,791 bodies lifted without failures/fallbacks;
+503 files passed syntax and brace checks. Shared markers 398 → 396;
+`object objN` 3,190 → 3,188. Report: `work/shift_spawn_ctor_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;
