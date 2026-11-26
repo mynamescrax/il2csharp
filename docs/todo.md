@@ -1083,6 +1083,22 @@ The strict rebuild changed only UIDService.cs and the codegen reader file.
 Shared markers remain 391 (the bogus conversion already had a name);
 `object objN` fell 3,185 → 3,184. Report: `work/shift_uid_dictionary_census.json`.
 
+**UIDService._fuidToActorID (26516):** MethodSpec 87498 at `0x180594a4a`
+selects constructor 60732 at `0x180f64600`, closed over `NetworkString<_64>`
+and `int`. The data argument is the saved `Ptr` plus 0xe7c bytes (927 words);
+capacity is 7. The key reader is saved in RSI and forwarded in R9. The fifth
+native argument at `[rsp+0x20]` is the cached `IElementReaderWriter<int>`;
+`[rsp+0x28]` holds the MethodInfo. On a cache miss the caller boxes a zeroed
+one-byte `ElementReaderWriterInt32`, stores it and issues a write barrier.
+Both paths reload the same field, matching `ElementReaderWriterInt32.GetInstance`.
+The emitted getter and Int32 factory compiled together. The test checked cold
+and prepopulated caches, replacement of `Ptr` and the cache by the key reader,
+null input, and reader/constructor failures. A strict rebuild lifted 6,791
+bodies; all 503 files passed syntax and brace checks. The two changed files
+are UIDService.cs and the generated codegen reader. This removes a wrongly
+named constructor, leaving 391 shared markers and 3,184 `object objN`.
+Report: `work/shift_uid_actor_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;
