@@ -1002,6 +1002,12 @@ class _HighLevelMixin:
                 t = self._sub_outside_literals(p1, '~E~', s, sh)
                 sh2, _ = self._mask_literals(t, False)
                 t = self._sub_outside_literals(p3, '~E~', t, sh2)
+                # A method/property on the address of a struct element can
+                # observe a replacement or mutate the element itself. A
+                # foreach local would take a value snapshot on loop entry.
+                if re.search(r'~E~\s*\.|(?:\b(?:ref|out|in)\s+|&)~E~',t):
+                    ok = False
+                    break
                 if idx_rx.search(t):
                     ok = False      # counter used for something else
                     break

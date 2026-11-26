@@ -7,6 +7,7 @@ from il2cpp.indexed_binary import _saved_pair,_reaching
 from il2cpp.copied_getter import _copies_prefix,_sp_offset
 from il2cpp.module_curve import fixed_frame
 from il2cpp.material_setter import _component
+from il2cpp.array_member import element_reads
 from il2cpp.static_getter import guarded_alias,alias_for_slot
 from il2cpp.sret_copy import _own_field
 from il2cpp.shared_action import _raises_on_null
@@ -233,14 +234,15 @@ def application_sites(lift,method,blocks,pads):
                 if got:actions.update(got[0]);fresh.update(got[1]);matched_pair=True
             if matched_pair:_additional_reads(lift,method,blocks,pred,actions)
     if actions:_readers(lift,blocks,actions)
+    actions.update(element_reads(lift,method,blocks,pads))
     return actions,fresh,counts
 
 
 def application_step(lift,ins,action,values):
     op,*args=action
-    def bind(expr,ty,reg):
+    def bind(expr,ty,reg,kind='obj'):
         name=lift.new_var();lift._var_types[name]=ty;lift.emit(ins.ip,'var %s = %s;'%(name,expr),None)
-        e=Expr(name,ty,'obj');lift.regs[reg]=e;values[ins.ip]=e
+        e=Expr(name,ty,kind);lift.regs[reg]=e;values[ins.ip]=e
     def clear():
         for r in (*VOLATILE,*('XMM%d'%n for n in range(6))):lift.regs.pop(r,None)
         lift.flags=None;lift._fresh_unknowns()
@@ -251,6 +253,13 @@ def application_step(lift,ins,action,values):
             values[ip]=Expr(e.text[1:],ty,'obj')
         return False
     if op=='low':return args[0] in values
+    if op=='element':
+        br,ir,ty,prop,rt,dst=args;a=dict.get(lift.regs,br);idx=dict.get(lift.regs,ir);key=lift.il._closed_type_key
+        if (a and idx and not a._unk and not idx._unk and re.fullmatch(r'\w+',a.text or '') and re.fullmatch(r'\w+',idx.text or '') and
+                (lift.dry or key(a.ty)==key(ty) and key(idx.ty)==(8,0))):
+            clear();bind(acc_get(f'{a.text}[{idx.text}].{prop}'),rt,dst,'float' if dst=='XMM0' else 'obj')
+            lift._type_hints.setdefault(values[ins.ip].text,rt)
+            return True
     if op=='byval' and all(ip in values and getattr(dict.get(lift.regs,r),'_stack_offset',None)==lift.rsp_delta+off for r,off,ip in args):
         for r,off,ip in args:
             v=values[ip];e=Expr('&'+v.text,v.ty,'ptr');e._stack_offset=lift.rsp_delta+off;lift.regs[r]=e

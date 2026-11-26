@@ -1399,6 +1399,8 @@ class _DataflowMixin:
                     # operand with an earlier snapshot defeats that barrier.
                     if m.group(2) == '__accget(%s)' % a_frag:
                         continue
+                    if '[' in a_frag and '__accget(%s.' % a_frag in m.group(2):
+                        continue  # an array-element getter has a live byref receiver
                     # Aggregate call arguments spell the individual native
                     # reads as a struct initializer. A call between those
                     # reads and a cached field value can mutate the field.

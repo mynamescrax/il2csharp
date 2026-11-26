@@ -20,7 +20,7 @@ _LEAD = re.compile(rb'(?:[\xf2\xf3]\x0f\x10|[\x44\x48\x4c]?\x8b|\x48\x89\xc8)')
 _MAX_BYTES = 4 * 9 + 3 + 1  # four scalar memory moves, echo, RET
 
 
-def _body(il, target):
+def _body(il, target, lead=_LEAD):
     b = getattr(il, 'bin', None)
     if not getattr(b, 'd', None) or not _amd64(b):
         return None
@@ -36,7 +36,7 @@ def _body(il, target):
 
     # Most call targets aren't candidates. No decoder or boundary lookups
     # on ordinary prologues, thunks or bodies without a nearby plain RET.
-    if not _LEAD.match(b.d, pos, stop) or b.d.find(b'\xc3', pos, stop) < 0:
+    if not lead.match(b.d, pos, stop) or b.d.find(b'\xc3', pos, stop) < 0:
         return None
     start, end = il.function_extent(target)
     if start != target or end <= target:

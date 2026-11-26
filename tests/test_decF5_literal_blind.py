@@ -115,3 +115,10 @@ def test_foreach_string_counter_declines():
             '    Log("arr[v0]");', '}']
     out = dec._foreach_sugar(list(loop))
     assert out == loop
+
+
+def test_live_array_property_is_not_a_foreach_value_snapshot():
+    dec=Decompiler.__new__(Decompiler);dec.L=__import__('types').SimpleNamespace(slot_types={},_var_types={},_type_hints={});dec._var_types={}
+    loop=['for (int v0 = 0; v0 < arr.Length; v0++)','{','var t1 = __accget(arr[v0].First);',
+          'MayReplaceElement();','var t2 = __accget(arr[v0].Second);','}']
+    assert dec._foreach_sugar(list(loop))==loop

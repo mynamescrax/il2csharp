@@ -1355,6 +1355,17 @@ and the first store survives a second-call fault. Other apparent getter
 replays (including the lerps in `AmbientMusicSystem`) need their own operand
 and effect-order evidence. Closed lookup batch: `9d15afb`.
 
+**Returned struct arrays.** `InventoryManager.CleanSpill` (`0x18070d268`,
+`0x18070d2af`) and `CleanSpillHose` (`0x18070cdc4`) compare the same index
+against the array length before forming `base + 32 + index * 44`. The array
+comes from the unique `Physics.RaycastAll` return. The registered collider
+getter now reads `hits[i].collider` once. On the non-null branch of
+`CleanSpill`, the shared scalar leaf at `0x182c90960` reads the float field at
+offset `0x1c` of that live element: `hits[i].distance`. Keep the indexed loop;
+`foreach` over struct values would miss replacement of the element between
+the two getters. The nearest-hit join, mixed ray arguments and backface-flag
+restoration are separate open defects. Scalar snapshot batch: `ef8a9d5`.
+
 **Whole-method behavior gate: `GasCollisionSpawner.OnParticleCollision`.**
 At `0x1806efcda` the RPC takes two different by-value arguments: the saved
 intersection (XMM6 + EBX, 8+4 bytes copied through RDX) and the full 16-byte
