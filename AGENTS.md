@@ -52,8 +52,20 @@ start there, then `docs/todo.md` (Current work section).
 
 ## Session setup (PowerShell)
 
+For every .NET invocation, including `dotnet --version`, set
+`DOTNET_ADD_GLOBAL_TOOLS_TO_PATH=false` in the **child process environment**
+before launch. Use `tests/dotnet_case.py` for compiled behavior tests. A fresh
+`DOTNET_CLI_HOME` alone can append temporary `.dotnet\tools` directories to
+the permanent Windows user `Path`. Never edit `Path` as part of a test. See
+[the incident and verification procedure](docs/windows-dotnet-path.md).
+
+On this workstation run one build or test job at a time, with one worker.
+Background jobs count toward that limit. Delegate read-only reviews while a
+job is running, and ask before starting a full-tree rebuild.
+
 ```powershell
 $env:PYTHONHASHSEED = '0'
+$env:DOTNET_ADD_GLOBAL_TOOLS_TO_PATH = 'false'
 $env:IL2CSHARP_METADATA = (Resolve-Path 'testgame/ShiftAtMidnight_Data/il2cpp_data/Metadata/global-metadata.dat').Path
 $env:IL2CSHARP_BINARY = (Resolve-Path 'testgame/GameAssembly.dll').Path
 $env:PYTHONPATH = '<repo>;tools'

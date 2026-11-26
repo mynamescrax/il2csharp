@@ -176,6 +176,8 @@ class _EmitMixin:
                             out.append(self._leave_loop(blocks, ex))
                         out.append('}')
                         self._edge(cur, nxt, out)
+                        witness=getattr(self,'_bottom_test_edge',None)
+                        if witness and witness[:2]==[cur,nxt]:witness[2]=True
                         cur = nxt
                         continue
                 J = self._ipdom(cur, self.pdom)
@@ -497,6 +499,49 @@ class _EmitMixin:
             return None
         return e
 
+    def _linear_search_loop(self,blocks,hdr,latch,body,exits,outer,out,depth):
+        """Bottom-tested loop with linear exit arms converging at one join.
+        Render each exit's work *inside* its guard; only the common join
+        follows the loop. Test the latch before its back-edge copies."""
+        if not outer or len(exits)!=2 or hdr==latch or self._seh_regions or self._sw_depth:return None
+        chain=[];seen=set();k=hdr
+        while k in body and k not in seen:
+            b=blocks[k];term=b.term or ();inside=[n for n in b.succs if n in body]
+            if (b.consumed or (k!=hdr and (k in self.loop_of_hdr or set(b.preds)!={chain[-1]})) or
+                    len(inside)!=1 or not term or term[0] not in ('jmp','fall','jcc') or
+                    (term[0]=='jcc')!=(len(b.succs)==2)):return None
+            seen.add(k);chain.append(k);k=inside[0]
+        if seen!=body or k!=hdr or chain[-1]!=latch or blocks[latch].term[0]!='jcc':return None
+        def tail(n):
+            path=[]
+            while 0<=n<len(blocks) and n not in body and n not in path and len(path)<32:
+                path.append(n);b=blocks[n]
+                if not b.term or b.term[0] not in ('jmp','fall') or len(b.succs)!=1:break
+                n=b.succs[0]
+            return path
+        paths={n:tail(n) for n in exits};a,z=paths.values();join=next((n for n in a if n in z),None)
+        if join is None or blocks[join].consumed or outer and join not in outer:return None
+        for start,path in paths.items():
+            arm=path[:path.index(join)];prev=body
+            for n in arm:
+                b=blocks[n]
+                if b.consumed or n in self.loop_of_hdr or outer and n not in outer or not set(b.preds)<=prev:return None
+                prev={n}
+            paths[start]=arm
+        # No other entry can land in the middle of a private arm.
+        if blocks[hdr].insns:out.append('%sL_%x:'%(LBL,blocks[hdr].insns[0].ip))
+        out.extend(('while (true)','{'));self._brace_push('loop')
+        for k in chain:
+            b=blocks[k];b.consumed=True;out.extend(b.stmts);t=b.term
+            if t[0]=='jcc':
+                ex,nxt=(t[1],t[2]) if t[1] not in body else (t[2],t[1]);cond=b.cond or 'true'
+                out.extend(('if (%s)'%(cond if ex==t[1] else '!(%s)'%cond),'{'));self._edge(k,ex,out)
+                for n in paths[ex]:
+                    a=blocks[n];a.consumed=True;out.extend(a.stmts);self._edge(n,a.succs[0],out)
+                out.extend(('break;','}'));self._edge(k,nxt,out)
+            else:self._edge(k,t[1],out)
+        out.append('}');self._brace_pop(blocks,out,depth);return join
+
     def _emit_loop(self, blocks, hdr, out: List[str], outer_loop: Set[int],
                    depth: int) -> Optional[int]:
         body_ids, latch = self.loop_of_hdr[hdr]
@@ -508,6 +553,9 @@ class _EmitMixin:
                     exits.add(s)
         # back-edge source latch block jcc -> do-while style if header isn't the jcc
         h_term = h.term or ('stop',)
+        if h_term[0] in ('jmp','fall'):
+            join=self._linear_search_loop(blocks,hdr,latch,body_ids,exits,outer_loop,out,depth)
+            if join is not None:return join
         cond_at_top = h_term[0] == 'jcc'
         top_true_in = cond_at_top and h_term[1] in body_ids
         top_false_in = cond_at_top and h_term[2] in body_ids
@@ -600,11 +648,14 @@ class _EmitMixin:
                     if not term or term[0] not in ('jmp','fall'):
                         break
                     seen.add(k); path.append((k,term[1])); k=term[1]
-            simple_latch = (cond_at_bottom and body_ids == {hdr,latch_b.bid} and latch_b.bid != hdr and
-                            h_term[0] in ('fall','jmp') and h_term[1] == latch_b.bid and not latch_b.consumed and
-                            latch_b.preds == [hdr] and not self._seh_regions and exits == set(latch_b.succs)-{hdr})
+            simple_latch = (cond_at_bottom and latch_b.bid != hdr and not latch_b.consumed and
+                            all(hdr not in blocks[n].succs for n in body_ids if n!=latch_b.bid) and
+                            not self._seh_regions and exits == set(latch_b.succs)-{hdr})
             self._edge(hdr, start, out)
+            old_witness=getattr(self,'_bottom_test_edge',None)
+            self._bottom_test_edge=[latch_b.bid,hdr,False] if simple_latch else None
             self._seq(blocks, start, {hdr}, body_ids, out, depth + 1)
+            tested=bool(self._bottom_test_edge and self._bottom_test_edge[2]);self._bottom_test_edge=old_witness
             bottom_return = self._latch_return is not None and self._latch_return[2]
             if bottom_return:
                 success_exit, = exits-{self._latch_return[0][1]}
@@ -630,9 +681,14 @@ class _EmitMixin:
             # same text again after a counter copy tests the next iteration's
             # index and skips the last item. Leave the actual exit guard in
             # charge when there is no other edge back to this header.
-            repeated = (start is not None and simple_latch and any(
+            repeated = (start is not None and tested and any(
                             (a := re.match(r'^(v\d+) = ',s)) and re.search(r'\b'+a[1]+r'\b',c)
                             for s in self.phi_copies.get((latch_b.bid,hdr),())))
+            if start is not None and tested and exits:
+                # When the exit initializes a join, falling through via a
+                # second condition would bypass the exit copies altogether.
+                ex=next(iter(exits))
+                repeated |= bool(self.phi_copies.get((latch_b.bid,ex)))
             out.append('while (%s);' % ('true' if repeated or (start is not None and bottom_return) else c if back_taken else '!(%s)' % c))
         elif not cond_at_top:
             out.append('while (true);')

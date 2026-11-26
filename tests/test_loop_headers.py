@@ -101,6 +101,20 @@ def test_bottom_guard_is_not_retested_after_counter_copy():
     assert text.endswith('while (true);')
 
 
+def test_nested_search_keeps_exit_work_and_checks_backedge_once():
+    blocks=[_block(0,term=('fall',1),succs=(1,),preds=(2,)),
+            _block(1,term=('jcc',3,2),cond='Found(i)',succs=(3,2),preds=(0,)),
+            _block(2,term=('jcc',0,4),cond='i + 1 < count',succs=(0,4),preds=(1,)),
+            _block(3,stmts=['Mark(i);'],term=('fall',5),succs=(5,),preds=(1,)),
+            _block(4,term=('jmp',5),succs=(5,),preds=(2,)),_block(5,preds=(3,4))]
+    dec=_decompiler(blocks,0,{0,1,2},2);dec.phi_copies={(2,0):['i = i + 1;'],(4,5):['reason = exhausted;'],(3,5):['reason = matched;']}
+    out=[];assert dec._emit_loop(blocks,0,out,set(range(6)),0)==5
+    text='\n'.join(out)
+    assert 'if (Found(i))\n{\nMark(i);\nreason = matched;\nbreak;' in text
+    assert 'if (!(i + 1 < count))\n{\nreason = exhausted;\nbreak;\n}\ni = i + 1;' in text
+    assert text.count('i + 1 < count')==1
+
+
 def test_empty_search_returns_while_match_reaches_action():
     blocks = [
         _block(0, term=('jcc',3,1), cond='i >= count', succs=(3,1), preds=(2,)),

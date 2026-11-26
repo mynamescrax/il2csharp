@@ -22,6 +22,7 @@ from il2cpp.copied_getter import array_fill_sites, mixed_copy_stores, write_snap
 from il2cpp.curve_join import joined_updates
 from il2cpp.curve_bridge import prefixes_before_join
 from il2cpp.reparent import bind_array_operand, hierarchy_sites
+from il2cpp.aggregate_apply import application_sites, application_step
 from il2cpp.material_setter import assignment as material_assignment, material_sites, snapshot as material_snapshot
 from il2cpp.inline_task import inline_tasks, emit_kickoff
 from il2cpp.joined_sret import joined_srets, copied_argument
@@ -47,6 +48,8 @@ class _AnalyzeMixin:
         kickoff_values = {}
         L._array_module_frames = {}
         L._single_array_allocs, L._single_array_counts = array_fill_sites(L, blocks, self._pad_bids,m)
+        applications,fresh_app,parked_counts=application_sites(L,m,blocks,self._pad_bids)
+        L._single_array_counts.update(parked_counts);app_values={}
         L._signed_module_slots = signed_module_slots(L, blocks)
         module_frame = probed_frame(L, m, blocks, self._pad_bids)
         L._converted_modules = conversion_uses(L,blocks,fixed_frame(L,m,blocks,self._pad_bids,immediate=True))
@@ -63,6 +66,7 @@ class _AnalyzeMixin:
         binary_values={}
         packs, extra_srets = return_plans(L, m, blocks, self._pad_bids, snapshot_getters)
         L._snapshot_srets.update(extra_srets)
+        L._snapshot_srets.update(fresh_app)
         L._ref_array_pads = self._pad_bids
         m_returns = self._returns_value(m)
         self.phi_pre = {}
@@ -78,6 +82,7 @@ class _AnalyzeMixin:
             binary_values.clear()
             kickoff_values.clear()
             L._ref_array_loads = {}
+            app_values.clear()
             L._ref_array_elements = set()
             replaced_selects.clear()
             # pass 1 never counts uses (dry), so it runs on a plain dict:
@@ -219,6 +224,7 @@ class _AnalyzeMixin:
                     if end is not None:
                         copied_until=end
                         continue
+                if ins.ip in applications and application_step(L,ins,applications[ins.ip],app_values):continue
                 if vector_getter or dec_getter:
                     if mn == Mnemonic.RET:
                         b.term=('ret',); b.ret=dec_getter or vector_getter[0]

@@ -28,7 +28,7 @@ From the repo root on Windows with a .NET 8+ SDK:
 python -m pytest -q -rs tests/test_dotnet_path.py
 ```
 
-Look for `1 passed`. The test starts with a fresh CLI home, checks the environment before each launch, and builds and runs a tiny program. It compares the **unexpanded value and registry type** of `HKCU\Environment\Path` before and after, without printing or rewriting the user's paths. A skip means the SDK check did not run.
+Look for `1 passed`. The test starts with a fresh CLI home, checks the environment before each launch, and builds and runs a tiny program. It compares the **unexpanded value and registry type** of `HKCU\Environment\Path` before and after, without printing or rewriting the user's paths. A skip means the full check did not complete, even if the SDK version probe ran.
 
 Verification on the affected Windows PC: `1 passed`; the saved user `Path` value and its registry type were identical before and after the fresh-home run.
 

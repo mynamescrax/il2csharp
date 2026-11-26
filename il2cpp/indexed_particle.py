@@ -187,7 +187,10 @@ def indexed_particle(lift, ins, regs):
     incoming=[ARG_REGS[k] for k,p in enumerate(source_params(il.meta,method),first) if k<4 and safe_ident(p.name)==arr.text and
               0<=p.type<len(il.types) and il._closed_type_key(il.types[p.type])==il._closed_type_key(arr.ty)]
     if len(incoming)!=1 or not _entry_copy(lift._blocks,b.preds[0],base,getattr(R,incoming[0])):
-        return None
+        if not setter:return None
+        from il2cpp.array_origin import array_origin
+        origin=array_origin(lift,lift._blocks,b.preds[0],base,through=ins.ip)
+        if origin is None or il._closed_type_key(origin)!=il._closed_type_key(arr.ty):return None
     if setter:
         mi=_lifetime_alias(lift,target,owner)
         return (True,mi,receiver) if mi is not None else None

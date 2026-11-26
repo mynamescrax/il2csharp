@@ -1295,6 +1295,34 @@ element zero. `0x18060adf4` reads its `m_Point` at offset 0 and `0x18060ae0d`
 reads its `m_Normal` at offset 12. This calls for an array-element
 proof rather than reusing the list-indexer proof.
 
+**Whole-method behavior gate: `ParticleCollisionSpawner.OnParticleCollision`.**
+Both inner searches increment the index once before the native backedge
+comparison (`0x180581329` / `0x1805814e9`). Previously the emitted loop
+incremented and then tested `index + 1` again; with two live particles it
+could skip index 1. Match and exhaustion also both became a bare `break`,
+losing the lifetime write. The structurer now follows each private exit arm
+to its common join, preserving its work and edge assignments. The count
+returned by the event query is captured once rather than re-evaluated on
+loop entry. The checked lifetime setter uses the same allocated array.
+
+On the authority path the manager getter at `0x18058125f` is equivalent to
+the registered public singleton getter. MethodSpec 174844 supplies
+`GameObject.GetComponent<NetworkObject>`; `SpawnItem` at `0x1805812b3`
+receives the captured manager in RCX, component in RDX, intersection in R8
+(by-value, 8+4 bytes), rotation in R9 (16 bytes), and a null callback in
+the fifth argument slot. The rotation is the result of `LookRotation` on
+the second event snapshot's normal. These identities are verified from the
+method registrations, field layouts, reaching definitions and full copies.
+
+`tests/test_game_particle_method.py` compiles the entire unedited method with
+typed stand-ins. Both spawn and non-spawn paths now visit `[0,1]` and clear
+only index 1 on the last-live match; a miss clears nothing; two events visit
+`[0,1,0]` and clear `[1,0]`. The test also checks zero events/live particles,
+first match, bounds, authority, call order, manager replacement, exceptions,
+and `SetParticles` receiving the filled array and original live count.
+This gate is scoped to the method; the published tree counts above are from
+the previous full census.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;
