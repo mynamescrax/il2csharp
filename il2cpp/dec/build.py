@@ -351,6 +351,9 @@ class _BuildMixin:
         self._prune_nonreturning(blocks)
         L._array_allocation_loop_guard = self._allocation_needs_loop_guard(blocks)
         self._analyze(m, td, blocks, bmap)
+        from il2cpp.virtual_forward import virtual_forward
+        wrapper=virtual_forward(L,m,td,blocks,insns,self._pad_bids)
+        if wrapper is not None:return wrapper
         kickoff = async_void_start(L,m,td,insns,self.eh) or async_task_start(L,m,td,insns,self.eh)
         if kickoff is not None: return kickoff
         dictionary = dictionary_constructor_body(L,m,td,insns,self.eh)

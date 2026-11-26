@@ -1385,6 +1385,18 @@ and `ref_vectors.py`). It is a comment on a recovered call, not a throwing
 signatures are inferred statically; conflicting observations at one cell
 are a separate validation concern.
 
+**Terminal virtual forwarding.** `Hittable.DealStunDamage` now emits
+`this.Hit(3.0f, UnityEngine.Vector3.zero, true, false, "Normal");`.
+The private static field and the public property are related by metadata
+layout and the full registered getter body, not by the word “zero”. The
+native call at `0x1806f3ad3` loads slot 28 from the very same `this`; the
+`+0x300` qword stored in the seventh ABI position is the MethodInfo half
+of that slot. The complete wrapper and its unwind-validated exit consume
+every temporary. The compiled original method invokes a derived override
+with distinct nonzero vector lanes, and a throwing getter prevents dispatch.
+Changing the slot, home, lane, receiver, or making the public alias ambiguous
+declines the fold. Previous stack literal batch: `0f106cd`.
+
 **Whole-method behavior gate: `GasCollisionSpawner.OnParticleCollision`.**
 At `0x1806efcda` the RPC takes two different by-value arguments: the saved
 intersection (XMM6 + EBX, 8+4 bytes copied through RDX) and the full 16-byte
