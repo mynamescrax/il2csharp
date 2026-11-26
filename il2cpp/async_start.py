@@ -1,4 +1,4 @@
-"""Recover a complete Win64 async-void kickoff from its typed stack writes.
+"""Recover Win64 async kickoffs from their typed stack writes.
 
 The shared Start address is not an identity. Its closed MethodRef, the two
 addresses passed by reference, and the Create result copied between them
@@ -62,17 +62,17 @@ def _frame(pro,epi):
     return size,saved
 
 
-def _closed_start(il,method,td,slot,start,create):
+def _start_binding(il,method,td,slot,start):
     usage=il.decode_slot(slot) or {}; si=usage.get('idx',-1)
     if usage.get('kind')!=6 or not 0<=si<len(il.method_specs):return None
     mi,ci,gi=il.method_specs[si];actual=il._method_spec_type_args(gi)
-    if ci!=-1 or not 0<=mi<len(il.meta.methods) or not actual or len(actual)!=1:return None
+    if not 0<=mi<len(il.meta.methods) or not actual or len(actual)!=1:return None
     ty=actual[0];key=il._closed_type_key
     if not ty or key(ty)!=(0x11,ty[0],0) or not 0<=ty[0]<len(il.meta.typedefs):return None
     sm=il.meta.typedefs[ty[0]];m=il.meta.methods[mi];bt=il.meta.typedefs[m.declaring];ps=il.meta.method_params(m)
     if (not sm.is_valuetype or sm.generic_container!=-1 or il._nested_owner(sm.index)!=td.index or
             not re.fullmatch('<'+re.escape(method.name)+r'>d__\d+',sm.name) or
-            not bt.is_valuetype or bt.generic_container!=-1 or il.typedef_full(bt.index)!='System.Runtime.CompilerServices.AsyncVoidMethodBuilder' or
+            not bt.is_valuetype or
             m.name!='Start' or m.is_static or m.flags&7!=6 or m.flags&0x40 or not 0<=m.generic_container<len(il.meta.generic_containers) or
             len(ps)!=1 or m.param_count!=1 or not 0<=ps[0].type<len(il.types) or not 0<=m.return_type<len(il.types) or key(il.types[m.return_type])!=(1,0) or
             _spec_entry(il,si,mi)!=start.near_branch_target):return None
@@ -80,6 +80,14 @@ def _closed_start(il,method,td,slot,start,create):
     if ((owner,count,is_method)!=(mi,1,1) or not pt or il._type_enum(pt)!=0x1e or not pt[1]&(1<<29) or pt[0]!=first or
             not any(0<=ii<len(il.types) and il.type_name(il.types[ii])=='System.Runtime.CompilerServices.IAsyncStateMachine'
                     for ii in il.meta.interfaces[sm.interfaces_start:sm.interfaces_start+sm.interfaces_count])):return None
+    return sm,ty,bt,ci
+
+
+def _closed_start(il,method,td,slot,start,create):
+    binding=_start_binding(il,method,td,slot,start)
+    if not binding:return None
+    sm,ty,bt,ci=binding; key=il._closed_type_key
+    if ci!=-1 or bt.generic_container!=-1 or il.typedef_full(bt.index)!='System.Runtime.CompilerServices.AsyncVoidMethodBuilder':return None
     ids=il.addr_candidates.get(create.near_branch_target,())
     if len(ids)!=1 or ids[0][0]!='method' or not 0<=ids[0][1]<len(il.meta.methods):return None
     factory=il.meta.methods[ids[0][1]]
@@ -96,6 +104,113 @@ def _covers(tiles,base,width):
         if off!=pos:return False
         pos+=n
     return pos==base+width
+
+
+def _slot_load(i,reg):
+    if i.mnemonic==M.MOV and i.op0_register==reg and i.memory_base==R.RIP:return i.ip_rel_memory_address
+
+
+def _task_member(il,slot,call,bt,ci,name,ret):
+    """The Create and Task MethodRefs must use Start's class instantiation."""
+    u=il.decode_slot(slot) or {};si=u.get('idx',-1)
+    if u.get('kind')!=6 or not 0<=si<len(il.method_specs):return False
+    mi,c,g=il.method_specs[si]
+    if c!=ci or g!=-1 or not 0<=mi<len(il.meta.methods):return False
+    m=il.meta.methods[mi]
+    return (m.declaring==bt.index and m.name==name and m.generic_container==-1 and not m.param_count and
+            m.is_static==(name=='Create') and m.flags&7==6 and not m.flags&0x40 and
+            il._closed_type_key(il.candidate_return_type(('generic',si)))==ret and _call(call,_spec_entry(il,si,mi)))
+
+
+def _stack_copy24(seq,source,dest):
+    """The 24-byte Create result is copied from its own home, not old RAX."""
+    if len(seq)!=6:return False
+    xy,home,zero,z,store,tail=seq
+    return (xy.mnemonic==M.MOVUPS and R.XMM0<=xy.op0_register<=R.XMM5 and xy.memory_base==R.RSP and xy.memory_displacement==source and
+            _addr(home,R.RCX) and home.memory_displacement==dest and _rr(zero,M.XOR,R.EDX,R.EDX) and
+            z.mnemonic==M.MOVSD and R.XMM0<=z.op0_register<=R.XMM5 and z.op0_register!=xy.op0_register and
+            z.memory_base==R.RSP and z.memory_displacement==source+16 and store.mnemonic==M.MOVUPS and
+            store.memory_base==R.RSP and store.memory_displacement==dest and store.op1_register==xy.op0_register and
+            tail.mnemonic==M.MOVSD and tail.memory_base==R.RSP and tail.memory_displacement==dest+16 and tail.op1_register==z.op0_register)
+
+
+def async_task_start(lift,method,td,seq,eh):
+    """Parameterless Task<T> wrapper that captures this, starts the nested
+    machine, then reads Task on exactly the same builder field."""
+    il=lift.il
+    if (not HAVE_ICED or eh or len(seq)<42 or len(seq)>64 or method.is_static or method.param_count or td.is_valuetype or
+            method.generic_container!=-1 or td.generic_container!=-1 or not isinstance(getattr(il,'bin',None),PE) or
+            not il.bin.is64 or il.meta.version!=31 or not 0<=method.return_type<len(il.types)):return None
+    result=il.types[method.return_type];key=il._closed_type_key
+    if not result or il._type_enum(result)!=0x15:return None
+    task=il.td_of_ty(result); rk=key(result)
+    if task is None or il.typedef_full(task)!='System.Threading.Tasks.Task`1' or not rk:return None
+    calls=[k for k,i in enumerate(seq) if i.mnemonic==M.CALL]
+    if (len(calls)!=10 or any(seq[k].op0_kind!=K.NEAR_BRANCH64 for k in calls) or seq[0].ip!=method.addr or
+            il.function_extent(method.addr)!=(method.addr,seq[-1].next_ip) or any(a.next_ip!=b.ip for a,b in zip(seq,seq[1:])) or
+            any(i.has_segment_prefix or i.has_lock_prefix or i.has_rep_prefix or i.has_repne_prefix or i.memory_index!=R.NONE for i in seq)):return None
+    init=calls[0]; cl,create,wb,cap,start,get=calls[4:]
+    if (calls[:4]!=list(range(init,init+8,2)) or init<5 or cl-init<13 or create!=cl+3 or wb!=create+7 or cap!=wb+4 or
+            start!=cap+5 or get!=start+3 or any(seq[k].near_branch_target!=lift.rt_init_meta for k in calls[:4]) or
+            seq[wb].near_branch_target not in lift.rt_wbarrier or seq[cap].near_branch_target!=seq[wb].near_branch_target):return None
+    cmp,save,branch=seq[init-4:init-1];ready=seq[init+7]; klass=seq[init+8];guard=seq[cl-2];hot=seq[cl-1]
+    frame=_frame(seq[:init-4],seq[get+1:]); parked=save.op0_register
+    if (not frame or parked not in frame[1] or not _rr(save,M.MOV,parked,R.RCX) or
+            cmp.mnemonic!=M.CMP or cmp.memory_base!=R.RIP or cmp.memory_size!=1 or cmp.op1_kind!=K.IMMEDIATE8 or cmp.immediate8 or
+            branch.mnemonic!=M.JNE or branch.near_branch_target!=klass.ip or ready.mnemonic!=M.MOV or ready.memory_base!=R.RIP or
+            ready.ip_rel_memory_address!=cmp.ip_rel_memory_address or ready.op1_kind!=K.IMMEDIATE8 or ready.immediate8!=1):return None
+    slots=[_slot_load(i,r) for i,r in ((klass,R.RCX),(seq[cl+1],R.RDX),(seq[cap+1],R.R8),(seq[start+1],R.RDX))]
+    if not all(slots) or len(set(slots))!=4:return None
+    inits=[seq[k-1] for k in calls[:4]]
+    if (any(i.mnemonic!=M.LEA or i.op0_register!=R.RCX or i.memory_base!=R.RIP for i in inits) or
+            {i.ip_rel_memory_address for i in inits}!=set(slots)):return None
+    binding=_start_binding(il,method,td,slots[2],seq[start])
+    if not binding:return None
+    sm,ty,bt,ci=binding;args=il._method_spec_type_args(ci)
+    if (not args or len(args)!=1 or not key(args[0]) or il.typedef_full(bt.index)!='System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1' or
+            rk!=(0x15,(0x12,task,0),(key(args[0]),),0)):return None
+    u=il.decode_slot(slots[0]) or {}; rt=u.get('type');bk=(0x15,(0x11,bt.index,0),rk[2],0)
+    if (u.get('kind')!=1 or u.get('td')!=bt.index or key(rt)!=bk or not il.returns_sret(rt) or il._sf_field_size(rt,0)!=24 or
+            not _task_member(il,slots[1],seq[create],bt,ci,'Create',bk) or not _task_member(il,slots[3],seq[get],bt,ci,'get_Task',rk)):return None
+    get_spec=il.decode_slot(slots[3])['idx']
+    if lift._accessor_prop(il.method_specs[get_spec][0])!=('get','Task',0):return None
+    if (guard.mnemonic!=M.CMP or guard.memory_base!=R.RCX or guard.memory_displacement!=0xe4 or guard.op1_kind!=K.IMMEDIATE8TO32 or
+            guard.immediate8to32 or hot.mnemonic!=M.JNE or hot.near_branch_target!=seq[cl+1].ip or
+            il.bin.exports.get(seq[cl].near_branch_target)!='il2cpp_runtime_class_init'):return None
+
+    machine,builder,state=seq[cap+2:start];source=seq[create-1];after=seq[get-1]
+    if not (_addr(source,R.RCX) and _addr(machine,R.RDX) and _addr(builder,R.RCX) and _addr(after,R.RCX)):return None
+    buf,home,dest=(i.memory_displacement for i in (source,machine,builder)); width=il.value_type_size(sm.index)
+    if (not width or width<24 or not 32<=home<=frame[0]-width or not 32<=buf<=frame[0]-24 or not (buf+24<=home or home+width<=buf) or
+            not home<=dest<=home+width-24 or after.memory_displacement!=dest or not _stack_copy24(seq[create+1:wb],buf,dest)):return None
+    bf=_own_field(il,sm,dest-home+16,24)
+    if not bf or bf[0]!='this.<>t__builder' or key(bf[1])!=bk or bf[1][1]&0x27!=6:return None
+    # Unlike the void wrapper, only the bytes *outside* the builder are
+    # zeroed. Together with the Create copy they cover the entire machine.
+    zero=seq[init+9]
+    if not _rr(zero,M.XORPS,R.XMM0,R.XMM0):return None
+    tiles=[(dest,24)]
+    for i in seq[init+10:cl-2]:
+        if i.memory_base!=R.RSP:return None
+        if i.mnemonic==M.MOVDQU and i.op1_register==R.XMM0:n=16
+        elif i.mnemonic==M.MOV and i.op1_kind==K.IMMEDIATE32TO64 and i.immediate32to64==0:n=8
+        else:return None
+        tiles.append((i.memory_displacement,n))
+    if not _covers(tiles,home,width):return None
+    arg,store,ptr=seq[wb+1:cap];off=store.memory_displacement
+    if (not _rr(arg,M.MOV,R.RDX,parked) or store.mnemonic!=M.MOV or store.memory_base!=R.RSP or store.op1_register!=parked or
+            not _addr(ptr,R.RCX) or ptr.memory_displacement!=off or not home<=off<=home+width-8):return None
+    captured=_own_field(il,sm,off-home+16,8); sf=_own_field(il,sm,state.memory_displacement-home+16,4)
+    if (not captured or captured[0]!='this.<>4__this' or key(captured[1])!=(0x12,td.index,0) or captured[1][1]&0x27!=6 or
+            not sf or sf[0]!='this.<>1__state' or key(sf[1])!=(8,0) or sf[1][1]&0x27!=6 or
+            not home<=state.memory_displacement<=home+width-4 or state.mnemonic!=M.MOV or state.memory_base!=R.RSP or
+            state.op1_kind!=K.IMMEDIATE32 or state.immediate32!=0xffffffff):return None
+    tn=il.type_name(ty); builder_name=il.type_name(rt)
+    return [f'{tn} stateMachine = default;',
+            f'System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof({builder_name}).TypeHandle);',
+            f'stateMachine.<>t__builder = {builder_name}.Create();','stateMachine.<>4__this = this;',
+            'stateMachine.<>1__state = -1;',f'stateMachine.<>t__builder.Start<{tn}>(ref stateMachine);',
+            'return stateMachine.<>t__builder.Task;']
 
 
 def async_void_start(lift,method,td,seq,eh):

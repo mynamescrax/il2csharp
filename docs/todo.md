@@ -1113,6 +1113,19 @@ Seventeen kickoff methods across twelve generated files now use concrete
 machines. The 503-file strict census held at 391 shared markers and reduced
 `object objN` from 3,184 to 3,167. Report: `work/shift_async_start_census.json`.
 
+**FusionNetworkManager.StartAsSolo (26428):** MethodSpec 7739 selects
+`AsyncTaskMethodBuilder<bool>.Start<FusionNetworkManager.<StartAsSolo>d__42>`
+at `0x18055c36e`. RDX borrows the 48-byte state machine at RSP+0x38; RCX
+borrows its 24-byte builder field at RSP+0x40. The wrapper initializes the
+closed builder class, copies the `Create` result (7789), captures `this`,
+and stores state −1. After `Start`, MethodSpec 7795 reads `Task` from
+RSP+0x40 again and RAX survives to RET. The emitted wrapper compiled
+with adapters for the suffixed generic names over the real .NET builder.
+It returned the same task observed inside MoveNext for pending, synchronous
+true/false, and faulted completions. Only FusionNetworkManager.cs changed;
+the 503-file census remains 391 shared calls and 3,167 `object objN`.
+Report: `work/shift_solo_task_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;

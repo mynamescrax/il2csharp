@@ -12,7 +12,7 @@ from il2cpp.this_home import saved_this_reloads
 from il2cpp.captured_home import captured_receiver
 from il2cpp.list_append import fold_terminal_appends
 from il2cpp.dictionary_ctor import dictionary_constructor_body
-from il2cpp.async_start import async_void_start
+from il2cpp.async_start import async_task_start, async_void_start
 from il2cpp.cleanup_box import fold_boxed_cleanup
 from il2cpp.parent_lookup import fold_lookup_list_tail
 from il2cpp.iterator_ctor import fold_iterator_creation
@@ -351,7 +351,7 @@ class _BuildMixin:
         self._prune_nonreturning(blocks)
         L._array_allocation_loop_guard = self._allocation_needs_loop_guard(blocks)
         self._analyze(m, td, blocks, bmap)
-        kickoff = async_void_start(L,m,td,insns,self.eh)
+        kickoff = async_void_start(L,m,td,insns,self.eh) or async_task_start(L,m,td,insns,self.eh)
         if kickoff is not None: return kickoff
         dictionary = dictionary_constructor_body(L,m,td,insns,self.eh)
         if dictionary is not None: return dictionary
