@@ -2,7 +2,8 @@
 import re
 
 from il2cpp.binary import PE
-from il2cpp.copied_getter import _copies_prefix, _prefix_getter
+from il2cpp.copied_getter import _copies_prefix, _prefix_getter, _sp_offset
+from il2cpp.module_curve import fixed_frame
 from il2cpp.metadata import source_params
 from il2cpp.names import safe_ident
 from il2cpp.prelude import HAVE_ICED
@@ -103,6 +104,34 @@ def _lifetime_alias(lift,target,owner):
         return matches.get('remainingLifetime')
 
 
+def _spilled_setup(seq,base,index,stride,frame):
+    """Track the element address independently of the scheduling of a second
+    vector's split 8+4 byte spill. Both the spill and the 12-byte sret must
+    be complete, disjoint locals in the same verified frame."""
+    if (not frame or base not in _SAVED or not RegisterExt.is_gpr32(index) or
+            RegisterExt.full_register(index) not in _SAVED or RegisterExt.full_register(index)==base or
+            len(seq)!=8 or any(a.next_ip!=b.ip for a,b in zip(seq,seq[1:]))):return None
+    bias,limit,_=frame
+    extended=None;scaled=header=array=zero=False;out=lo=hi=None
+    for i in seq:
+        if i.has_segment_prefix or i.has_lock_prefix or i.has_rep_prefix or i.has_repne_prefix or i.memory_index!=R.NONE:return None
+        if i.mnemonic==M.MOVSXD and i.op1_register==index and i.op0_register in (R.RAX,R.R9,R.R10,R.R11) and extended is None:
+            extended=i.op0_register
+        elif (i.mnemonic==M.IMUL and not scaled and extended is not None and i.op0_register==R.RDX and
+              i.op1_register==extended and i.op2_kind in (K.IMMEDIATE32TO64,K.IMMEDIATE8TO64) and i.immediate(2)==stride):scaled=True
+        elif i.mnemonic==M.ADD and scaled and i.op0_register==R.RDX:
+            if not header and i.op1_kind in (K.IMMEDIATE32TO64,K.IMMEDIATE8TO64) and i.immediate(1)==0x20:header=True
+            elif not array and i.op1_register==base:array=True
+            else:return None
+        elif not zero and i.mnemonic==M.XOR and i.op0_register==i.op1_register==R.R8D:zero=True
+        elif out is None and i.mnemonic==M.LEA and i.op0_register==R.RCX:out=_sp_offset(i,bias)
+        elif lo is None and i.mnemonic==M.MOVSD and i.op0_kind==K.MEMORY and RegisterExt.is_xmm(i.op1_register):lo=_sp_offset(i,bias)
+        elif hi is None and i.mnemonic==M.MOV and i.op0_kind==K.MEMORY and RegisterExt.is_gpr32(i.op1_register):hi=_sp_offset(i,bias)
+        else:return None
+    if (scaled and header and array and zero and None not in (hi,lo,out) and hi==lo+8 and 32<=min(out,lo) and
+            max(out,lo)+12<=limit and (lo+12<=out or out+12<=lo)):return out
+
+
 def indexed_particle(lift, ins, regs):
     il=lift.il
     if (not HAVE_ICED or not isinstance(getattr(il,'bin',None),PE) or not il.bin.is64 or
@@ -134,13 +163,24 @@ def indexed_particle(lift, ins, regs):
             not regs[2] or regs[2]._unk or regs[2].text!='0'):
         return None
     elem=il.type_from_ptr(arr.ty[0]); key=il._closed_type_key(elem)
-    if not elem or key!=(0x11,elem[0],0) or not 0<=elem[0]<len(il.meta.typedefs) or il.typedef_full(elem[0])!='UnityEngine.ParticleSystem.Particle':
+    if not elem or key!=(0x11,elem[0],0) or not 0<=elem[0]<len(il.meta.typedefs):
         return None
     owner=il.meta.typedefs[elem[0]]; stride=il.value_type_size(owner.index)
-    if (not owner.is_valuetype or owner.generic_container!=-1 or not stride or stride<12 or
-            not _setup(b.insns[:j],base,idx,stride,setter)):
-        return None
+    if not owner.is_valuetype or owner.generic_container!=-1 or not stride or stride<12:return None
+    if setter and il.typedef_full(owner.index)!='UnityEngine.ParticleSystem.Particle':return None
     method=lift._current_method
+    receiver=f'{arr.text}[{index.text}]'
+    if not _setup(b.insns[:j],base,idx,stride,setter):
+        if setter or b.insns[0].mnemonic!=M.MOVSXD:return None
+        frame=fixed_frame(lift,method,lift._blocks,lift._ref_array_pads,immediate=True,extended_saves=True)
+        buf=_spilled_setup(b.insns[:j],base,idx,stride,frame);output=regs[0]
+        if (buf is None or not output or output.kind!='ptr' or getattr(output,'_stack_offset',None)!=lift.rsp_delta+buf or
+                -lift.rsp_delta!=frame[2] or getattr(dict.get(lift.regs,'RBP'),'_stack_offset',None)!=frame[0]-frame[2]):return None
+        from il2cpp.array_origin import array_origin
+        origin=array_origin(lift,lift._blocks,b.preds[0],base,through=ins.ip)
+        if not origin or il._closed_type_key(origin)!=il._closed_type_key(arr.ty):return None
+        hit=_prefix_getter(lift,target,owner,receiver)
+        return (False,*hit) if hit else None
     if not 0<=method.return_type<len(il.types):
         return None
     first=int(not method.is_static)+int(il.returns_sret(il.types[method.return_type]))
@@ -148,7 +188,6 @@ def indexed_particle(lift, ins, regs):
               0<=p.type<len(il.types) and il._closed_type_key(il.types[p.type])==il._closed_type_key(arr.ty)]
     if len(incoming)!=1 or not _entry_copy(lift._blocks,b.preds[0],base,getattr(R,incoming[0])):
         return None
-    receiver=f'{arr.text}[{index.text}]'
     if setter:
         mi=_lifetime_alias(lift,target,owner)
         return (True,mi,receiver) if mi is not None else None

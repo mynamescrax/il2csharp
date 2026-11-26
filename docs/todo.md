@@ -1246,6 +1246,30 @@ Only `InventoryManager.cs` changed in the strict 503-file rebuild: 379 → 367
 shared markers (63 addresses) and 3,144 → 3,136 untyped locals. Report:
 `work/shift_out_point_census.json`.
 
+**Indexed particle positions:** At `0x1805812fc` and `0x1805814bc` in
+`ParticleCollisionSpawner.OnParticleCollision`, RDI holds the freshly
+allocated `ParticleSystem.Particle[]` passed to `GetParticles`. The
+unsigned length check uses EBX, and RDX then receives the array data address
+plus that index times the metadata element size (132 bytes). RCX points to a
+separate 12-byte result. Of the nine owners at the shared address, the
+matching accessor on this element type is `Particle.position` (MethodDef
+127967). The nearby `ParticleCollisionEvent.intersection` calls share the
+same address but have a different receiver. The analysis checks allocation
+identity across loop edges, element stride, bounds and non-overlapping
+stack copies; it does not infer a property from the shared address alone.
+
+The next call consumes the fresh position and the saved intersection.
+At both sites the latter's XY and Z come from the same earlier getter and
+survive in nonvolatile registers. The helper at `0x1804fe6e0` matches the
+entire 194-byte Win64 body and unwind record of `Vector3.Distance`
+(MethodDef 55788) after relocation and metadata-init guard normalization.
+The compiled getter and comparison slices checked array identity, index,
+all three coordinates, null/bounds/getter exceptions, threshold equality
+and NaN. This covers the reads and predicates, not the entire loop.
+The strict 503-file rebuild changed only `ParticleCollisionSpawner.cs`:
+367 → 365 shared markers (63 addresses) and 3,136 → 3,133 untyped locals.
+Report: `work/shift_array_position_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;

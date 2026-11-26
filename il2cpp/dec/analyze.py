@@ -25,6 +25,7 @@ from il2cpp.reparent import bind_array_operand, hierarchy_sites
 from il2cpp.material_setter import assignment as material_assignment, material_sites, snapshot as material_snapshot
 from il2cpp.inline_task import inline_tasks, emit_kickoff
 from il2cpp.joined_sret import joined_srets, copied_argument
+from il2cpp.indexed_binary import binary_sites, binary_use, echo_at, store_value
 from il2cpp.parent_lookup import parent_lookup_sites
 
 class _AnalyzeMixin:
@@ -57,6 +58,9 @@ class _AnalyzeMixin:
         (L._component_lookups,L._material_sites,L._material_captures,L._material_reads) = material_sites(L,m,blocks,self._pad_bids)
         L._component_lookups.update(L._parent_lookup_sites)
         L._snapshot_srets, packed_loads, snapshot_getters = snapshot_plans(L, td, blocks, self._pad_bids)
+        binary_reads,binary_stores,binary_uses=binary_sites(L,m,blocks,self._pad_bids)
+        L._snapshot_srets.update(binary_reads.values());L._snapshot_srets.update(v[0] for v in binary_uses.values())
+        binary_values={}
         packs, extra_srets = return_plans(L, m, blocks, self._pad_bids, snapshot_getters)
         L._snapshot_srets.update(extra_srets)
         L._ref_array_pads = self._pad_bids
@@ -71,6 +75,7 @@ class _AnalyzeMixin:
         capture = getattr(self, '_captured_receiver', None)
 
         def fresh_regs(counting):
+            binary_values.clear()
             kickoff_values.clear()
             L._ref_array_loads = {}
             L._ref_array_elements = set()
@@ -135,6 +140,7 @@ class _AnalyzeMixin:
             copied_until = -1
             receiver_stores = {}
             joined_echo = None
+            finish_spill = None
             packed_homes = {}
             packed_return = {}
             carried = jcc_fallthrough_flags.get(b.bid)
@@ -165,6 +171,20 @@ class _AnalyzeMixin:
                     L.regs['RDI'] = Expr(snapshot, capture[2], 'obj')
                     continue
                 mn = ins.mnemonic
+                if ins.ip in binary_reads:
+                    origin=binary_reads[ins.ip];value=echo_at(L,origin)
+                    if value:binary_values[origin]=value
+                if ins.ip in binary_stores:
+                    end,src,off=binary_stores[ins.ip]
+                    if src in binary_values:
+                        finish_spill=end,off,binary_values[src]
+                        continue
+                if finish_spill and ins.ip==finish_spill[0]:
+                    store_value(L,ins.ip,*finish_spill[1:]);finish_spill=None
+                    continue
+                if ins.ip in binary_uses and binary_use(L,ins,binary_uses[ins.ip],binary_values):
+                    copied_until=idx+7
+                    continue
                 if ins.ip in result_copies:
                     echo=dict.get(L.regs,'RAX')
                     if (echo and echo.kind=='ptr' and re.fullmatch(r'&t\d+',echo.text) and

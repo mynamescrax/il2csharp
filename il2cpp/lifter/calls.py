@@ -3425,6 +3425,7 @@ class _CallsMixin:
             # single field is a 64-byte struct has no offset >= 0x18).
             self.regs['RAX'] = Expr('&%s' % buf, rty, 'ptr')
             self._last_sret = ins.ip, dict.get(self.regs, 'RAX')
+            self._last_accessor_sret = self._last_sret if copied_getter is not None else None
             self.regs['RAX']._stack_offset = stack_address
             return
 
