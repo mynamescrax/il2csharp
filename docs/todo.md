@@ -1366,6 +1366,25 @@ offset `0x1c` of that live element: `hits[i].distance`. Keep the indexed loop;
 the two getters. The nearest-hit join, mixed ray arguments and backface-flag
 restoration are separate open defects. Scalar snapshot batch: `ef8a9d5`.
 
+**Win64 stack literal arguments.** The virtual `Hit` call at `0x18060afa3`
+spills byte `1` and the metadata StringLiteral `"Bludgeon"` to the fifth
+and sixth ABI positions. It now renders `false, true, "Bludgeon"` rather
+than `false, 1, obj24`. A second caller with the same slot passes
+`true, false, "Normal"`. Literals need a reaching store of the appropriate
+width in the same basic block; partial pointer writes, overlaps and unbounded
+memory writes decline. The compiled call slices dispatch to an override
+with the supplied XYZ. `Hittable.DealStunDamage` still needs a proof for the
+companion MethodInfo load and long-form virtual receiver; this test does
+not compile either enclosing method. Indexed hit batch: `694c9f5`.
+
+**Reading recovery annotations:** `/* shared icall */` accompanies an
+equivalent public wrapper when the managed names share code but the wrapper
+and runtime resolver signature identify the operation (see `shared_icall.py`
+and `ref_vectors.py`). It is a comment on a recovered call, not a throwing
+`sub_…/*shared body,…*/` stub or a shared-marker census entry. Cache-cell
+signatures are inferred statically; conflicting observations at one cell
+are a separate validation concern.
+
 **Whole-method behavior gate: `GasCollisionSpawner.OnParticleCollision`.**
 At `0x1806efcda` the RPC takes two different by-value arguments: the saved
 intersection (XMM6 + EBX, 8+4 bytes copied through RDX) and the full 16-byte

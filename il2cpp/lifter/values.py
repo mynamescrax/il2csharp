@@ -103,6 +103,8 @@ class _ValuesMixin:
             out.extend(['_'] * (gpr_want - len(out)))
         if want > 4:
             out.extend(self._stack_arg_texts(want - 4))
+            from il2cpp.stack_literal import stack_literal_args
+            stack_literal_args(self,m2,want-m2.param_count,out)
         xmm = getattr(self, '_xmm_pending', None) or []
         ri = 0 if m2.is_static else 1      # RCX is the receiver when instance
         if self.il.returns_sret(rty):
