@@ -1158,6 +1158,19 @@ also gained a concrete kickoff. The strict 503-file census fell from 391 to
 385 shared calls (64 addresses) and 3,167 to 3,155 `object objN` across five
 changed files. Report: `work/shift_leave_task_census.json`.
 
+**Inlined kickoff inside a protected branch:** `AbortStartGame.MoveNext`
+loads its manager at `0x18056b1dc`, before either log callback. The shared
+call at `0x18056b2f4` writes a 24-byte builder. The complete copy supplies
+the receiver of `Start<…CleanUpRunner…>` (MethodSpec 151388); the getter at
+`0x18056b34f` uses that same receiver. The recovered branch retains the
+manager snapshot and takes the awaiter from the task returned after Start.
+The compiled capture, kickoff and awaiter slice used the original manager
+and task in synchronous, suspended and faulted executions; a throwing log
+prevented Start. This test instruments the child MoveNext; it does not
+compile the entire enclosing method. Only `FusionNetworkManager.cs` changed
+in the strict 503-file tree: 385 → 384 shared markers (64 addresses),
+3,155 → 3,153 untyped locals. Report: `work/shift_nested_kickoff_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;

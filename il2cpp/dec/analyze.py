@@ -23,6 +23,7 @@ from il2cpp.curve_join import joined_updates
 from il2cpp.curve_bridge import prefixes_before_join
 from il2cpp.reparent import bind_array_operand, hierarchy_sites
 from il2cpp.material_setter import assignment as material_assignment, material_sites, snapshot as material_snapshot
+from il2cpp.inline_task import inline_tasks, emit_kickoff
 from il2cpp.parent_lookup import parent_lookup_sites
 
 class _AnalyzeMixin:
@@ -39,6 +40,8 @@ class _AnalyzeMixin:
         # CFG (reachable-from-the-declaration check); blocks[bid] and
         # Block.bid line up by construction
         L._blocks = blocks
+        kickoffs,owner_loads = inline_tasks(L,m,td,blocks,self.eh)
+        kickoff_values = {}
         L._array_module_frames = {}
         L._single_array_allocs, L._single_array_counts = array_fill_sites(L, blocks, self._pad_bids,m)
         L._signed_module_slots = signed_module_slots(L, blocks)
@@ -66,6 +69,7 @@ class _AnalyzeMixin:
         capture = getattr(self, '_captured_receiver', None)
 
         def fresh_regs(counting):
+            kickoff_values.clear()
             L._ref_array_loads = {}
             L._ref_array_elements = set()
             replaced_selects.clear()
@@ -156,6 +160,18 @@ class _AnalyzeMixin:
                     L.regs['RDI'] = Expr(snapshot, capture[2], 'obj')
                     continue
                 mn = ins.mnemonic
+                if ins.ip in owner_loads:
+                    (field,ty),dst=owner_loads[ins.ip];base=dict.get(L.regs,reg_name(ins.memory_base))
+                    if base and not base._unk and base.text=='this' and base.ty and base.ty[0]==td.index:
+                        name=L.new_var();L._var_types[name]=ty
+                        L.emit(ins.ip,'var %s = %s;'%(name,acc_get(field)),None)
+                        value=Expr(name,ty,'obj');L.regs[dst]=value;kickoff_values[ins.ip]=value
+                        continue
+                if ins.ip in kickoffs:
+                    end=emit_kickoff(L,ins.ip,kickoffs[ins.ip],kickoff_values)
+                    if end is not None:
+                        copied_until=end
+                        continue
                 if vector_getter or dec_getter:
                     if mn == Mnemonic.RET:
                         b.term=('ret',); b.ret=dec_getter or vector_getter[0]
