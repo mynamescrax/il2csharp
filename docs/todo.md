@@ -1066,6 +1066,23 @@ reset and the base call on a cleanup exception. Only UIDService.cs changed
 in the strict 503-file rebuild. Shared calls 392 → 391, `object objN` still
 3,185. Report: `work/shift_uid_tail_census.json`.
 
+**UIDService._fuidToPlatformID (26515):** At `0x180594b2f` MethodSpec
+87461 selects `NetworkDictionary<NetworkString<_64>,NetworkString<_64>>`'s
+four-argument constructor (60732, registered entry `0x180f64140`). RCX is
+the zero-initialized 64-byte result, RDX the original `int*` from `Ptr`,
+R8D the capacity 7, R9 the first reader result, `[rsp+0x20]` the second,
+and `[rsp+0x28]` the closed MethodInfo. The null-pointer arm throws
+`InvalidOperationException` with the full metadata literal before reading
+either factory. The codegen reader is one TypeDef with no generic container;
+its literal angle brackets now form part of one C# identifier in declarations
+and uses. A single-assembly Roslyn fixture compiled the emitted getter and
+tested distinct readers, replacement of `Ptr` during the first lookup, a
+null value reader, and exceptions at the guard, either reader and the ctor.
+This test retains Fusion's internal `Ptr` field in the same compilation.
+The strict rebuild changed only UIDService.cs and the codegen reader file.
+Shared markers remain 391 (the bogus conversion already had a name);
+`object objN` fell 3,185 → 3,184. Report: `work/shift_uid_dictionary_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;

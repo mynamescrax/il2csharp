@@ -7,6 +7,7 @@ from il2cpp.metadata import ImageDef, MethodDef, TypeDef, source_params
 from il2cpp.names import repr_f32, repr_f64, safe_ident, sanitize, sanitize_qualifier
 from il2cpp.runtime.core import Il2Cpp
 from il2cpp.runtime.meta import meta_lit_repr
+from il2cpp.codegen_ident import render_codegen_idents
 from il2cpp.text import MANGLED_IDENT_RX, reindent
 from il2cpp import rawaddr
 from il2cpp.pinvoke import dllimport_attribute, stub_arguments
@@ -1605,6 +1606,7 @@ class Emitter:
             if self.verbose:
                 print('warning: type emission failed %s: %s' % (td.name, ex), file=sys.stderr)
             buf = ['// emit failed for %s: %s' % (td.name, ex)]
+        buf = render_codegen_idents(self.il, ns, buf)
         subs = self._stub_collect('\n'.join(buf))
         tr = UsingTracker(self.il)
         for l in buf:
