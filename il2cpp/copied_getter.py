@@ -5,6 +5,8 @@ from il2cpp.awaiter import _spec_entry
 from il2cpp.binary import PE
 from il2cpp.expr import Expr
 from il2cpp.module_curve import fixed_frame
+from il2cpp.module_getter import _accessor, _receiver_use
+from il2cpp.shared_action import _raises_on_null
 from il2cpp.prelude import HAVE_ICED
 from il2cpp.sret_copy import _own_field
 from il2cpp.text import reg_name, sdisp
@@ -226,7 +228,7 @@ def _prefix_getter(lift,target,owner,receiver):
     return matches[0] if len(matches)==1 else None
 
 
-def array_fill_sites(lift, blocks, pads):
+def array_fill_sites(lift, blocks, pads, method=None):
     """One allocation followed by one fill before a loop. Both results
     are saved in nonvolatile registers; they must not be re-evaluated by
     a loop phi. Consider only a straight entry prefix with no back edge."""
@@ -243,7 +245,7 @@ def array_fill_sites(lift, blocks, pads):
         k = todo.pop()
         if 0<=k<len(blocks) and k not in reached:
             reached.add(k); todo.extend(blocks[k].succs)
-    seen=set()
+    seen=set(); candidates=[]
     while cur not in seen:
         seen.add(cur); b=blocks[cur]
         if len(b.succs)!=1 or b.succs[0] not in reached:
@@ -251,7 +253,17 @@ def array_fill_sites(lift, blocks, pads):
         nxt=b.succs[0]; use=blocks[nxt]
         if (set(use.preds)&reached)!={cur} or nxt in seen:
             break
-        cur=nxt; seq=b.insns
+        cur=nxt; candidates.append((b,use,False))
+    # A size getter and allocation can also be reached through a conditional
+    # before a loop. The fill block must be dominated by this allocation,
+    # with no path from the fill back to the allocation on a later iteration.
+    for bid in sorted(reached-seen):
+        b=blocks[bid]
+        if len(b.succs)==1 and len(b.insns)>=13 and b.insns[-8].mnemonic==M.CALL:
+            use=blocks[b.succs[0]]
+            if use.preds==[bid]: candidates.append((b,use,True))
+    for b,use,branched in candidates:
+        seq=b.insns
         if len(seq)<7 or len(use.insns)<6:
             continue
         klass,dim,alloc,recv,save,test,null=seq[-7:]
@@ -276,6 +288,30 @@ def array_fill_sites(lift, blocks, pads):
                 not 0<=ps[0].type<len(il.types) or il._closed_type_key(il.types[ps[0].type])!=il._closed_type_key(ty) or
                 not 0<=m.return_type<len(il.types) or il._closed_type_key(il.types[m.return_type])!=(8,0)):
             continue
+        biased=None
+        if method is not None and len(seq)>=13 and m.name=='GetParticles' and il.typedef_full(m.declaring)=='UnityEngine.ParticleSystem':
+            j=len(seq)-12; wrapper=seq[j]; read=_receiver_use(seq,j)
+            if (wrapper.mnemonic==M.CALL and wrapper.op0_kind==K.NEAR_BRANCH64 and read and read[0].ip==seq[-8].ip and
+                    read[1][0]==R.RBP and read[2]=={R.RCX:read[1]} and read[3]=={'RDX'} and _raises_on_null(lift,null)):
+                ids=il.addr_candidates.get(read[0].near_branch_target,())
+                if len(ids)==1 and ids[0][0]=='method':
+                    cap=il.meta.methods[ids[0][1]]
+                    if (lift._accessor_prop(cap.index)==('get','maxParticles',0) and
+                            il._closed_type_key(il.types[cap.return_type])==(8,0) and
+                            _accessor(lift,wrapper.near_branch_target,m.declaring,cap.declaring)):
+                        frame=fixed_frame(lift,method,blocks,pads,immediate=True,extended_saves=True)
+                        if frame:
+                            bias,size,entry=frame; off=bias+read[1][1]
+                            if (0x20<=off<=size-8 or off-entry in (8,16,24,32)) and off%8==0:
+                                biased=wrapper.ip,frame
+        if branched:
+            if not biased: continue
+            visited=set(); todo=[use.bid]
+            while todo:
+                n=todo.pop()
+                if n in visited: continue
+                visited.add(n); todo.extend(blocks[n].succs)
+            if b.bid in visited: continue
         # The filled array and count have distinct surviving homes. The
         # compiler may clear a separate register before saving the count.
         for x in use.insns[3:6]:
@@ -285,6 +321,7 @@ def array_fill_sites(lift, blocks, pads):
                 break
             if x.mnemonic == M.MOV and x.op1_register == R.EAX:
                 allocs.add(alloc.ip); counts[fill.ip]=mi
+                if biased: lift._array_module_frames[biased[0]]=biased[1]
                 break
             if x.mnemonic != M.XOR or x.op0_register != x.op1_register:
                 break

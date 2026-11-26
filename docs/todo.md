@@ -888,6 +888,19 @@ store. Across 30 changed files, `object objN` fell 3,271 → 3,208; unresolved
 calls remained 412. Strict lift, syntax and brace checks passed.
 Report: `work/shift_allocation_sink_census.json`.
 
+**Collision particle arrays:** In both spawners' `OnParticleCollision`, the
+one-reference module result is spilled to a biased RBP home and immediately
+borrowed by `MainModule.get_maxParticles`. The unwind frame identifies the
+actual slot; the allocated array then reaches `GetParticles` on the non-null
+path. Bind the allocation and count once even on a conditional path before
+a loop, rejecting a back edge to the allocation. The compiled slices read
+capacity from the original system, filled the same three-element array via
+a replacement system, and stopped before the fill if the size getter threw.
+Only GasCollisionSpawner.cs and ParticleCollisionSpawner.cs changed: six
+shared markers and fourteen `object objN` declarations removed. Remaining:
+406 and 3,194 respectively. All 503 files passed syntax and brace checks.
+Report: `work/shift_collision_arrays_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;

@@ -3814,7 +3814,7 @@ class _CallsMixin:
                     shared_getter(self, target, args, gpr_exprs, xmm_exprs) or
                     shared_coroutine(self, target, args, gpr_exprs, xmm_exprs) or call)
         elif mi is None and target and short is None and '/*shared body,' in name:
-            module = module_getter(self, ins, gpr_exprs, xmm_exprs)
+            module = module_getter(self, ins, gpr_exprs, xmm_exprs, biased_frame=getattr(self,'_array_module_frames',{}).get(ins.ip))
             if module is not None:
                 call, rty = module
                 shared_rty = True

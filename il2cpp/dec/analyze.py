@@ -38,7 +38,8 @@ class _AnalyzeMixin:
         # CFG (reachable-from-the-declaration check); blocks[bid] and
         # Block.bid line up by construction
         L._blocks = blocks
-        L._single_array_allocs, L._single_array_counts = array_fill_sites(L, blocks, self._pad_bids)
+        L._array_module_frames = {}
+        L._single_array_allocs, L._single_array_counts = array_fill_sites(L, blocks, self._pad_bids,m)
         L._signed_module_slots = signed_module_slots(L, blocks)
         module_frame = probed_frame(L, m, blocks, self._pad_bids)
         L._converted_modules = conversion_uses(L,blocks,fixed_frame(L,m,blocks,self._pad_bids,immediate=True))
