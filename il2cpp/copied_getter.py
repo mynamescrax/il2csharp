@@ -1,4 +1,4 @@
-"""A shared prefix-load getter applied to a by-value struct list element."""
+"""A shared field-copy getter applied to a by-value struct list element."""
 import re
 
 from il2cpp.awaiter import _spec_entry
@@ -69,9 +69,23 @@ def _copied_home(seq, source, size, bias=None):
 
 def _element_snapshot(lift, seq, p, echo, bias=None):
     il = lift.il
-    if p < 4 or il.meta.version != 31:
+    if p < 4:
         return None
-    slot,home,index,recv,call = seq[p-4:p+1]
+    end=p
+    # A caller may finish saving the previous sret's XY and Z *after* it
+    # has prepared all four arguments for the next indexer. These reads
+    # remain in the lift. Neither may redefine an argument or the parked
+    # list receiver used below as a witness of its closed type.
+    if p>=6:
+        xy,z=seq[p-2:p]
+        if (xy.mnemonic==M.MOVSD and R.XMM6<=xy.op0_register<=R.XMM15 and z.mnemonic==M.MOV and
+                RegisterExt.is_gpr32(z.op0_register) and RegisterExt.full_register(z.op0_register) in (R.RBX,R.RDI,R.RSI,R.R12,R.R13,R.R14,R.R15) and
+                all(i.op1_kind==K.MEMORY and i.memory_base==R.RAX and i.memory_index==R.NONE and not i.has_segment_prefix for i in (xy,z)) and
+                xy.memory_displacement==0 and z.memory_displacement==8):end-=2
+    slot,home,index,recv=seq[end-4:end];call=seq[p]
+    if (any(a.next_ip!=b.ip for a,b in zip(seq[end-4:p],seq[end-3:p+1])) or
+            any(i.has_segment_prefix or i.has_lock_prefix or i.has_rep_prefix or i.has_repne_prefix or i.memory_index!=R.NONE for i in seq[end-4:p+1]) or
+            end!=p and RegisterExt.full_register(seq[p-1].op0_register)==recv.op1_register):return None
     if (slot.mnemonic != M.MOV or slot.op0_register != R.R9 or slot.memory_base != R.RIP or slot.has_segment_prefix or
             home.mnemonic != M.LEA or home.op0_register != R.RCX or
             index.mnemonic != M.MOV or index.op0_register != R.R8D or not RegisterExt.is_gpr32(index.op1_register) or
@@ -143,14 +157,15 @@ def mixed_copy_stores(lift, seq, first):
     if not last or first<1 or seq[first-1].ip!=last[0] or dict.get(lift.regs,'RAX') is not last[1]:
         return {}
     j=next((k for k in range(first,min(first+16,len(seq))) if seq[k].mnemonic==M.CALL),None)
-    if (j is None or seq[j].op0_kind!=K.NEAR_BRANCH64 or not _copies_prefix(lift.il,seq[j].near_branch_target) or
-            not any(i.memory_base==R.RBP for i in seq[first:j])):
+    if (j is None or seq[j].op0_kind!=K.NEAR_BRANCH64 or not any(i.memory_base==R.RBP for i in seq[first:j])):
         return {}
+    off=_copy_offset(lift.il,seq[j].near_branch_target)
+    if off is None:return {}
     proof=_snapshot_copy(lift,seq,first-1,j,last[1])
     if not proof:
         return {}
     owner,source,dest,result,bias=proof
-    if bias is None or not _prefix_getter(lift,seq[j].near_branch_target,owner,last[1].text[1:]):
+    if bias is None or not _field_getter(lift,seq[j].near_branch_target,owner,last[1].text[1:],off):
         return {}
     stores=[i for i in seq[first:j] if i.op0_kind==K.MEMORY]
     name=lift.slot_var(dest); ty=last[1].ty
@@ -183,7 +198,7 @@ def copied_struct_getter(lift, ins, regs):
     RCX is the destination for the 12-byte return, not the receiver."""
     il = lift.il
     if (not HAVE_ICED or not isinstance(getattr(il,'bin',None),PE) or not il.bin.is64 or
-            ins.op0_kind != K.NEAR_BRANCH64 or len(regs)<3 or not _copies_prefix(il,ins.near_branch_target)):
+            ins.op0_kind != K.NEAR_BRANCH64 or len(regs)<3):
         return None
     b = getattr(getattr(lift,'out',None),'block',None); last = getattr(lift,'_last_sret',None)
     if not b or not last or dict.get(lift.regs,'RAX') is not last[1]:
@@ -191,6 +206,9 @@ def copied_struct_getter(lift, ins, regs):
     seq=b.insns; echo=last[1]
     j=next((k for k,i in enumerate(seq) if i.ip==ins.ip),-1)
     p=next((k for k in range(max(0,j-16),j) if seq[k].ip==last[0]),-1)
+    if p<4:return None
+    off=_copy_offset(il,ins.near_branch_target)
+    if off is None:return None
     proof=_snapshot_copy(lift,seq,p,j,echo)
     if not proof:
         return None
@@ -198,7 +216,7 @@ def copied_struct_getter(lift, ins, regs):
     if (any(not r or r.kind!='ptr' or getattr(r,'_stack_offset',None)!=lift.rsp_delta+n for r,n in zip(regs,(result,dest))) or
             not regs[2] or regs[2]._unk or regs[2].text!='0'):
         return None
-    return _prefix_getter(lift,ins.near_branch_target,owner,echo.text[1:])
+    return _field_getter(lift,ins.near_branch_target,owner,echo.text[1:],off)
 
 
 def _copies_prefix(il,target):
@@ -206,8 +224,20 @@ def _copies_prefix(il,target):
 
 
 def _prefix_getter(lift,target,owner,receiver):
+    return _field_getter(lift,target,owner,receiver,0)
+
+
+def _copy_offset(il,target):
+    if _copies_prefix(il,target):return 0
+    from il2cpp.field_slice import field_offset
+    return field_offset(il,target)
+
+
+def _field_getter(lift,target,owner,receiver,off):
     il = lift.il
-    field = _own_field(il,owner,0x10,12)
+    size=il.value_type_size(owner.index)
+    if not size or not 0<=off<=size-12:return None
+    field = _own_field(il,owner,0x10+off,12)
     if not field or il._type_enum(field[1])!=0x11:
         return None
     matches=[]

@@ -321,14 +321,15 @@ def test_particle_collision_spawner_reads_indexed_event(body,tmp_path):
     from dotnet_case import run_case
 
     lifted=body('ParticleCollisionSpawner','OnParticleCollision',0x180580f90)
-    arms=re.findall(r'((\w+) = (\w+)\[(\w+)\];\s+(\w+) = \2;\s+UnityEngine\.Vector3 (\w+) = \2\.intersection /\* shared getter \*/;)',lifted)
+    # A spill becomes dead once all consumers use typed event snapshots.
+    arms=re.findall(r'((\w+) = (\w+)\[(\w+)\];\s+(?:(\w+) = \2;\s+)?UnityEngine\.Vector3 (\w+) = \2\.intersection /\* shared getter \*/;)',lifted)
     assert len(arms)==2 and lifted.count('.intersection /* shared getter */')==2
     members=[]
     for n,(code,event,collection,index,copy,point) in enumerate(arms):
         decl=re.search(r'UnityEngine\.ParticleCollisionEvent '+event+';',lifted)
-        spill=re.search(r'object '+copy+r'(?: = 0f)?;',lifted)
-        assert decl and spill
-        members.append(f'public static Vector3 Read{n}(Events {collection},int {index}) {{\n'+decl[0]+'\n'+spill[0]+'\n'+code+'\nreturn '+point+';\n}')
+        spill=re.search(r'object '+copy+r'(?: = 0f)?;',lifted) if copy else None
+        assert decl and (not copy or spill)
+        members.append(f'public static Vector3 Read{n}(Events {collection},int {index}) {{\n'+decl[0]+'\n'+(spill[0] if spill else '')+'\n'+code+'\nreturn '+point+';\n}')
     runner=tmp_path/'runner';runner.mkdir()
     (runner/'Program.cs').write_text('''using System;
 using System.Collections.Generic;

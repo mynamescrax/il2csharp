@@ -25,7 +25,7 @@ from il2cpp.reparent import bind_array_operand, hierarchy_sites
 from il2cpp.material_setter import assignment as material_assignment, material_sites, snapshot as material_snapshot
 from il2cpp.inline_task import inline_tasks, emit_kickoff
 from il2cpp.joined_sret import joined_srets, copied_argument
-from il2cpp.indexed_binary import binary_sites, binary_use, echo_at, store_value
+from il2cpp.indexed_binary import binary_sites, binary_use, echo_at, store_value, unary_argument
 from il2cpp.parent_lookup import parent_lookup_sites
 
 class _AnalyzeMixin:
@@ -141,6 +141,7 @@ class _AnalyzeMixin:
             receiver_stores = {}
             joined_echo = None
             finish_spill = None
+            unary_store = None
             packed_homes = {}
             packed_return = {}
             carried = jcc_fallthrough_flags.get(b.bid)
@@ -171,6 +172,13 @@ class _AnalyzeMixin:
                     L.regs['RDI'] = Expr(snapshot, capture[2], 'obj')
                     continue
                 mn = ins.mnemonic
+                if mn==Mnemonic.XOR and idx and b.insns[idx-1].mnemonic==Mnemonic.CALL:
+                    unary_store=unary_argument(L,b.insns,idx)
+                if unary_store and ins.ip==unary_store[0]:
+                    _,off,value=unary_store;store_value(L,ins.ip,off,value)
+                    arg=Expr('&'+value.text,value.ty,'ptr');arg._stack_offset=L.rsp_delta+off
+                    L.regs['RDX']=arg;unary_store=None;copied_until=idx+1
+                    continue
                 if ins.ip in binary_reads:
                     origin=binary_reads[ins.ip];value=echo_at(L,origin)
                     if value:binary_values[origin]=value

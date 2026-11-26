@@ -49,9 +49,9 @@ def _saved_pair(byip,pred,lo,hi):
         p=i.ip
 
 
-def _echo_copy(seq,frame):
-    """Return destination offsets of the first and second arguments. Require
-    every byte of the first to be copied from the *echoed* sret address."""
+def _echo_copy(seq,frame,*,into_second=False):
+    """Return stack offsets for RCX and RDX. Require the selected home to
+    receive all 12 bytes of the *echoed* sret, not just its first lane."""
     zero,other,first,lo,hi,store,tail,call=seq
     if (any(i.has_segment_prefix or i.has_lock_prefix or i.memory_index!=R.NONE for i in seq) or
             zero.mnemonic!=M.XOR or zero.op0_register!=R.R8D or zero.op1_register!=R.R8D or
@@ -61,7 +61,8 @@ def _echo_copy(seq,frame):
             store.mnemonic!=M.MOVSD or store.op1_register!=lo.op0_register or tail.mnemonic!=M.MOV or tail.op1_register!=R.EAX or
             call.mnemonic!=M.CALL or call.op0_kind!=K.NEAR_BRANCH64):return None
     a,b,c,d=(_sp_offset(i,frame[0]) for i in (first,other,store,tail))
-    if None not in (a,b,c,d) and c==a and d==a+8:return a,b
+    dest=b if into_second else a
+    if None not in (a,b,c,d) and c==dest and d==dest+8:return a,b
 
 
 def binary_sites(lift,method,blocks,pads):
@@ -105,6 +106,31 @@ def store_value(lift,ip,off,value):
     for a,old in lift.stack_map.items():
         if start<=a<start+12:lift.stack_values.pop(old,None)
     lift._stack_store(start,12,value);lift.stack_values[name]=value
+
+
+def unary_argument(lift,seq,j):
+    """A closed static S F(T) after a proven getter. MSVC passes T by
+    value through RDX and borrows a separate RCX home for the new S. The
+    caller may reuse these slots elsewhere; type only this transfer."""
+    if j<1 or j+8>len(seq) or seq[j].op0_register!=R.R8D or seq[j-1].next_ip!=seq[j].ip:return None
+    value=echo_at(lift,seq[j-1].ip);frame=getattr(lift,'_copied_frame',None)
+    if not value or not frame or -lift.rsp_delta!=frame[2] or getattr(dict.get(lift.regs,'RBP'),'_stack_offset',None)!=frame[0]-frame[2]:return None
+    group=seq[j:j+8];homes=_echo_copy(group,frame,into_second=True)
+    if not homes or any(x.next_ip!=y.ip for x,y in zip(group,group[1:])):return None
+    il=lift.il;addr=group[-1].near_branch_target;ids=il.addr_candidates.get(addr,())
+    if len(ids)!=1 or ids[0][0]!='method' or not 0<=ids[0][1]<len(il.meta.methods):return None
+    md=il.meta.methods[ids[0][1]];ps=il.meta.method_params(md)
+    if (md.addr!=addr or not md.is_static or md.generic_container!=-1 or md.param_count!=1 or len(ps)!=1 or
+            not 0<=ps[0].type<len(il.types) or il._closed_type_key(il.types[ps[0].type])!=il._closed_type_key(value.ty) or
+            not 0<=md.return_type<len(il.types)):return None
+    ty=il.types[md.return_type]
+    if not ty or il._closed_type_key(ty)!=(0x11,ty[0],0) or not il.returns_sret(ty):return None
+    width=il._sf_field_size(ty,0);out,arg=homes
+    if not width or width<=0:return None
+    origin=dict.get(lift.regs,'RAX')._stack_offset-lift.rsp_delta
+    ranges=sorted(((out,width),(arg,12),(origin,12)))
+    if any(not 32<=a<=frame[1]-n for a,n in ranges) or any(a+n>b for (a,n),(b,_) in zip(ranges,ranges[1:])):return None
+    return group[5].ip,arg,value
 
 
 def binary_use(lift,ins,plan,values):

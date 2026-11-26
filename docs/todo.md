@@ -1270,6 +1270,31 @@ The strict 503-file rebuild changed only `ParticleCollisionSpawner.cs`:
 367 → 365 shared markers (63 addresses) and 3,136 → 3,133 untyped locals.
 Report: `work/shift_array_position_census.json`.
 
+**Collision normal for `Quaternion.LookRotation`:** The two list reads in
+`ParticleCollisionSpawner.OnParticleCollision` use the same index but return
+distinct 40-byte event snapshots. MethodSpec 68132 binds the second call at
+`0x180581195` to `List<ParticleCollisionEvent>.get_Item`. After the entire
+event is copied, the shared getter at `0x1805811c2` reads bytes 12–23 of its
+receiver. Those are `m_Normal`; the registered property on this owner is
+`ParticleCollisionEvent.normal` (MethodDef 128005). The call at
+`0x1805811e1` passes all 12 bytes by value to `Quaternion.LookRotation`.
+The compiled slice exercises replacement and removal between reads, all
+three normal components, and exception order. The first read still supplies
+`intersection` for the later distance calculation.
+
+The rebuild completed in 13 slices: 6,791 bodies, no failures or fallbacks,
+and all 503 files passed the syntax and brace checks. The rule removed one
+marker from `ParticleCollisionSpawner.cs` and four from `GasCollisionSpawner.cs`.
+Shared markers fell 365 → 360 (63 addresses); untyped locals fell
+3,133 → 3,125. Report: `work/shift_normal_parts_census.json`.
+
+`ThrownObject.OnCollisionEnter` is a separate remaining shape: the unique
+`Collision.contacts` getter at `0x18060adb1` returns `ContactPoint[]`. After
+the null and length checks, three 16-byte loads copy the complete 48-byte
+element zero. `0x18060adf4` reads its `m_Point` at offset 0 and `0x18060ae0d`
+reads its `m_Normal` at offset 12. This calls for an array-element
+proof rather than reusing the list-indexer proof.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;
