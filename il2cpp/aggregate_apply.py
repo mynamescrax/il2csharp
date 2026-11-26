@@ -8,6 +8,7 @@ from il2cpp.copied_getter import _copies_prefix,_sp_offset
 from il2cpp.module_curve import fixed_frame
 from il2cpp.material_setter import _component
 from il2cpp.array_member import element_reads
+from il2cpp.float_setter import float_setters
 from il2cpp.static_getter import guarded_alias,alias_for_slot
 from il2cpp.sret_copy import _own_field
 from il2cpp.shared_action import _raises_on_null
@@ -235,6 +236,7 @@ def application_sites(lift,method,blocks,pads):
             if matched_pair:_additional_reads(lift,method,blocks,pred,actions)
     if actions:_readers(lift,blocks,actions)
     actions.update(element_reads(lift,method,blocks,pads))
+    actions.update(float_setters(lift,method,blocks,pads))
     return actions,fresh,counts
 
 
@@ -253,6 +255,17 @@ def application_step(lift,ins,action,values):
             values[ip]=Expr(e.text[1:],ty,'obj')
         return False
     if op=='low':return args[0] in values
+    if op=='field_value':
+        (name,ty),reg,kind=args;bind(acc_get(name),ty,reg,kind);return True
+    if op=='make_float':
+        fn,ty,lo,hi=args
+        if lo in values and hi in values:
+            expr=f'{fn}({values[lo].text}, {values[hi].text})';clear();bind(expr,ty,'XMM0','float');return True
+    if op=='set_float':
+        ref,value,member,tail=args
+        if ref in values and value in values:
+            lift.emit(ins.ip,f'{values[ref].text}.{member} = {values[value].text} /* shared implementation */;'+(' return;' if tail else ''),None)
+            clear();return True
     if op=='element':
         br,ir,ty,prop,rt,dst=args;a=dict.get(lift.regs,br);idx=dict.get(lift.regs,ir);key=lift.il._closed_type_key
         if (a and idx and not a._unk and not idx._unk and re.fullmatch(r'\w+',a.text or '') and re.fullmatch(r'\w+',idx.text or '') and

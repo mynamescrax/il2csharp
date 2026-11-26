@@ -1416,6 +1416,20 @@ the generated truth-operator signature compile together in
 during callbacks and verify the order through faults, false/null guards,
 and NaN. Icall cache consensus batch: `9cdb8b8`.
 
+**Marshalled float setter.** `ChangePitchPerLoop.ForceChangePitch` previously
+discarded `Random.Range(minPitch,maxPitch)` and passed an undefined `obj1`
+to a tail call. The two MethodDefs at that target have the same native
+receiver and float argument positions. On both cache paths the wrapper
+preserves the receiver and XMM1, marshals the receiver and forwards that
+float to the verified `SetPitch_Injected(IntPtr,Single)` cell. The caller
+loads the receiver before the draw and null-checks it after the draw.
+The complete `ForceChangePitch`, `OnEnable` and `FixedUpdate` methods are
+compiled by `tests/test_game_float_setter.py`. Tests replace the source
+inside `Range`, check the write on the original source and playback on the
+replacement, and inject getter/setter and playback failures. Three shared
+markers removed in this class. The indexed `PlayAudioArray` receiver still
+requires a separate proof. Light fade batch: `b3334ba`.
+
 **Whole-method behavior gate: `GasCollisionSpawner.OnParticleCollision`.**
 At `0x1806efcda` the RPC takes two different by-value arguments: the saved
 intersection (XMM6 + EBX, 8+4 bytes copied through RDX) and the full 16-byte
