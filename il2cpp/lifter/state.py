@@ -1468,6 +1468,10 @@ class _StateMixin:
         self._signed_module_slots = set()
         self._converted_modules = {}
         self._hierarchy_bindings = {}
+        self._material_lookups = {}
+        self._material_sites = {}
+        self._material_captures = {}
+        self._material_reads = {}
         self._reparent_sites = {}
         self._array_allocation_loop_guard = False
         self._single_array_allocs, self._single_array_counts = set(), {}
@@ -1653,6 +1657,7 @@ class _StateMixin:
         self._module_conversion = self._converted_setter = None
         self._stored_getter_lane = None
         self._hierarchy_values = {}
+        self._material_values = {}
         self._scratch_getter_lanes = None
         self._last_sret = None
         self.__dict__.pop('_copied_frame', None)

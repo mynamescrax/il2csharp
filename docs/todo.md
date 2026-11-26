@@ -822,6 +822,26 @@ Only ParticleCollisionSpawner.cs and GasCollisionSpawner.cs changed. All
 The full callback still contains unresolved inner particle operations.
 Report: `work/shift_event_frame_census.json`.
 
+**Renderer material access:** `0x182bcb460` is shared by private
+`Renderer.SetMaterial` and both public material setters (54619/54646/54648).
+On both cache paths it passes the renderer and nullable material pointers,
+in that order, to `Renderer::SetMaterial_Injected(IntPtr,IntPtr)` and returns
+void. Emit `sharedMaterial = ...` as an equivalent spelling, not a unique
+source identity. Distinguish the two read wrappers: `0x182bcafe0` calls
+GetMaterial_Injected, whereas `0x182bcb180` calls GetSharedMaterial_Injected.
+
+Both complete WFX material selectors compiled and exercised Concrete, Wood,
+Metal, Checker, an unmatched key, a null renderer, changing wall references,
+and tail assignments. `RopeSweepCut.AddMouseLine` also compiled: the write
+uses the renderer captured before Shader.Find and material construction;
+the subsequent read uses the reloaded field even when the callbacks replace
+it. Checked exceptions stop at the corresponding operation. A separate
+fixture exercised the instance-material getter versus the shared-material
+setter, including a null material. Across 503 files: setter markers 26 → 0,
+instance reads 12 → 0, shared reads 1 → 0, all shared markers 470 → 431;
+`object objN` remains 3,274. All 6,791 bodies lifted with no failures or
+fallbacks, and all 503 files parsed. Report: `work/shift_renderer_material_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;

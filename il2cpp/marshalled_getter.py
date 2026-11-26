@@ -16,6 +16,13 @@ _INVOKE = re.compile(
     rb'\x48\x85\xdb\x74(.)\x48\x89\x7c\x24\x30\x48\x8b\x7b(.)\x48\x85\xff\x74(.)'
     rb'\x48\x8b\x05(.{4})\x48\x85\xc0\x75\x13\x48\x8d\x0d(.{4})\xe8(.{4})\x48\x89\x05(.{4})'
     rb'\x48\x8b\xcf\xff\xd0', re.S)
+# Same marshal and call, with the destroyed-object helper in the fallthrough
+# rather than after the tail return. Group 3 is now its rel32 call target.
+_INLINE_INVOKE = re.compile(
+    rb'\x48\x85\xdb\x74(.)\x48\x89\x7c\x24\x30\x48\x8b\x7b(.)\x48\x85\xff\x75\x0a'
+    rb'\x33\xd2\x48\x8b\xcb\xe8(.{4})'
+    rb'\x48\x8b\x05(.{4})\x48\x85\xc0\x75\x13\x48\x8d\x0d(.{4})\xe8(.{4})\x48\x89\x05(.{4})'
+    rb'\x48\x8b\xcf\xff\xd0', re.S)
 # Unmarshal RAX using a fresh MethodRef in RDX, then tail-return. The two
 # null exits raise; only the destroyed-object exit takes a managed argument.
 _RETURN = re.compile(rb'\x48\x8b\x15(.{4})\x48\x8b\xc8\x48\x8b\x7c\x24\x30\x48\x83\xc4\x20\x5b\xe9(.{4})', re.S)
@@ -71,6 +78,9 @@ def marshalled_getter(lift, addr, owner, result, method_names):
             rel(entry, 2) != addr + ready.end()):
         return False
     invoke = _INVOKE.match(data, ready.end())
+    inline_throw = invoke is None
+    if inline_throw:
+        invoke = _INLINE_INVOKE.match(data, ready.end())
     if not invoke or rel(invoke, 4) != rel(invoke, 7) or rel(invoke, 6) != il.rt_icall_resolve:
         return False
     offset = int.from_bytes(invoke[2], 'little', signed=True)
@@ -96,7 +106,17 @@ def marshalled_getter(lift, addr, owner, result, method_names):
     ret = _RETURN.match(data, invoke.end())
     if not ret or not il.bin.is_exec_va(rel(ret, 2)) or addr <= rel(ret, 2) < end or not _unmarshal(il, rel(ret, 1), result, rel(ret, 2)):
         return False
+    if inline_throw:
+        return (_throw_null_object(il, rel(invoke,3)) and
+                _plain_null_exit(lift, addr, data, ret.end(), rel(invoke,1)))
     return _null_exits(lift, addr, data, ret.end(), rel(invoke, 1), rel(invoke, 3))
+
+
+def _plain_null_exit(lift, addr, data, pos, null):
+    if null != addr+pos or data[pos:pos+1] != b'\xe8' or data[pos+5:pos+6] != b'\xcc':
+        return False
+    target = null+5+int.from_bytes(data[pos+1:pos+5],'little',signed=True)
+    return lift._named_raise_throw(target,lift._call_name(target)) == 'System.NullReferenceException'
 
 
 def _null_exits(lift, addr, data, pos, null, destroyed):
@@ -107,6 +127,10 @@ def _null_exits(lift, addr, data, pos, null, destroyed):
     raiser, throw = (addr + exits.end(i) + int.from_bytes(exits[i],'little',signed=True) for i in (1,2))
     if lift._named_raise_throw(raiser, lift._call_name(raiser)) != 'System.NullReferenceException':
         return False
+    return _throw_null_object(il, throw)
+
+
+def _throw_null_object(il, throw):
     cands = il.addr_candidates.get(throw, ())
     if len(cands) != 1 or cands[0][0] != 'method' or not 0 <= cands[0][1] < len(il.meta.methods):
         return False

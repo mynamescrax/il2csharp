@@ -5,7 +5,7 @@ from il2cpp.boolmask import enum_mask
 from il2cpp.expr import Expr, _BARE_TOKEN_RX, _INT_TY, _R8_TY, _mentions, _merge_arr_proof, _recv_fold, _recv_shaped, acc_get
 from il2cpp.expr import _tile_proof_for as _dry_tile_proof
 from il2cpp.text import imm_of, reg_name
-from il2cpp.x64 import ARG_REGS, GPRS, flag_cond
+from il2cpp.x64 import ARG_REGS, GPRS, VOLATILE, flag_cond
 from il2cpp.shared_field import saved_fp_consumers
 from il2cpp.shared_action import shared_action_tail
 from il2cpp.shared_coroutine import shared_coroutine
@@ -20,6 +20,7 @@ from il2cpp.copied_getter import array_fill_sites, mixed_copy_stores, write_snap
 from il2cpp.curve_join import joined_updates
 from il2cpp.curve_bridge import prefixes_before_join
 from il2cpp.reparent import bind_array_operand, hierarchy_sites
+from il2cpp.material_setter import assignment as material_assignment, material_sites, snapshot as material_snapshot
 
 class _AnalyzeMixin:
     def _analyze(self, m, td, blocks, bmap):
@@ -41,6 +42,7 @@ class _AnalyzeMixin:
         curve_arms, curve_joins = joined_updates(L, m, td, blocks, module_frame)
         curve_prefixes, curve_refs = prefixes_before_join(L, m, td, blocks, module_frame, curve_arms)
         L._hierarchy_bindings, L._reparent_sites = hierarchy_sites(L, m, blocks, self._pad_bids)
+        (L._material_lookups,L._material_sites,L._material_captures,L._material_reads) = material_sites(L,m,blocks,self._pad_bids)
         L._snapshot_srets, packed_loads, snapshot_getters = snapshot_plans(L, td, blocks, self._pad_bids)
         packs, extra_srets = return_plans(L, m, blocks, self._pad_bids, snapshot_getters)
         L._snapshot_srets.update(extra_srets)
@@ -146,6 +148,16 @@ class _AnalyzeMixin:
                     L.regs['RDI'] = Expr(snapshot, capture[2], 'obj')
                     continue
                 mn = ins.mnemonic
+                if ins.ip in L._material_captures and material_snapshot(L,ins):
+                    continue
+                if ins.ip in L._material_sites:
+                    stmt = material_assignment(L,ins)
+                    if stmt is not None:
+                        L.emit(ins.ip,stmt + (' return;' if mn == Mnemonic.JMP else ''),None)
+                        for r in (*VOLATILE, *('XMM%d'%n for n in range(6))):
+                            L.regs.pop(r,None)
+                        L.flags = None; L._fresh_unknowns()
+                        continue
                 if mn == Mnemonic.MOVUPS and idx and b.insns[idx-1].mnemonic == Mnemonic.CALL:
                     receiver_stores = mixed_copy_stores(L,b.insns,idx)
                 if ins.ip in receiver_stores:

@@ -9,6 +9,7 @@ from il2cpp.entrylive import entry_live_args, xmm0_result_width
 from il2cpp.shared_icall import shared_icall
 from il2cpp.shared_getter import shared_getter
 from il2cpp.module_getter import module_getter
+from il2cpp.material_setter import material_read
 from il2cpp.copied_getter import copied_struct_getter
 from il2cpp.indexed_particle import indexed_particle
 from il2cpp.reparent import reparent_call
@@ -2876,6 +2877,11 @@ class _CallsMixin:
         if copied_getter and info is not None and info != ('method',copied_getter[0]):
             copied_getter = None
         indexed_setter = None
+        lookup = getattr(self,'_material_lookups',{}).get(ins.ip)
+        if lookup and (info != ('generic',lookup[0]) or not recv or not recv.ty or recv._unk or
+                       self.il._closed_type_key(recv.ty) != (0x12,recv.ty[0],0) or lookup[1] not in self.il.base_chain_tds(recv.ty[0]) or
+                       getattr(gpr_exprs[1],'_usg_idx',None) != lookup[0]):
+            lookup = None
         if info is None and target and '/*shared body,' in name:
             indexed = None if copied_getter else indexed_particle(self,ins,gpr_exprs)
             if indexed:
@@ -3471,7 +3477,11 @@ class _CallsMixin:
                 mbase = 'get_Item' if _ap137[0] == 'get' else 'set_Item'
             # a proved generic identity (exact hidden-slot match) prints its
             # closed token; the metadata open name feeds only the guards
-            if array_call:
+            if lookup:
+                if recv.ty[0] != lookup[1]:
+                    recv_txt = '((%s)%s)' % (self.il.typedef_full(lookup[1]), _recv_fold(recv_txt))
+                mdot = '%s<%s>' % (lookup[3], self.il.type_name(lookup[2]))
+            elif array_call:
                 mdot = array_call[1]
             elif info is not None and info[0] == 'generic':
                 try:
@@ -3792,7 +3802,7 @@ class _CallsMixin:
         elif shared_rty and short is None and '/*shared body,' in name:
             # Keep the original unresolved-call evaluation and result binding.
             # Only the spelling changes, with no claim about MethodDef identity.
-            call = (reparent_call(self, ins, args, gpr_exprs, xmm_exprs) or
+            call = (material_read(self, ins, gpr_exprs) or reparent_call(self, ins, args, gpr_exprs, xmm_exprs) or
                     shared_icall(self, target, args, gpr_exprs) or
                     shared_getter(self, target, args, gpr_exprs, xmm_exprs) or
                     shared_coroutine(self, target, args, gpr_exprs, xmm_exprs) or call)
@@ -3889,6 +3899,12 @@ class _CallsMixin:
             result = Expr(call, rty,
                           'obj' if te >= 0x10 else ('float' if isf else 'int'))
             self.regs[dstreg] = result
+            if lookup and self.il._closed_type_key(rty) == self.il._closed_type_key(lookup[2]):
+                self._bind(result)
+                self._material_values[ins.ip] = result
+                if lookup[4]:
+                    self.emit(ins.ip,'if (%s is null) { throw new System.NullReferenceException(); }' % result.text,None)
+                return
             if mi is not None and getattr(self,'_single_array_counts',{}).get(ins.ip)==mi:
                 self._bind(result)
                 return
