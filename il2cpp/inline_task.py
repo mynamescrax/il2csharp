@@ -1,7 +1,8 @@
 """Closed Task kickoffs embedded in another method's control flow."""
 from bisect import bisect_right
+from dataclasses import dataclass
 
-from il2cpp.async_start import _addr, _builder_copy, _call, _covers, _ordinary_task_members, _rr, _slot_load, _start_binding, _task_captures, _zero_tiles
+from il2cpp.async_start import _addr, _builder_copy, _call, _covers, _ordinary_task_members, _rr, _slot_load, _start_binding, _task_captures, _zero_tiles, async_task_start
 from il2cpp.binary import PE
 from il2cpp.awaiter import _spec_entry
 from il2cpp.captured_home import _ancestors, _borrow_calls, _normal_predecessors, _predecessors, _register_arguments
@@ -10,12 +11,14 @@ from il2cpp.metadata import source_params
 from il2cpp.names import safe_ident
 from il2cpp.prelude import HAVE_ICED
 from il2cpp.sret_copy import _own_field
+from il2cpp.static_getter import guarded_alias
+from il2cpp.task_reuse import formatting_uses
 from il2cpp.text import reg_name, sdisp
 from il2cpp.this_home import _fixed_frame
 from il2cpp.x64 import KLASS_INITIALIZED, VOLATILE
 
 if HAVE_ICED:
-    from iced_x86 import FlowControl as F, InstructionInfoFactory, MemorySizeExt, Mnemonic as M, OpAccess, OpKind as K, Register as R, RegisterExt
+    from iced_x86 import Decoder, FlowControl as F, InstructionInfoFactory, MemorySizeExt, Mnemonic as M, OpAccess, OpKind as K, Register as R, RegisterExt
     _NONVOL={R.RBX,R.RBP,R.RDI,R.RSI,R.R12,R.R13,R.R14,R.R15}
 
 
@@ -77,7 +80,7 @@ def _kickoff_frame(seq,raw,*,plain=False):
     return _fixed_frame(seq,raw,require_receiver_home=not plain)
 
 
-def _frame_isolated(lift,m,seq,eh,start,end,ranges,pred):
+def _frame_isolated(lift,m,seq,eh,start,end,ranges,pred,peers=()):
     """Verify local extents, all normal entries and EH boundaries. Do not
     erase storage shared with surrounding code or cross a protected span."""
     il=lift.il
@@ -101,8 +104,9 @@ def _frame_isolated(lift,m,seq,eh,start,end,ranges,pred):
         spans=[(a,b) for _,_,_,ss in eh['try_ranges'] for a,b in ss]
         if not any(a<=start<end<=b for a,b in spans) or any(start<x<end for ab in spans for x in ab):return False
     epilogue=set();fac=InstructionInfoFactory();bounds=_borrow_calls(il,seq,pred)
+    bounded=formatting_uses(il,seq,pred,ranges) if peers else set()
     for k,i in enumerate(seq):
-        if i.ip<pro[-1].next_ip or start<=i.ip<end or i.ip in epilogue:continue
+        if i.ip<pro[-1].next_ip or start<=i.ip<end or i.ip in epilogue or any(a<=i.ip<b for a,b in peers):continue
         if i.has_segment_prefix or i.flow_control in (F.INDIRECT_BRANCH,F.INDIRECT_CALL):return False
         if i.flow_control in (F.CONDITIONAL_BRANCH,F.UNCONDITIONAL_BRANCH,F.CALL):
             if i.op0_kind!=K.NEAR_BRANCH64 or start<i.near_branch_target<end:return False
@@ -126,6 +130,7 @@ def _frame_isolated(lift,m,seq,eh,start,end,ranges,pred):
         if i.memory_index==R.RSP or any(i.op_kind(j)==K.REGISTER and RegisterExt.full_register(i.op_register(j))==R.RSP for j in range(i.op_count)):return False
         if i.memory_base==R.RSP:
             if i.memory_index!=R.NONE:return False  # displacement alone cannot bound a dynamic access
+            if i.ip in bounded:continue
             off=sdisp(i.memory_displacement);width=MemorySizeExt.size(i.memory_size)
             if i.mnemonic==M.LEA:
                 if (off<max(b for _,b in ranges) or k+1>=len(seq) or
@@ -186,13 +191,40 @@ def _checked_owner(lift,seq,cmp,reg,pred):
     return lift._named_raise_throw(helper,lift._call_name(helper))=='System.NullReferenceException'
 
 
-def _region(lift,m,td,blocks,b,seq,eh):
+@dataclass
+class Site:
+    ip:int
+    plan:tuple
+    begin:int
+    end:int
+    ranges:tuple
+    zero_stores:tuple
+    getter:int=0
+
+
+def _public_wrapper(lift,owner,rk,identity):
+    """A different class cannot instantiate a private nested machine. Use
+    the registered public wrapper only if its entire body is this kickoff."""
+    il=lift.il;found=[]
+    for mi in il.meta.type_methods(owner):
+        m=il.meta.methods[mi]
+        if (not m.addr or m.is_static or m.param_count or m.flags&7!=6 or m.flags&0x40 or m.declaring!=owner.index or
+                m.generic_container!=-1 or not 0<=m.return_type<len(il.types) or il._closed_type_key(il.types[m.return_type])!=rk):continue
+        ex=il.function_extent(m.addr)
+        if not ex or ex[0]!=m.addr or not 0<ex[1]-m.addr<=2048:continue
+        seq=list(Decoder(64,il.bin.read(m.addr,ex[1]-m.addr) or b'',ip=m.addr))
+        if async_task_start(lift,m,owner,seq,il.eh_regions(m.addr),identity=True)==identity:found.append(safe_ident(m.name))
+    return found[0] if len(found)==1 else None
+
+
+def _region(lift,m,td,blocks,b,seq,eh,pred):
     il=lift.il;ins=b.insns
     calls=[j for j,i in enumerate(ins) if i.mnemonic==M.CALL]
-    if b.bid<4 or len(calls)!=5 or calls[0]!=2 or any(ins[j].op0_kind!=K.NEAR_BRANCH64 for j in calls):return None
-    create,wb,cap,start,get=calls
-    if (not _addr(ins[1],R.RCX) or cap!=wb+4 or start!=cap+5 or get!=start+3 or ins[wb].near_branch_target not in lift.rt_wbarrier or
-            not _call(ins[cap],ins[wb].near_branch_target) or not _rr(ins[start+1],M.XOR,R.EDX,R.EDX)):return None
+    if b.bid<4 or len(calls) not in (4,5) or calls[0]!=2 or any(ins[j].op0_kind!=K.NEAR_BRANCH64 for j in calls):return None
+    create,wb,*barriers,start,get=calls
+    scalar=not barriers;cap=wb+1 if scalar else barriers[0]
+    if (not _addr(ins[1],R.RCX) or not scalar and (cap!=wb+4 or not _call(ins[cap],ins[wb].near_branch_target)) or
+            start!=cap+5 or get!=start+3 or ins[wb].near_branch_target not in lift.rt_wbarrier or not _rr(ins[start+1],M.XOR,R.EDX,R.EDX)):return None
     setup=ins[cap+1:start]
     # Four independent definitions, scheduled on either side of the state store.
     flag=next((i for i in setup if i.op0_kind==K.MEMORY),None)
@@ -206,6 +238,15 @@ def _region(lift,m,td,blocks,b,seq,eh):
             flag.op1_kind!=K.IMMEDIATE32 or flag.immediate32!=0xffffffff):return None
     outer=il._nested_owner(td.index)
     if outer is None or m.is_static or (eh is None)==td.is_valuetype:return None
+    # A closed child may belong to another type. The capture must then
+    # come from a separately proved producer of that concrete type.
+    usage=il.decode_slot(slot) or {};si=usage.get('idx',-1)
+    if usage.get('kind')!=6 or not 0<=si<len(il.method_specs):return None
+    args=il._method_spec_type_args(il.method_specs[si][2])
+    if not args or len(args)!=1 or not 0<=args[0][0]<len(il.meta.typedefs):return None
+    child_owner=il._nested_owner(args[0][0]);external=child_owner!=outer
+    if child_owner is None or external and (scalar or not eh):return None
+    outer=child_owner
     owner=il.meta.typedefs[outer]; binding=_start_binding(il,m,owner,slot,ins[start])
     if not binding:return None
     sm,ty,bt,ci=binding;rt=il.types[bt.byval];bk=il._closed_type_key(rt)
@@ -243,49 +284,89 @@ def _region(lift,m,td,blocks,b,seq,eh):
                  RegisterExt.is_gpr32(guard.op1_register) and guard.op1_register!=R.ECX and RegisterExt.full_register(guard.op1_register) in tiles[1]) or
             hot.mnemonic!=M.JNE or hot.near_branch_target!=ins[0].ip or
             cl.insns[0].mnemonic!=M.CALL or cl.insns[0].op0_kind!=K.NEAR_BRANCH64 or il.bin.exports.get(cl.insns[0].near_branch_target)!='il2cpp_runtime_class_init'):return None
-    pred=_normal_predecessors(seq) if eh is None else _predecessors(seq,eh)
-    if not pred or not _frame_isolated(lift,m,seq,eh,cmp.ip,ins[get].next_ip,[(home,home+width),(src,src+w)],pred):return None
-    group=ins[wb+1:cap];reg=next((i.op1_register for i in group if i.op0_kind==K.MEMORY and i.memory_base==R.RSP),R.NONE)
-    if reg not in (R.RBX,R.RBP,R.RDI,R.RSI,R.R12,R.R13,R.R14,R.R15):return None
-    if eh is None:
-        if (not 0<=m.return_type<len(il.types) or il._closed_type_key(il.types[m.return_type])!=(2,0) or
-                get!=len(ins)-1 or b.bid+1>=len(blocks) or not _discarded_bool(blocks[b.bid+1].insns) or
-                not _checked_owner(lift,seq,cmp,reg,pred)):return None
-    source=_source(il,m,td,seq,eh,cmp.ip,reg,owner,pred)
-    if not source:return None
-    capfields=_task_captures(il,sm,home,width,None,{reg:('owner',(0x12,outer,0))},[group])
-    if not capfields or len(capfields)!=1:return None
-    return ins[0].ip,(ty,rt,task,bf[0][5:],sf[0][5:],capfields[0][0],source,get,eh is None),source
+    source=None;getter=0;constant=None;wrapper=None
+    if scalar:
+        store=ins[cap];off=sdisp(store.memory_displacement)
+        if (not eh or store.mnemonic!=M.MOV or store.memory_base!=R.RSP or store.op1_kind!=K.IMMEDIATE32 or not home<=off<=home+width-4):return None
+        row=_own_field(il,sm,off-home+16,4)
+        if not row or row==sf or row[1][1]&0x27!=6 or il._closed_type_key(row[1])!=(8,0):return None
+        capture=row[0][5:];constant=str(int.from_bytes(store.immediate32.to_bytes(4,'little'),'little',signed=True))
+    else:
+        group=ins[wb+1:cap];reg=next((i.op1_register for i in group if i.op0_kind==K.MEMORY and i.memory_base==R.RSP),R.NONE)
+        if reg not in _NONVOL:return None
+        if eh is None:
+            if (not 0<=m.return_type<len(il.types) or il._closed_type_key(il.types[m.return_type])!=(2,0) or
+                    get!=len(ins)-1 or b.bid+1>=len(blocks) or not _discarded_bool(blocks[b.bid+1].insns) or
+                    not _checked_owner(lift,seq,cmp,reg,pred)):return None
+        if external:
+            j=next(k for k,x in enumerate(seq) if x.ip==cmp.ip)
+            if j<5 or not _checked_owner(lift,seq,cmp,R.RAX,pred):return None
+            zero,producer,save,test,jump=seq[j-5:j]
+            if (not _rr(zero,M.XOR,R.ECX,R.ECX) or producer.mnemonic!=M.CALL or producer.op0_kind!=K.NEAR_BRANCH64 or
+                    not _rr(save,M.MOV,reg,R.RAX) or any(pred[y.ip]!={x.ip} for x,y in zip(seq[j-5:j-1],seq[j-4:j]))):return None
+            getter=producer.near_branch_target;alias=guarded_alias(il,getter,lift.rt_init_meta)
+            if alias and il._closed_type_key(alias[1])==(0x12,outer,0):source=producer.ip,alias,reg_name(reg)
+        else:source=_source(il,m,td,seq,eh,cmp.ip,reg,owner,pred)
+        if not source:return None
+        capfields=_task_captures(il,sm,home,width,None,{reg:('owner',(0x12,outer,0))},[group])
+        if not capfields or len(capfields)!=1:return None
+        capture=capfields[0][0]
+        if external:
+            wrapper=_public_wrapper(lift,owner,rk,(slot,ins[create].near_branch_target,ins[get].near_branch_target,bf[0],sf[0],((capture,'this'),)))
+            if not wrapper:return None
+    plan=(ty,rt,task,bf[0][5:],sf[0][5:],capture,source,get,eh is None,wrapper,constant)
+    return Site(ins[0].ip,plan,cmp.ip,ins[get].next_ip,((home,home+width),(src,src+w)),
+                tuple(i.ip for i in g[:-2] if i.op0_kind==K.MEMORY),getter)
 
 
 def inline_tasks(lift,m,td,blocks,eh):
-    plans={};loads={};il=lift.il
-    if not HAVE_ICED or not isinstance(getattr(il,'bin',None),PE) or not il.bin.is64:return plans,loads
-    if eh is None and (td.is_valuetype or m.is_static or not 0<=m.return_type<len(il.types) or il._type_enum(il.types[m.return_type])!=2):return plans,loads
+    plans={};loads={};getters={};zeroes=set();result=(plans,loads,getters,zeroes);il=lift.il
+    if not HAVE_ICED or not isinstance(getattr(il,'bin',None),PE) or not il.bin.is64:return result
+    if eh is None and (td.is_valuetype or m.is_static or not 0<=m.return_type<len(il.types) or il._type_enum(il.types[m.return_type])!=2):return result
     seq=[i for b in blocks for i in b.insns]
-    if not seq or len(seq)>1024 or any(a.next_ip!=b.ip for a,b in zip(seq,seq[1:])):return plans,loads
-    for b in blocks:
-        if len(b.insns)<4 or not _rr(b.insns[0],M.XOR,R.EDX,R.EDX):continue
-        site=_region(lift,m,td,blocks,b,seq,eh)
-        if site:
-            ip,plan,(load,row,reg)=site;plans[ip]=plan;loads[load]=(row,reg)
-    return plans,loads
+    if not seq or len(seq)>1024 or any(a.next_ip!=b.ip for a,b in zip(seq,seq[1:])):return result
+    candidates=[b for b in blocks if len(b.insns)>=4 and _rr(b.insns[0],M.XOR,R.EDX,R.EDX) and _addr(b.insns[1],R.RCX)]
+    if not candidates:return result
+    pred=_normal_predecessors(seq) if eh is None else _predecessors(seq,eh)
+    if not pred:return result
+    groups={}
+    for b in candidates:
+        s=_region(lift,m,td,blocks,b,seq,eh,pred)
+        if s:groups.setdefault(s.ranges,[]).append(s)
+    for ranges,sites in groups.items():
+        if any(a.end>b.begin for a,b in zip(sites,sites[1:])):continue
+        # Atomic: exclude a peer's accesses only if every peer independently
+        # proved its full initialization, closed Start, Task and entry edges.
+        if not all(_frame_isolated(lift,m,seq,eh,s.begin,s.end,ranges,pred,[(p.begin,p.end) for p in sites if p is not s]) for s in sites):continue
+        for s in sites:
+            plans[s.ip]=s.plan;source=s.plan[6]
+            if s.getter:
+                load,row,reg=source
+                for k,i in enumerate(seq[1:],1):
+                    if _call(i,s.getter) and pred[i.ip]=={seq[k-1].ip} and _rr(seq[k-1],M.XOR,R.ECX,R.ECX):getters[i.ip]=row
+            elif source:
+                load,row,reg=source;loads[load]=(row,reg)
+            if len(sites)>1 and (s.getter or not source):zeroes.update(s.zero_stores)
+    return result
 
 
 def emit_kickoff(lift,ip,plan,values):
-    ty,rt,task_ty,builder,state,capture,(load,_,reg),end,discard=plan
-    value=dict.get(lift.regs,reg)
-    if value is None or value._unk or value is not values.get(load):return None
+    ty,rt,task_ty,builder,state,capture,source,end,discard,wrapper,operand=plan
+    if source:
+        load,_,reg=source;value=values.get(load)
+        if value is None or value._unk or not wrapper and value is not dict.get(lift.regs,reg):return None
+        operand=value.text
     machine='nestedStateMachine'+lift.new_var()[1:];task=lift.new_var();tn=lift.il.type_name(ty);btn=lift.il.type_name(rt)
     while machine in {safe_ident(p.name) for p in source_params(lift.meta,lift._current_method)}:machine+='Local'
     field=machine+'.'+builder
-    if discard:lift.emit(ip,f'if ({value.text} is null) {{ throw new System.NullReferenceException(); }}',None)
-    else:lift._var_types[task]=task_ty
+    if discard:lift.emit(ip,f'if ({operand} is null) {{ throw new System.NullReferenceException(); }}',None)
+    if not discard:lift._var_types[task]=task_ty
     result=('_' if discard else 'var '+task)+' = '+acc_get(field+'.Task')+';'
-    for line in (f'{tn} {machine} = default;',f'System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof({btn}).TypeHandle);',
-                 f'{field} = {btn}.Create();',f'{machine}.{capture} = {value.text};',f'{machine}.{state} = -1;',
-                 f'{field}.Start<{tn}>(ref {machine});',result):
-        lift.emit(ip,line,None)
+    lines=(f'var {task} = {operand}.{wrapper}();',) if wrapper else (
+                 f'{tn} {machine} = default;',f'System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof({btn}).TypeHandle);',
+                 f'{field} = {btn}.Create();',f'{machine}.{capture} = {operand};',f'{machine}.{state} = -1;',
+                 f'{field}.Start<{tn}>(ref {machine});',result)
+    for line in lines:lift.emit(ip,line,None)
     for reg in (*VOLATILE,*('XMM%d'%n for n in range(6))):lift.regs.pop(reg,None)
     if not discard:lift.regs['RAX']=Expr(task,task_ty,'obj')
     lift.flags=None;lift._fresh_unknowns()

@@ -281,7 +281,7 @@ def _task_captures(il,sm,base,width,bias,regs,groups,scalars=()):
     return writes
 
 
-def async_task_start(lift,method,td,seq,eh):
+def async_task_start(lift,method,td,seq,eh,*,identity=False):
     """Task or Task<T>: capture inputs, start the closed machine by reference,
     then read Task on the same builder field after Start has returned."""
     il=lift.il
@@ -364,6 +364,7 @@ def async_task_start(lift,method,td,seq,eh):
     sf=_own_field(il,sm,off-home+16,4)
     if (not sf or key(sf[1])!=(8,0) or sf[1][1]&0x27!=6 or any(f==sf[0][5:] for f,_ in writes) or state.mnemonic!=M.MOV or
             state.op1_kind!=K.IMMEDIATE32 or state.immediate32!=0xffffffff):return None
+    if identity:return (start_slot,seq[create].near_branch_target,seq[get].near_branch_target,bf[0],sf[0],tuple(writes))
     tn=il.type_name(ty); builder_name=il.type_name(rt)
     name='stateMachine'
     while name in {v[0] for v in inputs.values()}:name+='Local'

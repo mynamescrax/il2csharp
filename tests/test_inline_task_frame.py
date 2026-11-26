@@ -60,3 +60,24 @@ def test_no_receiver_home_requires_plain_registered_frame(change):
     if change=='wrong save offset':raw[6]-=1
     if change=='wrong register':raw[5]=0xf4
     assert bool(_kickoff_frame(seq,bytes(raw),plain=True))==(change=='valid')
+
+
+@pytest.mark.parametrize('base,home',[(0x28000,0x20),(0x190000,0x40)])
+@pytest.mark.parametrize('defect',['none','peer interior entry','late read','cut span'])
+def test_reused_home_has_two_independent_entry_boundaries(base,home,defect):
+    # These windows stand in for already validated complete initializers.
+    # Each has an actual memory access in the other's range; neither passes
+    # the single-owner proof. Only their joint frame audit may discharge it.
+    pro='48894c2408 56 4883ec70';init='90 48894424%02x'%home;ep='4883c470 5e c3'
+    # From the branch after the first window, skip the peer or jump into it.
+    jump='7501' if defect=='peer interior entry' else '7506'
+    off=home+8 if defect=='late read' else home+24
+    seq=list(Decoder(64,bytes.fromhex(' '.join((pro,init,jump,init,'488b4424%02x'%off,ep,ep))),ip=base))
+    windows=[(seq[3].ip,seq[5].ip),(seq[6].ip,seq[8].ip)];ranges=[(home,home+24)]
+    spans=[(seq[3].ip,seq[8].ip)]
+    if defect=='cut span':spans=[(seq[3].ip,seq[7].ip),(seq[7].ip,seq[8].ip)]
+    pad=seq[-3].ip;eh=dict(try_ranges=[(0,0,1,spans)],try_pads=[[pad]],pads=[pad]);pred=_predecessors(seq,eh)
+    raw=bytes.fromhex('190a0200 0ad2 0660');image=NS(image_base=base,read=lambda a,n:raw[:n])
+    lift=NS(il=NS(bin=image,_eh4_begins=[0],_eh4_entries=[(0,seq[-1].next_ip-base,0x180)]));m=NS(addr=base)
+    assert not any(_frame_isolated(lift,m,seq,eh,*w,ranges,pred) for w in windows)
+    assert all(_frame_isolated(lift,m,seq,eh,*w,ranges,pred,[windows[1-j]]) for j,w in enumerate(windows))==(defect=='none')

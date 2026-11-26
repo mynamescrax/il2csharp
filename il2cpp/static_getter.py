@@ -8,12 +8,31 @@ from il2cpp.names import safe_ident
 
 # cmp byte [flag],0; jne load; lea rcx,[slot]; call init; mov byte [flag],1;
 # load: mov rax,[slot]; mov rax,[rax+static_fields]; mov rax,[rax]; epilogue.
-_PREFIX = (rb'\x48\x83\xec\x28\x80\x3d(.{4})\x00\x75\x13\x48\x8d\x0d(.{4})'
-                    rb'\xe8(.{4})\xc6\x05(.{4})\x01\x48\x8b\x05(.{4})'
-                    rb'\x48\x8b\x80\xb8\x00\x00\x00\x48\x8b')
+_LOAD = (rb'\x48\x83\xec\x28\x80\x3d(.{4})\x00\x75\x13\x48\x8d\x0d(.{4})'
+         rb'\xe8(.{4})\xc6\x05(.{4})\x01\x48\x8b\x05(.{4})')
+_STATIC = rb'\x48\x8b\x80\xb8\x00\x00\x00\x48\x8b'
+_PREFIX = _LOAD + _STATIC
 _EPILOGUE = rb'\x48\x83\xc4\x28\xc3'
 _SHAPE = re.compile(_PREFIX + b'\x00' + _EPILOGUE,re.S)
 _DISP8 = re.compile(_PREFIX + b'\x40(.)' + _EPILOGUE,re.S)
+_GUARDED = re.compile(_LOAD + rb'\x83\xb8\xe4\x00\x00\x00\x00\x75\x0f\x48\x8b\xc8\xe8(.{4})\x48\x8b\x05(.{4})'
+                      + _STATIC + rb'(?:\x00|\x40(.))' + _EPILOGUE,re.S)
+
+
+def _guarded_info(il,va,init):
+    ex=il.function_extent(va)
+    if not init or not ex or ex[0]!=va or not il.bin.is_exec_va(va) or not 0<ex[1]-va<=128:return None
+    m=_GUARDED.fullmatch(il.bin.read(va,ex[1]-va) or b'')
+    if not m:return None
+    flag,slot,call,store,load,cl,reload=(va+m.end(j)+(j in (1,4))+int.from_bytes(m[j],'little',signed=True) for j in range(1,8))
+    if flag==store and slot==load==reload and call==init and il.bin.exports.get(cl)=='il2cpp_runtime_class_init':
+        return slot,int.from_bytes(m[8] or b'\0','little',signed=True)
+
+
+def guarded_alias(il,va,init):
+    if il.addr_candidates.get(va) or il.addr_to_method.get(va):return None
+    info=_guarded_info(il,va,init)
+    if info:return alias_for_slot(il,info[0],init,info[1],guarded=True)
 
 
 def _slot(il, va, init, offset=0):
@@ -33,7 +52,7 @@ def _alias(il, va, init):
     return alias_for_slot(il, _slot(il, va, init), init)
 
 
-def alias_for_slot(il, slot, init, offset=0):
+def alias_for_slot(il, slot, init, offset=0, *, guarded=False):
     """Public getter for the reference at the caller's exact static-field offset."""
     if not 0<=offset<128 or offset%8: return None
     usage = il.decode_slot(slot) if slot is not None else None
@@ -45,7 +64,7 @@ def alias_for_slot(il, slot, init, offset=0):
             not 0 <= ti < len(il.meta.typedefs) or ti >= len(il.field_offsets)):
         return None
     td = il.meta.typedefs[ti]
-    if (td.generic_container != -1 or td.declaring >= 0 or td.is_valuetype or td.has_cctor or
+    if (td.generic_container != -1 or td.declaring >= 0 or td.is_valuetype or td.has_cctor and not guarded or
             td.flags & 7 != 1 or td.flags & 0x20):
         return None
     offsets = il.field_offsets[ti]
@@ -77,8 +96,11 @@ def alias_for_slot(il, slot, init, offset=0):
     m = il.meta.methods[td.method_start + rows[0][1]]
     if (m.declaring != ti or m.name != 'get_' + name or not m.is_static or m.param_count or
             m.flags & 7 != 6 or m.generic_container != -1 or not 0 <= m.return_type < len(il.types) or
-            il.types[m.return_type] != ty or not m.addr or _slot(il, m.addr, init, offset) != slot):
+            il.types[m.return_type] != ty or not m.addr):
         return None
+    if guarded:
+        if _guarded_info(il,m.addr,init)!=(slot,offset):return None
+    elif _slot(il,m.addr,init,offset)!=slot:return None
     return il.type_name(ty) + '.' + safe_ident(name), ty
 
 

@@ -40,7 +40,7 @@ class _AnalyzeMixin:
         # CFG (reachable-from-the-declaration check); blocks[bid] and
         # Block.bid line up by construction
         L._blocks = blocks
-        kickoffs,owner_loads = inline_tasks(L,m,td,blocks,self.eh)
+        kickoffs,owner_loads,task_getters,task_zeroes = inline_tasks(L,m,td,blocks,self.eh)
         kickoff_values = {}
         L._array_module_frames = {}
         L._single_array_allocs, L._single_array_counts = array_fill_sites(L, blocks, self._pad_bids,m)
@@ -160,6 +160,13 @@ class _AnalyzeMixin:
                     L.regs['RDI'] = Expr(snapshot, capture[2], 'obj')
                     continue
                 mn = ins.mnemonic
+                if ins.ip in task_zeroes:continue
+                if ins.ip in task_getters:
+                    member,ty=task_getters[ins.ip];name=L.new_var();L._var_types[name]=ty
+                    L.emit(ins.ip,'var %s = %s;'%(name,acc_get(member)),None)
+                    for r in (*VOLATILE,*('XMM%d'%n for n in range(6))):L.regs.pop(r,None)
+                    value=Expr(name,ty,'obj');L.regs['RAX']=value;kickoff_values[ins.ip]=value
+                    L.flags=None;L._fresh_unknowns();continue
                 if ins.ip in owner_loads:
                     (field,ty),dst=owner_loads[ins.ip];base=dict.get(L.regs,reg_name(ins.memory_base))
                     if base and not base._unk and base.text=='this' and base.ty and base.ty[0]==td.index:

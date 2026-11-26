@@ -1203,6 +1203,30 @@ locals. The three remaining markers for this factory in `PlatformManager_Steam`
 come from two native kickoffs that reuse the same stack storage. Report:
 `work/shift_discarded_kickoff_census.json`.
 
+**Two kickoffs sharing a stack frame:** `HandleEndSessionReturn.MoveNext`
+uses RSP+0x38 for two builder results and RSP+0x50 for two machines. Each
+region fully initializes its own machine before its closed `Start`, then
+reads the task from that same builder. The frame audit checks the regions
+together: an interior branch, exception entry, partial copy, or stray read
+invalidates the reuse proof. It also checks the earlier stack-box borrow
+by `System.Enum.ToString` before allowing those bytes to be reused.
+
+At `0x18056cb3c`, MethodSpec 151389 and the complete registered `LeaveGame`
+wrapper agree on the machine, builder, state and captured `this`. The call
+uses the **second** singleton read, after logging. At `0x18056cc4a`,
+MethodSpec 151462 identifies `WaitForFrames`; the four-byte store is to
+`frameCount` and supplies `10`. A .NET harness compiled the emitted wrapper,
+both kickoff/awaiter slices and both renderings of the wait site with private
+child machines. It replaced the manager between reads, suspended both
+children and completed them independently; synchronous and faulted cases
+also passed. This does not compile the enclosing async method as a whole.
+
+The strict 503-file tree lifted 6,791 bodies without failures or fallbacks;
+syntax and brace gates were clean. Only `PlatformManager_Steam.cs` and the
+shared-stub file changed. Shared markers fell **382 → 379** (64 → 63 native
+addresses); untyped locals fell **3,149 → 3,144**. No marker at the folded
+builder factory remains. Report: `work/shift_reused_frames_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;
