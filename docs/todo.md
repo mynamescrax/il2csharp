@@ -853,6 +853,19 @@ parent threw. Only `LAM_DirectionalMovement.cs` changed. The strict rebuild
 and syntax gates passed: shared calls 431 → 430; `object objN` still 3,274.
 Report: `work/shift_nested_field_census.json`.
 
+**Owner reads after vector arithmetic:** Eleven calls to the same +0x18
+reference getter had live-looking XMM values. The leaf takes only RCX. A
+discarded packed value now needs four known lanes with no deferred calls,
+properties or dereferences; scalar arithmetic is restricted to bound floats
+and their value-type fields. In `OnLateUpdatePreApply` (30157), the following
+8+4-byte copy reads the owner's private `_worldUpAxisVector`. `get_Up`
+(29667) copies precisely these twelve bytes into the native return buffer.
+The emitted getter and caller's copy compiled together: distinct XYZ values
+survived, the owner was read once, and a null owner left the destination
+unchanged. Shared calls 430 → 419; `object objN` 3,274 → 3,271. The strict
+build lifted 6,791 bodies; all 503 files passed brace and syntax checks.
+Report: `work/shift_vector_owner_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;

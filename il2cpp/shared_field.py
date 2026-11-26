@@ -125,6 +125,44 @@ def _read(il, addr, receiver):
     return head + safe_ident(name), ty
 
 
+def _scratch_lane(lift, e):
+    """Pure floating arithmetic on already bound locals/struct fields only.
+
+    A packed Expr prints `?` even when one of its hidden lanes contains a
+    deferred property read. Inspect all four lanes before discarding it.
+    No dereferences, getters, indexers, user operators or calls qualify.
+    """
+    if e.text == '?' and e.kind == 'bits':
+        parts = getattr(e, '_parts', ())
+        return len(parts) == 4 and all(
+            off == 4*i and start == 0 and width == 4 and lane.kind == 'float' and
+            _scratch_lane(lift, lane) for i,(off,lane,start,width) in enumerate(parts))
+    if e.kind != 'float' or not e.text or len(e.text) > 256:
+        return False
+    # A flat product/sum of float locals has no overflow or conversion effects.
+    atoms = re.split(r' [*+\-] ', e.text)
+    il = lift.il
+    for atom in atoms:
+        m = re.fullmatch(r'(t\d+)(?:\.([xyzw]))?', atom)
+        if not m: return False
+        ty = getattr(lift, '_var_types', {}).get(m[1])
+        if not ty: return False
+        key = il._closed_type_key(ty)
+        if not m[2]:
+            if key != (0x0c,0): return False
+            continue
+        if key != (0x11,ty[0],0) or not 0 <= ty[0] < len(il.meta.typedefs): return False
+        td = il.meta.typedefs[ty[0]]
+        if not td.is_valuetype or td.generic_container != -1: return False
+        fields = [il.meta.fields[fi] for fi in il.meta.type_fields(td) if source_field_name(il,fi) == m[2]]
+        if len(fields) != 1: return False
+        field, = fields
+        if (field_attrs(il,field) & (FA_LITERAL | FA_STATIC | 7) != 6 or
+                not 0 <= field.type < len(il.types) or il._closed_type_key(il.types[field.type]) != (0x0c,0)):
+            return False
+    return True
+
+
 def shared_field_read(lift, addr, args, xmm):
     il = lift.il
     current = getattr(lift, '_current_method', None)
@@ -135,8 +173,12 @@ def shared_field_read(lift, addr, args, xmm):
             recv.ty[0] != current.declaring or len(il.addr_candidates.get(addr, ())) < 2):
         return None
     # Dropping stale ABI slots must not discard an unevaluated expression.
-    for extra in [*args[1:4], *xmm]:
+    for extra in args[1:4]:
         if extra and not extra._unk and not re.fullmatch(r'[A-Za-z_]\w*|-?\d+(?:\.\d+)?[fd]?', extra.text or ''):
+            return None
+    for extra in xmm:
+        if (extra and not extra._unk and not re.fullmatch(r'[A-Za-z_]\w*|-?\d+(?:\.\d+)?[fd]?', extra.text or '') and
+                not _scratch_lane(lift, extra)):
             return None
     cache = il.__dict__.setdefault('_shared_field_reads', {})
     key = (addr, current.declaring)

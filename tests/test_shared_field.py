@@ -4,7 +4,7 @@ import pytest
 
 from il2cpp import Expr
 from il2cpp.binary import PE
-from il2cpp.shared_field import saved_fp_consumers, shared_field_read
+from il2cpp.shared_field import _scratch_lane, saved_fp_consumers, shared_field_read
 from iced_x86 import Decoder
 
 
@@ -46,6 +46,24 @@ def test_shared_leaf_reads_accessible_storage_or_verified_backing_getter():
                                      dict(recv='other'), dict(extra='SideEffect()'), dict(return_index=2)])
 def test_inexact_field_read_declines(changes):
     assert probe(**changes) is None
+
+
+@pytest.mark.parametrize('bad', [None, 'deferred getter', 'reference receiver', 'missing lane', 'wrong width', 'unbound arithmetic'])
+def test_discarded_xmm_cannot_conceal_a_deferred_read(bad):
+    vector = (2,(0x12 if bad=='reference receiver' else 0x11)<<16)
+    scalar = (3, 0x0c<<16 | 6)
+    meta = NS(typedefs=[None,None,NS(is_valuetype=True,generic_container=-1)], type_fields=lambda _: [0],
+              fields=[NS(type=0,name='x')])
+    il=NS(meta=meta, types=[scalar], _source_field_names={0:'x'},
+          _closed_type_key=lambda t:(0x0c,0) if t==scalar else (t[1]>>16,t[0],0))
+    lift=NS(il=il,_var_types={'t1':vector,'t2':scalar})
+    lane=Expr('t1.x * t2',scalar,'float')
+    pack=Expr('?',None,'bits'); pack._parts=[(n*4,lane,0,4) for n in range(4)]
+    if bad=='deferred getter': pack._parts[-1]=(12,Expr('t1.Fetch().x',scalar,'float'),0,4)
+    if bad=='missing lane': pack._parts.pop()
+    if bad=='wrong width': pack._parts[1]=(4,lane,0,8)
+    if bad=='unbound arithmetic': del lift._var_types['t2']
+    assert _scratch_lane(lift,pack)==(bad is None)
 
 
 @pytest.mark.parametrize('save,match', [('0f28f0', True), ('0f28e0', False),

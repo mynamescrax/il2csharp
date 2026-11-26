@@ -1,6 +1,8 @@
 """Nested Win64 owner forwarder: protected access, nulls and single evaluation."""
 from types import SimpleNamespace as NS
 
+import re
+
 import pytest
 
 from dotnet_case import run_case
@@ -62,3 +64,46 @@ def test_nested_owner_declines(shift_runtime, monkeypatch, change):
     else:
         monkeypatch.setattr(m,'return_type',next(i for i,t in enumerate(il.types) if t and il._closed_type_key(t)==(8,0)))
     assert nested_field_tail(lift, ins, args) is None
+
+
+def test_shared_owner_copies_all_three_up_components(body, tmp_path):
+    getter=body('LegsAnimator','get_Up',0x18066e640)
+    caller=body('LAM_AutoGroundAlignBodyMatrix','OnLateUpdatePreApply',0x18068bbc0)
+    arm=re.search(r'FIMSpace\.FProceduralAnimation\.LegsAnimator (\w+) = base.Owner;\s+this.averageNormal = \1.Up;',caller)
+    assert arm and getter=='return this._worldUpAxisVector;'
+    runner=tmp_path/'runner';runner.mkdir()
+    (runner/'Program.cs').write_text('''using System;
+using FIMSpace.FProceduralAnimation;
+var before=new V(-3.25f,7,11); var after=new V(111,222,333);
+var m=new Module(); int reads=0;
+m.Read=()=>new LegsAnimator(++reads==1?before:after);
+m.Copy(); if(reads!=1 || m.Result!=before)throw new Exception("lost snapshot/lane");
+m.Copy(); if(reads!=2 || m.Result!=after)throw new Exception("reused snapshot");
+m.Read=()=>null;try { m.Copy(); throw new Exception("accepted null"); }catch(NullReferenceException) { }
+if(m.Result!=after)throw new Exception("partial write on throw"); Console.WriteLine("Up: (-3.25,7,11), (111,222,333); null leaves destination unchanged");
+record struct V(float X,float Y,float Z);
+namespace FIMSpace.FProceduralAnimation {
+    class LegsAnimator {private V _worldUpAxisVector; public LegsAnimator(V initial)=>_worldUpAxisVector=initial;
+        public V Up {get {\n''' + getter + '''\n}} }
+}
+class Base {public Func<LegsAnimator> Read; protected LegsAnimator Owner=>Read();}
+class Module : Base {private V averageNormal; public V Result=>averageNormal; public void Copy(){\n'''+arm[0]+'\n}}',encoding='utf-8')
+    print(run_case(tmp_path,runner).strip())
+
+
+@pytest.mark.parametrize('defect',['returns x twice','noncontiguous destination','virtual override'])
+def test_public_vector_copy_declines_other_getters(shift_runtime,monkeypatch,defect):
+    from il2cpp.vector_field_copy import vector_field_getter
+    meta,il=shift_runtime; lift=Lifter(il); m=meta.methods[29667]
+    assert vector_field_getter(lift,m)==('this._worldUpAxisVector','Up',0x474)
+    if defect=='virtual override':
+        monkeypatch.setattr(m,'flags',m.flags|0x40)
+    else:
+        original=il.bin.read
+        def read(p,n):
+            data=original(p,n)
+            if (p,n)!=(m.addr,25): return data
+            if defect=='returns x twice': return data[:2]+data[10:14]+data[6:]
+            return data[:20]+b'\x04'+data[21:]
+        monkeypatch.setattr(il.bin,'read',read)
+    assert vector_field_getter(lift,m) is None
