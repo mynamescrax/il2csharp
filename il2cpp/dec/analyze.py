@@ -8,7 +8,7 @@ from il2cpp.text import imm_of, reg_name
 from il2cpp.x64 import ARG_REGS, GPRS, VOLATILE, flag_cond
 from il2cpp.shared_field import nested_field_tail, saved_fp_consumers
 from il2cpp.shared_action import shared_action_tail
-from il2cpp.shared_coroutine import shared_coroutine
+from il2cpp.shared_coroutine import coroutine_null_test, shared_coroutine
 from il2cpp.sret_copy import copied_sret_before_getter
 from il2cpp.simd_getter import keep_scalars, snapshot_plans
 from il2cpp.simd_return import capture_return, emit_return, return_plans
@@ -372,6 +372,8 @@ class _AnalyzeMixin:
                         b.cond = '%s %s %s' % (lt, op, zero)
                     else:
                         b.cond = '%s %s %s' % (lt, op, rt)
+                        if idx and rt=='0' and op in ('==','!='):
+                            b.cond = coroutine_null_test(L,b.insns[idx-1],ins,lhs) or b.cond
                     L.flags = None
                     continue
                 if mn == Mnemonic.JMP and ins.op0_kind in (OpKind.REGISTER,

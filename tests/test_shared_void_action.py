@@ -6,7 +6,7 @@ import pytest
 
 from il2cpp.binary import PE
 from il2cpp.expr import Expr
-from il2cpp.shared_action import _bool_transfer, _entry_forward, _guarded_helper_forward, _guarded_this_forward, _guarded_ref_bool_forward, shared_action_tail, shared_base_action, shared_bool_tail, shared_void_action
+from il2cpp.shared_action import _bool_transfer, _cleanup_tail_forward, _entry_forward, _guarded_helper_forward, _guarded_this_forward, _guarded_ref_bool_forward, shared_action_tail, shared_base_action, shared_bool_tail, shared_void_action
 from iced_x86 import Register as R
 
 
@@ -306,6 +306,31 @@ def test_guarded_reference_and_bool_must_come_from_the_original_arguments(case):
         bs.append(NS(bid=n,is_entry=n==0,insns=list(Decoder(64,raw,ip=ip)),preds=preds,succs=succs));ip+=len(raw)
     lift=NS(_blocks=bs,_current_method=NS(addr=start),rt_init_meta=init,il=NS(eh_regions=lambda _:None))
     assert _guarded_ref_bool_forward(lift,bs[2],bs[2].insns[-1])==(case in ('hot and cold','linearized'))
+
+
+@pytest.mark.parametrize('cleanup,ok',[
+    ('4883c101',True),       # volatile scratch in an otherwise empty cleanup
+    ('488bc2',True),         # caller is void; old RAX does not escape the tail
+    ('4080c601',False),      # SIL is part of the saved flag, even a partial write matters
+    ('488beb',False),        # overwrite saved runner
+    ('48894c2430',False),    # overwrite the caller's saved RBX
+    ('488d4c2430',False),    # escape an address in the frame
+    ('4883c408',False),      # restores no longer use the entry stack coordinates
+    ('ffd0',False),          # opaque indirect transfer
+])
+def test_cleanup_tail_requires_preserved_arguments_and_homes(cleanup,ok):
+    va=0x3000
+    # Dummy guard skips a NOP to the test cleanup. No metadata from the
+    # private fixture is required to validate the input/epilogue proof.
+    head='48895c2408 48896c2410 4889742418 57 4883ec20 803d0001000000 410fb6f0 488bea 488bd9 7501'
+    out='4531c9 440fb6c6 488bd5 488bcb 488b5c2430 488b6c2438 488b742440 4883c420 5f e900200000'
+    blocks=[];ip=va
+    for n,code in enumerate((head,'90',cleanup,out)):
+        data=bytes.fromhex(code);blocks.append(NS(bid=n,is_entry=n==0,preds=[] if n==0 else [n-1],succs=[] if n==3 else [n+1],
+                                                   insns=list(Decoder(64,data,ip=ip))));ip+=len(data)
+    il=NS(function_extent=lambda _:(va,ip),eh_regions=lambda _:None,bin=NS(is_exec_va=lambda _:True))
+    lift=NS(_current_method=NS(addr=va),_blocks=blocks,il=il)
+    assert _cleanup_tail_forward(lift,blocks[3],blocks[3].insns[-1])==ok
 
 
 @pytest.mark.parametrize('change',['wrong source','other call','other flag','clobber before branch','other edge','handler entry'])

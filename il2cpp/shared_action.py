@@ -9,7 +9,7 @@ from il2cpp.prelude import HAVE_ICED
 from il2cpp.text import reg_name, sdisp
 
 if HAVE_ICED:
-    from iced_x86 import Mnemonic as M, OpKind as K, Register as R, RegisterExt
+    from iced_x86 import FlowControl as F, InstructionInfoFactory, Mnemonic as M, OpAccess, OpKind as K, Register as R, RegisterExt
     _NONVOL = (R.RBX, R.RBP, R.RSI, R.RDI, R.R12, R.R13, R.R14, R.R15)
 
 
@@ -136,6 +136,62 @@ def _guarded_ref_bool_forward(lift, block, ins):
             arg2.mnemonic==M.MOV and arg2.op0_register==R.RDX and arg2.op1_register==b and
             recv2.mnemonic==M.MOV and recv2.op0_register==R.RCX and recv2.op1_register==a and
             call.mnemonic==M.CALL and call.op0_kind==K.NEAR_BRANCH64)
+
+
+def _cleanup_tail_forward(lift, block, jump):
+    """Follow saved Win64 inputs through cleanup to a shared void tail.
+
+    Use the original instruction stream: some metadata-init/throw edges have
+    been removed from the structured CFG. No alternate entry, write to a
+    parked argument, or frame/home alias can precede the argument reloads.
+    """
+    blocks=getattr(lift,'_blocks',()); method=lift._current_method
+    if (not blocks or block is not blocks[-1] or len(block.insns)!=10 or block.succs or
+            not blocks[0].is_entry or blocks[0].preds or len(blocks[0].insns)!=10): return False
+    start=blocks[0].insns; out=block.insns
+    if (start[0].ip!=method.addr or out[-1].ip!=jump.ip or jump.mnemonic!=M.JMP or jump.op0_kind!=K.NEAR_BRANCH64 or
+            lift.il.function_extent(method.addr)!=(method.addr,jump.next_ip) or lift.il.eh_regions(method.addr)):
+        return False
+    one,two,three,push,sub,cmp,flag,arg,recv,branch=start
+    zero,flag2,arg2,recv2,r1,r2,r3,add,pop,_=out
+    saved=[i.op1_register for i in (one,two,three)]; pushed=push.op0_register
+    if (len(set(saved+[pushed]))!=4 or not set(saved+[pushed])<=set(_NONVOL) or push.mnemonic!=M.PUSH or
+            sub.mnemonic!=M.SUB or sub.op0_register!=R.RSP or sub.op1_kind!=K.IMMEDIATE8TO64 or sub.immediate8to64!=0x20 or
+            add.mnemonic!=M.ADD or add.op0_register!=R.RSP or add.op1_kind!=K.IMMEDIATE8TO64 or add.immediate8to64!=0x20 or
+            pop.mnemonic!=M.POP or pop.op0_register!=pushed): return False
+    for spill,reload,reg,off in zip((one,two,three),(r1,r2,r3),saved,(8,16,24)):
+        if (spill.mnemonic!=M.MOV or spill.memory_base!=R.RSP or spill.memory_index!=R.NONE or spill.memory_displacement!=off or
+                reload.mnemonic!=M.MOV or reload.op0_register!=reg or reload.memory_base!=R.RSP or reload.memory_index!=R.NONE or
+                reload.memory_displacement!=off+0x28): return False
+    if (cmp.mnemonic!=M.CMP or cmp.memory_base!=R.RIP or cmp.memory_size!=1 or cmp.op1_kind!=K.IMMEDIATE8 or cmp.immediate8!=0 or
+            branch.mnemonic!=M.JNE or branch.op0_kind!=K.NEAR_BRANCH64 or flag.mnemonic!=M.MOVZX or flag.op1_register!=R.R8L or
+            not RegisterExt.is_gpr32(flag.op0_register) or arg.mnemonic!=M.MOV or arg.op1_register!=R.RDX or
+            recv.mnemonic!=M.MOV or recv.op1_register!=R.RCX): return False
+    parked={recv.op0_register,arg.op0_register,RegisterExt.full_register(flag.op0_register)}
+    if len(parked)!=3 or not parked<=set(saved+[pushed]): return False
+    if (zero.mnemonic!=M.XOR or zero.op0_register!=zero.op1_register or zero.op0_register!=R.R9D or
+            flag2.mnemonic!=M.MOVZX or flag2.op0_register!=R.R8D or not RegisterExt.is_gpr8(flag2.op1_register) or
+            flag2.op1_register in (R.AH,R.BH,R.CH,R.DH) or RegisterExt.full_register(flag2.op1_register)!=RegisterExt.full_register(flag.op0_register) or
+            arg2.mnemonic!=M.MOV or arg2.op0_register!=R.RDX or arg2.op1_register!=arg.op0_register or
+            recv2.mnemonic!=M.MOV or recv2.op0_register!=R.RCX or recv2.op1_register!=recv.op0_register): return False
+    seq=[i for b in blocks for i in b.insns]
+    if any(a.next_ip!=b.ip for a,b in zip(seq,seq[1:])) or any(i.has_segment_prefix or i.has_lock_prefix or i.has_rep_prefix or i.has_repne_prefix for i in seq): return False
+    middle=seq[len(start):-len(out)]; ips={i.ip for i in middle}|{zero.ip}
+    if branch.near_branch_target not in ips: return False
+    fac=InstructionInfoFactory(); writes={OpAccess.WRITE,OpAccess.READ_WRITE,OpAccess.COND_WRITE,OpAccess.READ_COND_WRITE}
+    for i in middle:
+        if i.flow_control==F.CALL and i.op0_kind==K.NEAR_BRANCH64:
+            if method.addr<=i.near_branch_target<jump.next_ip or not lift.il.bin.is_exec_va(i.near_branch_target): return False
+            continue  # Win64 direct callees preserve the parked registers and restore RSP.
+        if i.flow_control in (F.CONDITIONAL_BRANCH,F.UNCONDITIONAL_BRANCH):
+            if i.op0_kind!=K.NEAR_BRANCH64 or i.near_branch_target not in ips: return False
+        elif i.flow_control!=F.NEXT: return False
+        # No intervening stack reference (including LEA) or stack-pointer
+        # copy; the saved nonvolatiles/return address remain in their homes.
+        for u in fac.info(i).used_registers():
+            r=RegisterExt.full_register(u.register)
+            if r==R.RSP or (r in parked and u.access in writes): return False
+    return True
 
 
 def _guarded_helper_forward(lift, block, ins):
@@ -312,6 +368,9 @@ def shared_base_action(lift, ins, regs, xmm, *, tail_body=None):
             guarded = True
         else:
             return None
+    elif m.param_count==2 and ins.mnemonic==M.JMP and b is not None and tail_body is b.insns and _cleanup_tail_forward(lift,b,ins):
+        if m.addr==ins.near_branch_target or ('method',m.index) not in il.addr_candidates.get(m.addr,()): return None
+        guarded=True
     else:
         # A frameless, nullary override can transfer straight to the base
         # implementation. Prove the COMPLETE prefix: even a push before
@@ -380,7 +439,7 @@ def shared_base_action(lift, ins, regs, xmm, *, tail_body=None):
 
 
 def shared_action_tail(lift, ins, body, args, regs):
-    if args == ['this', '0'] and len(body) == 2:
+    if (args == ['this', '0'] and len(body) == 2 or len(args)==4 and args[0]=='this' and args[-1]=='0' and len(body)==10):
         # Use the actual register file, not only the trimmed tail arguments.
         # In particular, don't hide a surplus expression with side effects.
         full = [dict.get(lift.regs, r) for r in ('RCX', 'RDX', 'R8', 'R9')]

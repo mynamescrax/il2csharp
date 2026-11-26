@@ -1022,6 +1022,21 @@ used its animator and the manager selected after the base callback. Only
 PurchaseNode.cs changed. Strict 503-file census: 395 → 394 shared calls,
 3,187 → 3,186 `object objN`. Report: `work/shift_purchase_despawn_census.json`.
 
+**VoiceVolumeManager.Despawned (28413):** The entry parks `this`, `runner`
+and the low byte of `hasState` in RBX, RBP and RSI. No cleanup path writes
+these registers or borrows the stack frame. At `0x180619619` the epilogue
+reloads the arguments and clears R9D before restoring the nonvolatiles,
+unwinding the frame and jumping at `0x18061963a` to the shared slot-26
+implementation. The complete override compiled: stopping and clearing a
+present coroutine, comparing/conditionally clearing the singleton, then
+calling the base once with the original runner and flag. An exception from
+StopCoroutine or the singleton comparison prevented the base call. A raw
+qword zero comparison on a proved `this` Coroutine field now uses a C# null
+pattern. Across 14 files this fixed 32 guards. All 6,791 bodies lifted, all
+503 files passed syntax and brace checks, and the census fell from 394 to
+393 shared calls with `object objN` unchanged at 3,186. Report:
+`work/shift_voice_cleanup_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;

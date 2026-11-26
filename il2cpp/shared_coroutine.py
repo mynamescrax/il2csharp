@@ -1,6 +1,7 @@
 """Equivalent public coroutine entry after proving the native wrapper's forwarding ABI."""
 from il2cpp.binary import PE
 from il2cpp.expr import _recv_fold
+from il2cpp.sret_copy import _own_field
 from il2cpp.prelude import *  # noqa: F401,F403
 from il2cpp.text import reg_name, sdisp
 from il2cpp.x64 import VOLATILE, _reg_size
@@ -8,6 +9,22 @@ from il2cpp.x64 import VOLATILE, _reg_size
 _OWNER = 'UnityEngine.MonoBehaviour'
 _CHECK = _OWNER + '::IsObjectMonoBehaviour_Injected(System.IntPtr)'
 _START = _OWNER + '::StartCoroutineManaged2_Injected(System.IntPtr,System.Collections.IEnumerator)'
+
+
+def coroutine_null_test(lift,cmp,branch,lhs):
+    """A qword comparison with zero tests the managed Coroutine reference,
+    without calling an overloaded Unity comparison operator."""
+    if (cmp.mnemonic!=Mnemonic.CMP or cmp.next_ip!=branch.ip or branch.mnemonic not in (Mnemonic.JE,Mnemonic.JNE) or
+            cmp.op0_kind!=OpKind.MEMORY or cmp.memory_index!=IReg.NONE or cmp.has_segment_prefix or
+            MemorySizeExt.size(cmp.memory_size)!=8 or cmp.op1_kind not in (OpKind.IMMEDIATE8TO64,OpKind.IMMEDIATE32TO64) or
+            cmp.immediate(1)!=0 or not lhs or not lhs.ty or not lhs.text.startswith('this.')): return None
+    il=lift.il; td=lift._current_td; obj=dict.get(lift.regs,reg_name(cmp.memory_base))
+    if (not isinstance(getattr(il,'bin',None),PE) or not il.bin.is64 or not obj or obj._unk or obj.text!='this' or
+            il._closed_type_key(obj.ty)!=(0x12,td.index,0) or il._type_enum(lhs.ty)!=0x12 or il.type_name(lhs.ty)!='UnityEngine.Coroutine'):
+        return None
+    row=_own_field(il,td,sdisp(cmp.memory_displacement),8)
+    if row and row[0]==lhs.text and il._closed_type_key(row[1])==il._closed_type_key(lhs.ty):
+        return lhs.text+(' is null' if branch.mnemonic==Mnemonic.JE else ' is not null')
 
 
 def _wrapper(lift, va, ptr_offset):
