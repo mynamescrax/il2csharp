@@ -3579,6 +3579,12 @@ class _CallsMixin:
                 rest = [delegate_target]
             if m2.name == '.ctor' and not m2.is_static \
                     and self._complete_fresh_constructor(recv, rest):
+                # A consumer's `object` field describes the destination, not
+                # the allocation. Record the actual completed constructor,
+                # never just a text match on an arbitrary `new` expression.
+                if (not self.dry and recv.ty and self.il._closed_type_key(recv.ty)==(0x12,m2.declaring,0) and
+                        self.meta.typedefs[m2.declaring].generic_container==-1 and re.fullmatch(r't\d+',recv.text)):
+                    self._bound_constructor_types[recv.text]=recv.ty
                 return
             # property accessors fold through ANY receiver: the accessor's
             # own metadata declares arg0 an instance of the declaring type,

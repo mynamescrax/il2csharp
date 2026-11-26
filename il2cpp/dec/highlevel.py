@@ -6,6 +6,7 @@ from il2cpp.names import safe_ident
 from il2cpp.stmt_text import _split_top
 from il2cpp.text import mask_literals
 from il2cpp.expr import _mentions
+from il2cpp.allocation_sink import allocation_sinks
 
 class _HighLevelMixin:
     def _jumps_into(self, lines, lo, hi) -> bool:
@@ -1278,6 +1279,7 @@ class _HighLevelMixin:
                    and not (t in seen or seen.add(t))]
         if not ordered:
             return lines
+        fresh_sinks = allocation_sinks(self.L, method, shadow, tokens)
         # Minted obj/num/flag/real names must not capture identifiers
         # the body already uses -- least of all metadata parameter
         # names (mi 124140: s_8/v4 became obj1/obj2, shadowing the
@@ -1665,6 +1667,8 @@ class _HighLevelMixin:
                 rhs = m.group(4)
                 if nm not in decl:
                     dt = self._decl_type_of(tok_of[nm], rhs)
+                    if dt in ('object','System.Object'):
+                        dt = fresh_sinks.get(tok_of[nm],dt)
                     try:
                         dt = _hetero_decl(nm, dt, rhs)
                     except Exception:

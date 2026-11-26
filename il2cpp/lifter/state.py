@@ -1658,6 +1658,7 @@ class _StateMixin:
         self._stored_getter_lane = None
         self._hierarchy_values = {}
         self._material_values = {}
+        self._bound_constructor_types = {}
         self._scratch_getter_lanes = None
         self._last_sret = None
         self.__dict__.pop('_copied_frame', None)

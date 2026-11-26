@@ -876,6 +876,18 @@ the strict tree: 419 → 412 shared calls, `object objN` unchanged at 3,271;
 only FusionNetworkManager.cs and PerPlayerVolumeUI.cs changed.
 Report: `work/shift_player_index_census.json`.
 
+**Typed allocations stored as object:** A sole assignment into an object
+field was overriding the temporary's known constructor type. In the
+CFX particle iterator (23829), the constructor at `0x180528b04` receives
+the new `WaitForSeconds` and 0.5 seconds; the write barrier publishes that
+same reference as `Current` before the state advances. The emitted yield
+block compiled. Two yields produced two distinct waits, and a throwing
+constructor left the old `Current` and state intact. The type change requires
+a recorded closed reference constructor and a local used only for the field
+store. Across 30 changed files, `object objN` fell 3,271 → 3,208; unresolved
+calls remained 412. Strict lift, syntax and brace checks passed.
+Report: `work/shift_allocation_sink_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;
