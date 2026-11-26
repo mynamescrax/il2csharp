@@ -108,12 +108,12 @@ def _epilogue(seq):
             seq[1].immediate8to64==0x20 and seq[2].mnemonic==M.POP and seq[2].op0_register==R.RBX)
 
 
-def _diamond(blocks,head):
+def _diamond(blocks,head,*,shared_exit=False):
     i=head.bid
-    if len(blocks)<i+6: return None
-    version,cap,slow,fast,store=blocks[i+1:i+6]
+    if len(blocks)<i+6+shared_exit: return None
+    version,cap,slow=blocks[i+1:i+4]; fast,store=blocks[i+4+shared_exit:i+6+shared_exit]
     if (head.succs==[i+1] and version.preds==[i] and version.succs==[i+2] and cap.preds==[i+1] and
-            cap.succs==[i+4,i+3] and fast.preds==slow.preds==[i+2] and fast.succs==[i+5] and store.preds==[i+4]):
+            cap.succs==[fast.bid,slow.bid] and fast.preds==slow.preds==[cap.bid] and fast.succs==[store.bid] and store.preds==[fast.bid]):
         return version,cap,slow,fast,store
 
 
@@ -175,12 +175,12 @@ def _arm(lift,td,blocks,head,by_ip):
     return '%s.Add(%s);'%(row[0],call), terminal, field.ip
 
 
-def _saved_this(blocks,stop):
+def _saved_this(blocks,stop,frame_size=0x20,rdi_home=0x30):
     # The entry argument is captured in RBX before any branch; no PC on the
     # way to the final capture can redefine it. Win64 calls preserve RBX.
     seq=blocks[0].insns
     if (len(seq)<3 or seq[0].mnemonic!=M.PUSH or seq[0].op0_register!=R.RBX or seq[1].mnemonic!=M.SUB or
-            seq[1].op0_register!=R.RSP or seq[1].op1_kind!=K.IMMEDIATE8TO64 or seq[1].immediate8to64!=0x20): return False
+            seq[1].op0_register!=R.RSP or seq[1].op1_kind!=K.IMMEDIATE8TO64 or seq[1].immediate8to64!=frame_size): return False
     fac=InstructionInfoFactory(); saved=False; spill=None
     writes={OpAccess.WRITE,OpAccess.READ_WRITE,OpAccess.COND_WRITE,OpAccess.READ_COND_WRITE}
     for b in blocks:
@@ -198,7 +198,7 @@ def _saved_this(blocks,stop):
             if ins.ip>stop: return False
             if b is blocks[0] and not saved and _rr(ins,M.MOV,R.RBX,R.RCX): saved=True; continue
             if not saved and ins.flow_control!=F.NEXT: return False
-            if (ins.op0_kind==K.MEMORY and _mem(ins,M.MOV,R.RSP,0x30,8) and ins.op1_register==R.RDI):
+            if (ins.op0_kind==K.MEMORY and _mem(ins,M.MOV,R.RSP,rdi_home,8) and ins.op1_register==R.RDI):
                 if spill is not None: return False
                 spill=b.bid
             if any(r.access in writes and RegisterExt.full_register(r.register) in ((R.RBX,) if saved else (R.RBX,R.RCX))
@@ -232,12 +232,12 @@ def _field_frame(blocks,head):
     return 0 in seen
 
 
-def _singleton_read(b,slot,nre,by_ip):
-    """One bound, null-checked reference from [klass.static_fields+0]."""
+def _singleton_read(b,slot,nre,by_ip,offset=0):
+    """One bound, null-checked reference from the named static-fields slot."""
     if len(b.insns)!=5 or len(b.stmts)!=1 or not all(_plain(i) for i in b.insns): return None
     klass,blob,ref,test,null=b.insns; dest=ref.op0_register
     if (klass.mnemonic!=M.MOV or klass.op0_register!=R.RAX or klass.memory_base!=R.RIP or klass.ip_rel_memory_address!=slot or
-            not _load(blob,M.MOV,R.RCX,R.RAX,0xb8,8) or dest not in (R.RCX,R.RDX) or not _load(ref,M.MOV,dest,R.RCX,0,8) or
+            not _load(blob,M.MOV,R.RCX,R.RAX,0xb8,8) or dest not in (R.RCX,R.RDX,R.RDI) or not _load(ref,M.MOV,dest,R.RCX,offset,8) or
             not _rr(test,M.TEST,dest,dest) or null.mnemonic!=M.JE or not _raise_at(by_ip,null.near_branch_target,nre)): return None
     obj=(b.end_state or {}).get(reg_name(dest))
     if (obj and not obj._unk and re.fullmatch(r't\d+',obj.text) and
@@ -292,6 +292,68 @@ def _owner_field_append(lift,td,blocks,head,by_ip):
     return True
 
 
+def _parses_int(il, call):
+    if call.mnemonic!=M.CALL or call.op0_kind!=K.NEAR_BRANCH64: return False
+    ids=il.addr_candidates.get(call.near_branch_target,())
+    if len(ids)!=1 or ids[0][0]!='method' or not 0<=ids[0][1]<len(il.meta.methods): return False
+    m=il.meta.methods[ids[0][1]]; ps=il.meta.method_params(m)
+    return (m.addr==call.near_branch_target and il.typedef_full(m.declaring)=='System.Int32' and m.name=='Parse' and
+            m.is_static and m.flags&7==6 and m.generic_container==-1 and m.param_count==len(ps)==1 and
+            0<=ps[0].type<len(il.types) and il._closed_type_key(il.types[ps[0].type])==(0x0e,0) and
+            0<=m.return_type<len(il.types) and il._closed_type_key(il.types[m.return_type])==(8,0))
+
+
+def _parsed_field_append(lift,td,blocks,head,by_ip):
+    """Read the string, capture the list, then parse. The slow arm CALLs
+    resize and falls into an epilogue that other paths can also enter."""
+    if len(head.insns)!=7 or len(head.preds)!=1 or len(head.stmts)!=1: return False
+    region=_diamond(blocks,head,shared_exit=True)
+    if not region: return False
+    version,cap,slow,fast,store=region; exit_block=blocks[slow.bid+1]; prev=blocks[head.preds[0]]
+    if (prev.succs!=[head.bid] or len(prev.insns)!=5 or prev.insns[-1].next_ip!=head.insns[0].ip or
+            slow.succs!=[exit_block.bid] or slow.bid not in exit_block.preds or store.succs or exit_block.succs or
+            exit_block.term!=('ret',) or exit_block.stmts or exit_block.ret): return False
+    v,c,s,f,w=(b.insns for b in region); ep=exit_block.insns
+    if list(map(len,(v,c,s,ep,f,w)))!=[6,2,6,5,4,6]: return False
+    seq=head.insns+v+c+s+ep+f+w
+    if not all(_plain(i) for i in seq) or any(a.next_ip!=b.ip for a,b in zip(seq,seq[1:])): return False
+    text,hidden,field,parse,value,test,null=head.insns; il=lift.il
+    if (not _load(text,M.MOV,R.RCX,R.RBX,text.memory_displacement,8) or not _rr(hidden,M.XOR,R.EDX,R.EDX) or
+            not _load(field,M.MOV,R.RDI,R.RDI,field.memory_displacement,8) or not _parses_int(il,parse) or
+            not _rr(value,M.MOV,R.R9D,R.EAX) or not _rr(test,M.TEST,R.RDI,R.RDI) or null.mnemonic!=M.JE or
+            not _fast_path(v,c,f,w[2],R.RDI,R.RDX,R.RCX,R.ECX,R.R9D,R.RAX,null)): return False
+    contract=_contract(lift,v[0].ip_rel_memory_address)
+    if not contract: return False
+    list_key,resize,nre,ior=contract
+    if (not _raise_at(by_ip,null.near_branch_target,nre) or not _raise_at(by_ip,f[3].near_branch_target,ior) or
+            not _load(s[0],M.MOV,R.RAX,R.RAX,0x20,8) or not _rr(s[1],M.MOV,R.EDX,R.R9D) or not _rr(s[2],M.MOV,R.RCX,R.RDI) or
+            not _load(s[3],M.MOV,R.R8,R.RAX,0xc0,8) or not _load(s[4],M.MOV,R.R8,R.R8,0x70,8) or not _jump(s[5],M.CALL,resize)):
+        return False
+    # The fast path interleaves the element store with the same restores.
+    # Keep the return block; branches skipping the append still reach it.
+    for di,si,sp,bx,ret in (ep,w[:2]+w[3:]):
+        if (not _load(di,M.MOV,R.RDI,R.RSP,0x48,8) or not _load(si,M.MOV,R.RSI,R.RSP,0x40,8) or not _sp(sp,M.ADD,0x30) or
+                bx.mnemonic!=M.POP or bx.op0_register!=R.RBX or ret.mnemonic!=M.RET or ret.op_count): return False
+    if not _saved_this(blocks,text.ip,frame_size=0x30,rdi_home=0x48): return False
+    slot=prev.insns[0].ip_rel_memory_address; offset=prev.insns[2].memory_displacement
+    owner=_singleton_read(prev,slot,nre,by_ip,offset)
+    prop=alias_for_slot(il,slot,lift.rt_init_meta,offset) if owner else None
+    if (not prop or owner is not prev.end_state.get('RDI') or il._closed_type_key(owner.ty)!=il._closed_type_key(prop[1])): return False
+    row=_own_field(il,il.meta.typedefs[prop[1][0]],field.memory_displacement,8); arg=_own_field(il,td,text.memory_displacement,8)
+    if (not row or row[1][1]&7!=6 or il._closed_type_key(row[1])!=list_key or not arg or il._closed_type_key(arg[1])!=(0x0e,0)): return False
+    recv=head.end_state.get('RDI'); item=head.end_state.get('R9'); this=head.end_state.get('RBX')
+    if (not recv or recv._unk or recv.text!=owner.text+row[0][4:] or il._closed_type_key(recv.ty)!=list_key or
+            not this or this._unk or this.text!='this' or il._closed_type_key(this.ty)!=(0x12,td.index,0) or not item or item._unk or
+            not re.fullmatch(r't\d+',item.text) or il._closed_type_key(item.ty)!=(8,0) or head.stmts!=['var %s = int.Parse(%s);'%(item.text,arg[0])]): return False
+    prev.stmts[:]=['var %s = %s;'%(owner.text,acc_get(prop[0])),
+                   'if (%s is null) { throw new System.NullReferenceException(); }'%owner.text]
+    saved=lift.new_var(); lift._var_types[saved]=arg[1]
+    head.stmts[:]=['var %s = %s;'%(saved,acc_get(arg[0])), '%s.Add(int.Parse(%s));'%(recv.text,saved)]
+    version.preds.remove(head.bid); head.succs=[exit_block.bid]; head.term=('jmp',exit_block.bid); head.cond=head.ret=None
+    exit_block.preds.append(head.bid)
+    return True
+
+
 def fold_terminal_appends(lift,method,td,blocks,pads):
     """Fold a terminal append or an adjoining pair; no later consumer can
     observe discarded scratch registers. Never let an unmatched join enter
@@ -302,6 +364,9 @@ def fold_terminal_appends(lift,method,td,blocks,pads):
             il._closed_type_key(il.types[method.return_type])!=(1,0)): return
     by_ip=None
     for head in blocks[:-5]:
+        if len(head.insns)==7 and head.insns[3].mnemonic==M.CALL and head.insns[-1].mnemonic==M.JE:
+            if by_ip is None: by_ip={x.ip:x for b in blocks for x in b.insns}
+            if _parsed_field_append(lift,td,blocks,head,by_ip): return
         if len(head.insns)==4 and head.insns[0].mnemonic==M.MOV and head.insns[0].op0_register==R.RCX and head.insns[-1].mnemonic==M.JE:
             if by_ip is None: by_ip={x.ip:x for b in blocks for x in b.insns}
             if _owner_field_append(lift,td,blocks,head,by_ip): return

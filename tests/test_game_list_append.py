@@ -167,3 +167,72 @@ def test_nuisance_append_requires_exact_field_paths(shift_runtime,monkeypatch,de
     old=[(list(b.stmts),b.term,list(b.succs),list(b.preds)) for b in blocks]
     fold_terminal_appends(d.L,md,td,blocks,d._pad_bids)
     assert old==[(b.stmts,b.term,b.succs,b.preds) for b in blocks]
+
+
+def test_dialogue_report_uses_list_captured_before_int_parse(body,tmp_path):
+    method=body('DialogueInteractable','Start',0x1806c4fc0)
+    assert 'sub_180e09d60' not in method
+    tail=re.search(r'EODReportValues (\w+) = EODReportValues\.Instance;\s*'
+                   r'if \(\1 is null\) \{ throw new System.NullReferenceException\(\); \}\s*'
+                   r'string (\w+) = this\.dialogueId;\s*\1\.npcID\.Add\(int\.Parse\(\2\)\);',method)
+    assert tail
+    runner=tmp_path/'runner';runner.mkdir()
+    (runner/'Program.cs').write_text('''using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
+var version=typeof(List<int>).GetField("_version",BindingFlags.NonPublic|BindingFlags.Instance);
+var culture=new HookCulture();CultureInfo.CurrentCulture=culture;
+foreach(string mode in new[]{"spare","grow","bad id","overflow","null list, bad id","null list","null owner"}) {
+    var log=new List<string>(); var saved=new List<int>(mode=="grow"?1:4){7};var later=new List<int>{11};
+    var before=(int)version.GetValue(saved); List<int> field=mode.StartsWith("null list")?null:saved;
+    string id=mode.Contains("bad id")?"oops":mode=="overflow"?"2147483648":"~41";
+    var owner=new EODReportValues(); EODReportValues.Read=()=>{log.Add("owner");return mode=="null owner"?null:owner;};
+    var c=new Case {ReadId=()=>{log.Add("id");return id;}};
+    owner.ReadList=()=>{log.Add("list");id="123";return field;};
+    // Run the actual int.Parse(string). The culture lookup replaces npcID
+    // while the argument is evaluated, after the receiver was captured.
+    culture.Hook=()=>{log.Add("parse");field=later;};
+    Exception failure=null;
+    try {c.Run();} catch(Exception ex){failure=ex;} finally{culture.Hook=null;}
+    Type expected=mode.Contains("bad id")?typeof(FormatException):mode=="overflow"?typeof(OverflowException):
+                  mode.StartsWith("null")?typeof(NullReferenceException):null;
+    bool ok=expected==null;
+    if(failure?.GetType()!=expected || string.Join(";",log)!=(mode=="null owner"?"owner":"owner;id;list;parse") ||
+        !saved.SequenceEqual(ok?new[]{7,-41}:new[]{7}) || !later.SequenceEqual(new[]{11}) ||
+        (int)version.GetValue(saved)!=before+(ok?1:0) || mode=="grow" && saved.Capacity<=1 || mode=="spare" && saved.Capacity!=4)
+        throw new Exception(mode+": "+string.Join(";",log),failure);
+}
+Console.WriteLine("spare and resize: [7,-41] on the captured list; malformed and overflowing IDs leave both lists unchanged");
+class HookCulture : CultureInfo {
+    public Action Hook; readonly NumberFormatInfo format=new NumberFormatInfo {NegativeSign="~"}; public HookCulture():base("en-US"){}
+    public override NumberFormatInfo NumberFormat {get {var h=Hook;Hook=null;h?.Invoke();return format;} set=>base.NumberFormat=value;}
+}
+class EODReportValues {public static Func<EODReportValues> Read;public static EODReportValues Instance=>Read();
+    public Func<List<int>> ReadList;public List<int> npcID=>ReadList();}
+class Case {public Func<string> ReadId; string dialogueId=>ReadId();public void Run(){\n'''+tail[0]+'\n}}',encoding='utf-8')
+    print(run_case(tmp_path,runner).strip())
+
+
+@pytest.mark.parametrize('defect',['wrong static offset','wrong parse target','wrong item','resize reload','extra exit effect'])
+def test_dialogue_append_declines_inexact_paths(shift_runtime,monkeypatch,defect):
+    from iced_x86 import Decoder
+    from il2cpp.dec import build
+    from il2cpp.list_append import fold_terminal_appends
+
+    meta,il=shift_runtime; d=Decompiler(Lifter(il)); m=meta.methods[24853];td=meta.typedefs[m.declaring]
+    monkeypatch.setattr(build,'fold_terminal_appends',lambda *args:None);d.lift_method(m,td);blocks=d.L._blocks
+    ip={'wrong static offset':0x1806c51f9,'wrong parse target':0x1806c5213,'wrong item':0x1806c5218,
+        'resize reload':0x1806c5243,'extra exit effect':0x1806c5256}[defect]
+    dest=next(b for b in blocks if any(i.ip==ip for i in b.insns)); j=next(j for j,i in enumerate(dest.insns) if i.ip==ip)
+    raw=bytearray(il.bin.read(ip,dest.insns[j].len))
+    if defect=='wrong static offset': raw[-1]=0x10
+    elif defect=='wrong parse target': raw[1]^=0x10
+    elif defect=='wrong item': raw[-1]^=1
+    elif defect=='resize reload': raw[-1]^=1
+    else: raw[1]=0x89  # write RDI to its home rather than restoring it
+    monkeypatch.setattr(dest,'insns',dest.insns[:j]+list(Decoder(64,bytes(raw),ip=ip))+dest.insns[j+1:])
+    old=[(list(b.stmts),b.term,list(b.succs),list(b.preds)) for b in blocks]
+    fold_terminal_appends(d.L,m,td,blocks,d._pad_bids)
+    assert old==[(b.stmts,b.term,b.succs,b.preds) for b in blocks]

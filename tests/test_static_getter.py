@@ -5,7 +5,7 @@ import pytest
 
 from il2cpp.binary import PE
 from il2cpp.expr import Expr
-from il2cpp.static_getter import static_getter
+from il2cpp.static_getter import static_getter, _slot
 
 
 def wrapper(va, flag, load, init, *, store=None, slot=0x7000):
@@ -55,3 +55,11 @@ def test_snapshot_type_and_accessible_property_come_from_the_same_static_slot():
                                      dict(extra='SideEffect()')])
 def test_unproven_accessor_twin_declines(changes):
     assert probe(**changes) is None
+
+
+@pytest.mark.parametrize('offset,expected',[(8,0x7000),(0,None),(16,None)])
+def test_static_getter_proves_the_displacement_not_just_the_type(offset,expected):
+    va=0x1000; code=wrapper(va,0x4000,0x7000,0x8000)
+    code=code.replace(b'\x48\x8b\x00\x48\x83\xc4',b'\x48\x8b\x40\x08\x48\x83\xc4')
+    il=NS(bin=NS(is_exec_va=lambda p:p==va,read=lambda p,n:code[:n]),function_extent=lambda p:(p,p+len(code)))
+    assert _slot(il,va,0x8000,offset)==expected

@@ -928,6 +928,20 @@ evaluation order. The strict 503-file rebuild changed only NuisanceCustomer.cs:
 shared calls 404 → 403 (22 → 21 at the resize address); `object objN` stays
 at 3,194. Report: `work/shift_nuisance_append_census.json`.
 
+**DialogueInteractable.Start (24853):** The report-owner getter and caller
+read the same reference at static-field offset +8. After checking that owner,
+the caller loads `dialogueId` at `0x1806c5206`, captures the `npcID` list in
+RDI at `0x1806c520f`, then calls `Int32.Parse(string)`. The list null check
+follows the parse. The fast arm writes the result at the old size, and the
+full-list arm passes the same receiver and item to `AddWithResize`. Other
+branches still reach the shared return without appending. The compiled
+report block preserved `[7,-41]` on both capacity paths when the list field
+changed inside the real parser's culture lookup. Malformed and overflowing
+IDs left both lists untouched; a malformed ID took precedence over a null
+list. Only DialogueInteractable.cs changed. Shared calls 403 → 402 (21 → 20
+at the resize helper); `object objN` stays at 3,194. Strict lift, syntax and
+brace checks passed. Report: `work/shift_dialogue_append_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;
