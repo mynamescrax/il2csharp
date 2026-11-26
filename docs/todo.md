@@ -915,6 +915,19 @@ append. Only RegularBrowsingNPC.cs changed in the 503-file strict rebuild.
 Shared calls 406 → 404 (24 → 22 at the resize address); `object objN` stayed
 at 3,194. Report: `work/shift_goal_appends_census.json`.
 
+**NuisanceCustomer.SelectNuisanceType (24062):** After the animation store,
+the caller reloads `NuisanceCustomerManager.Instance`, reads its list into
+RCX and the signed `nuisanceType` into EDX. The spare-capacity path increments
+the size and writes EDX at the old index. The full-list path tail-jumps to
+`List<int>.AddWithResize` at `0x180e09d60` with both inputs unchanged. Both
+paths share the single version increment before the capacity test. The
+compiled selection-and-append tail yielded `[9,-19]` on both paths, including
+when the manager was replaced after publishing the animation and the list
+was replaced while reading the item. Null and throwing paths retained their
+evaluation order. The strict 503-file rebuild changed only NuisanceCustomer.cs:
+shared calls 404 → 403 (22 → 21 at the resize address); `object objN` stays
+at 3,194. Report: `work/shift_nuisance_append_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;

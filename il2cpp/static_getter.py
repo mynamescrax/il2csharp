@@ -26,7 +26,11 @@ def _slot(il, va, init):
 
 
 def _alias(il, va, init):
-    slot = _slot(il, va, init)
+    return alias_for_slot(il, _slot(il, va, init), init)
+
+
+def alias_for_slot(il, slot, init):
+    """Public getter for the reference at offset zero of this exact static blob."""
     usage = il.decode_slot(slot) if slot is not None else None
     if not usage or usage.get('kind') != 1:
         return None

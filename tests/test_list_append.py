@@ -3,7 +3,7 @@ from types import SimpleNamespace as NS
 import pytest
 from iced_x86 import Decoder
 
-from il2cpp.list_append import _saved_this
+from il2cpp.list_append import _field_frame, _saved_this
 
 
 @pytest.mark.parametrize('case',['dominating save','bypassed save','replaced this','call before capture'])
@@ -17,3 +17,14 @@ def test_terminal_epilogue_rejects_unrelated_receivers_and_bypassed_saves(case):
         raw=bytes.fromhex(part); blocks.append(NS(bid=j,insns=list(Decoder(64,raw,ip=ip)),succs=[j+1] if j<3 else []));ip+=len(raw)
     if case=='bypassed save':blocks[0].succs.append(2)
     assert _saved_this(blocks,blocks[-1].insns[0].ip)==(case=='dominating save')
+
+
+@pytest.mark.parametrize('change', ['sibling return','changed receiver','conflicting spill','different frame'])
+def test_field_append_only_accepts_intact_frame_and_receiver(change):
+    def block(n,raw,preds): return NS(bid=n,insns=list(Decoder(64,bytes.fromhex(raw))),preds=preds)
+    entry=block(0,'48895c2408 4889742410 57 4883ec20 803900 488bd9',[])
+    other=block(1,'488b5c2430 4883c420 5f c3',[0])
+    path=block(2,{'changed receiver':'488bd8','conflicting spill':'4889442438',
+                  'different frame':'4883ec10'}.get(change,'488bcb'),[0])
+    target=block(3,'90',[2])
+    assert _field_frame([entry,other,path,target],target)==(change=='sibling return')
