@@ -100,12 +100,20 @@ def echo_at(lift,ip):
             lift.il._type_enum(echo.ty)==0x11 and lift.il.value_type_size(echo.ty[0])==12):return Expr(echo.text[1:],echo.ty,'obj')
 
 
-def store_value(lift,ip,off,value):
+def store_value(lift,ip,off,value,width=12):
     name=lift.slot_var(off);start=lift.rsp_delta+off;lift._kill_stale(name)
     lift.emit(ip,f'{name} = {value.text};',None)
+    aliases=getattr(lift,'addr_of',{})
     for a,old in lift.stack_map.items():
-        if start<=a<start+12:lift.stack_values.pop(old,None)
-    lift._stack_store(start,12,value);lift.stack_values[name]=value
+        if a>=start+width:continue
+        if old in aliases and start<a+8:aliases.pop(old)
+        if old not in lift.stack_values:continue
+        v=lift.stack_values[old];part=getattr(v,'_slice',None)
+        ty=getattr(v,'ty',None);n=part[2] if part else (lift.il._sf_field_size(ty,0) if ty else None)
+        # A named scalar home can also hold a full Win64 argument word. If
+        # its extent isn't known, don't keep a potentially partial value.
+        if not n or n<0 or start<a+max(8,n):lift.stack_values.pop(old)
+    lift._stack_store(start,width,value);lift.stack_values[name]=value
 
 
 def unary_argument(lift,seq,j):

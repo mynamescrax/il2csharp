@@ -27,6 +27,7 @@ from il2cpp.material_setter import assignment as material_assignment, material_s
 from il2cpp.inline_task import inline_tasks, emit_kickoff
 from il2cpp.joined_sret import joined_srets, copied_argument
 from il2cpp.indexed_binary import binary_sites, binary_use, echo_at, store_value, unary_argument
+from il2cpp.checked_element import element_sites,element_step
 from il2cpp.parent_lookup import parent_lookup_sites
 
 class _AnalyzeMixin:
@@ -43,6 +44,7 @@ class _AnalyzeMixin:
         # CFG (reachable-from-the-declaration check); blocks[bid] and
         # Block.bid line up by construction
         L._blocks = blocks
+        element_plans=element_sites(L,m,blocks,self._pad_bids)
         result_homes,result_copies,L._joined_getters=joined_srets(L,m,blocks,self._pad_bids)
         kickoffs,owner_loads,task_getters,task_zeroes = inline_tasks(L,m,td,blocks,self.eh)
         kickoff_values = {}
@@ -61,6 +63,7 @@ class _AnalyzeMixin:
         (L._component_lookups,L._material_sites,L._material_captures,L._material_reads) = material_sites(L,m,blocks,self._pad_bids)
         L._component_lookups.update(L._parent_lookup_sites)
         L._snapshot_srets, packed_loads, snapshot_getters = snapshot_plans(L, td, blocks, self._pad_bids)
+        for site,_ in element_plans.values():L._snapshot_srets.update((*site.getters,site.rotate))
         binary_reads,binary_stores,binary_uses=binary_sites(L,m,blocks,self._pad_bids)
         L._snapshot_srets.update(binary_reads.values());L._snapshot_srets.update(v[0] for v in binary_uses.values())
         binary_values={}
@@ -79,6 +82,7 @@ class _AnalyzeMixin:
         capture = getattr(self, '_captured_receiver', None)
 
         def fresh_regs(counting):
+            L._checked_element_getters={}
             binary_values.clear()
             kickoff_values.clear()
             L._ref_array_loads = {}
@@ -139,6 +143,7 @@ class _AnalyzeMixin:
         jcc_fallthrough_flags = {}
 
         def exec_block(b, dry):
+            element_plan=element_plans.get(b.bid);element_values={}
             L.out = _Sink(b)
             L.dry = dry
             L._jcc_flags = None
@@ -177,6 +182,7 @@ class _AnalyzeMixin:
                     L.regs['RDI'] = Expr(snapshot, capture[2], 'obj')
                     continue
                 mn = ins.mnemonic
+                if element_plan and element_step(L,element_plan,element_values,ins):continue
                 if mn==Mnemonic.XOR and idx and b.insns[idx-1].mnemonic==Mnemonic.CALL:
                     unary_store=unary_argument(L,b.insns,idx)
                 if unary_store and ins.ip==unary_store[0]:

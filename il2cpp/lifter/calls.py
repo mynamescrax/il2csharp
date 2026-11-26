@@ -2875,6 +2875,7 @@ class _CallsMixin:
         void_action = None
         copied_getter = (copied_struct_getter(self,ins,gpr_exprs)
                          if target and cands and len(cands)>1 else None)
+        copied_getter=getattr(self,'_checked_element_getters',{}).pop(ins.ip,None) or copied_getter
         joined=getattr(self,'_joined_getters',{}).get(ins.ip)
         if joined is not None and len(gpr_exprs)>1:
             r=gpr_exprs[1]

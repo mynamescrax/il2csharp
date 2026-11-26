@@ -1288,12 +1288,18 @@ marker from `ParticleCollisionSpawner.cs` and four from `GasCollisionSpawner.cs`
 Shared markers fell 365 → 360 (63 addresses); untyped locals fell
 3,133 → 3,125. Report: `work/shift_normal_parts_census.json`.
 
-`ThrownObject.OnCollisionEnter` is a separate remaining shape: the unique
+**Checked first contact:** In `ThrownObject.OnCollisionEnter`, the unique
 `Collision.contacts` getter at `0x18060adb1` returns `ContactPoint[]`. After
 the null and length checks, three 16-byte loads copy the complete 48-byte
 element zero. `0x18060adf4` reads its `m_Point` at offset 0 and `0x18060ae0d`
-reads its `m_Normal` at offset 12. This calls for an array-element
-proof rather than reusing the list-indexer proof.
+reads its `m_Normal` at offset 12. The emitted branches use one local
+`ContactPoint` for both reads and send the point and `LookRotation(normal)`
+to the RPC. The compiled guard replaces `contacts[0]` during the point
+getter; the normal still comes from the original element. Null, empty,
+disabled and throwing paths are covered. The scoped `ThrownObject.cs`
+re-emit removed four shared markers (4 → 0) and reduced `object objN`
+declarations from 21 to 7. The enclosing damage/dispatch code still needs
+a whole-method gate. This is a single-file comparison, not a tree census.
 
 **Whole-method behavior gate: `ParticleCollisionSpawner.OnParticleCollision`.**
 Both inner searches increment the index once before the native backedge
