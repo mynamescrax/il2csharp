@@ -304,6 +304,9 @@ class _BuildMixin:
         insns, skip = self._decode(m)
         if not insns:
             return ['/* no code */']
+        from il2cpp.packed_projection import packed_projection
+        projected=packed_projection(L,m,td,insns,self.eh)
+        if projected is not None:return projected
         L._entry_ref_zeros = entry_ref_zeros(L, m, insns, (self.eh or {}).get('pads') or ())
         L._entry_reference_loads = entry_reference_loads(L, m, insns, skip, (self.eh or {}).get('pads') or ())
         L._this_reloads = saved_this_reloads(L.il, m, td, insns, self.eh)

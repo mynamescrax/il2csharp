@@ -1471,6 +1471,18 @@ cursor, previously three, for `MoveNext` and `Current`. Those two larger
 methods were measured by call count; their arguments/cleanup are not a
 whole-method gate. Queue slice batch: `785c8cc` (12 targeted checks).
 
+**Packed two-float returns.** `FEngineering.V3ToV2` and `FVectorMethods.XOZ`
+formerly ended with `return unknown;`. The instructions load Z then X, interleave
+X/Z, and return those eight bytes in RAX. The lift now uses the actual field
+offsets for both layouts and preserves the two dwords without executing a value
+constructor. The exact-build cohort has **28 methods/accessors at 16 native
+entries**: three projection functions plus the 25 two-lane swizzles of `float3`
+and `float4`. Compiled behavior checks use distinct lane values, signed zero,
+subnormals and NaNs with nontrivial payloads. A wrong GPR, missing lane,
+unaligned source or hidden return buffer declines. Projections involving
+arithmetic are a separate case. Saved reference batch: `a9af380` (17 targeted
+checks, 2,324 single-worker portable checks).
+
 **Whole-method behavior gate: `GasCollisionSpawner.OnParticleCollision`.**
 At `0x1806efcda` the RPC takes two different by-value arguments: the saved
 intersection (XMM6 + EBX, 8+4 bytes copied through RDX) and the full 16-byte
