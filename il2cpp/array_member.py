@@ -6,6 +6,7 @@ from il2cpp.field_slice import _body
 from il2cpp.sret_copy import _own_field
 from il2cpp.prelude import HAVE_ICED
 from il2cpp.text import reg_name
+from il2cpp.saved_ref import reference_vector
 
 if HAVE_ICED:
     from iced_x86 import Mnemonic as M, OpKind as K, Register as R, RegisterExt
@@ -13,6 +14,39 @@ if HAVE_ICED:
 
 _SCALAR=re.compile(rb'(?:\x66\x90)?\xf3\x0f\x10(?:\x01|\x41(.)|\x81(.{4}))\xc3',re.S)
 _LEAD=re.compile(rb'(?:\x66\x90)?\xf3\x0f\x10')
+
+
+def checked_ref_elements(lift,method,blocks,pads):
+    """A checked pointer-width read of a direct call's returned reference
+    array. Bind the query once, but read the live element on each iteration."""
+    found={};il=lift.il
+    if not HAVE_ICED or pads or not lift._saved_references:return found
+    checks=[b.insns[-2:] for b in blocks if len(b.insns)>=2 and b.insns[-1].mnemonic==M.JAE and b.insns[-2].mnemonic==M.CMP]
+    if not checks:return found
+    seq=[i for b in blocks for i in b.insns];graph=_graph(il,seq,allow_tail=True,chained=True,runtime_tails=lift.rt_wbarrier)
+    if not graph:return found
+    pred,_=graph;by={i.ip:i for i in seq}
+    for cmp,jump in checks:
+        br=cmp.memory_base;index=cmp.op0_register;throw=by.get(jump.near_branch_target);extend=by.get(jump.next_ip)
+        if (br not in _SAVED or cmp.op1_kind!=K.MEMORY or cmp.memory_displacement!=24 or not RegisterExt.is_gpr32(index) or
+                cmp.memory_index!=R.NONE or RegisterExt.full_register(index)==br or jump.op0_kind!=K.NEAR_BRANCH64 or
+                not throw or throw.mnemonic!=M.CALL or throw.op0_kind!=K.NEAR_BRANCH64 or
+                lift._named_raise_throw(throw.near_branch_target,lift._call_name(throw.near_branch_target))!='System.IndexOutOfRangeException' or
+                not extend or extend.mnemonic!=M.MOVSXD or extend.op1_register!=index or extend.op0_register==br):continue
+        read=by.get(extend.next_ip)
+        if (not read or read.mnemonic!=M.MOV or read.op1_kind!=K.MEMORY or not RegisterExt.is_gpr64(read.op0_register) or
+                read.memory_base!=br or read.memory_index!=extend.op0_register or read.memory_index_scale!=8 or read.memory_displacement!=32 or
+                any(i.has_segment_prefix or i.has_lock_prefix for i in (cmp,extend,read)) or
+                any(pred[b.ip]!=[a.ip] or b.ip!=a.next_ip for a,b in zip((cmp,jump,extend),(jump,extend,read)))):continue
+        defs=_definitions(by,pred,method.addr,cmp.ip,br)
+        if len(defs)!=1:continue
+        source,reg=defs.pop();fact=lift._saved_references.get(source)
+        if reg!=R.RAX or not fact or fact[0]!='method':continue
+        m=il.meta.methods[fact[1]];rt=il.types[m.return_type]
+        if (by[source].mnemonic==M.CALL and by[source].op0_kind==K.NEAR_BRANCH64 and m.addr==by[source].near_branch_target and
+                m.generic_container==-1 and il.meta.typedefs[m.declaring].generic_container==-1 and reference_vector(il,rt)):
+            found[read.ip]=rt
+    return found
 
 
 def _member(lift,target,owner):

@@ -1944,6 +1944,9 @@ class _InsnMixin:
                             self.emit(ins.ip,f'var {local} = {acc_get(indexed)};',None);return Expr(local,element,'str')
                         return Expr(indexed, element, 'str')
                     if self.il._type_enum(element) == 0x12 and getattr(self, '_ref_array_loads', {}).get(ins.ip) == be.ty:
+                        if ins.ip in getattr(self,'_snapshot_ref_elements',()) and not self.dry:
+                            local=self.new_var();self._var_types[local]=element;self._type_hints[local]=element
+                            self.emit(ins.ip,f'var {local} = {acc_get(indexed)};',None);indexed=local
                         value = Expr(indexed, element, 'obj')
                         self._ref_array_elements.add(value)
                         return value

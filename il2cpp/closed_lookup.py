@@ -44,7 +44,7 @@ def _receiver(il,method,byip,pred,site,owner,*,initial=None,this_only=False,prod
     return proved
 
 
-def closed_lookup_sites(lift,method,blocks,pads,*,producers=None,conversions=None):
+def closed_lookup_sites(lift,method,blocks,pads,*,producers=None,conversions=None,element_loads=None):
     il=lift.il
     result={}
     if not HAVE_ICED or pads or not isinstance(getattr(il,'bin',None),PE) or not il.bin.is64:return result
@@ -90,8 +90,15 @@ def closed_lookup_sites(lift,method,blocks,pads,*,producers=None,conversions=Non
             # No concrete registration is usual for a reference specialization;
             # a conflicting/invalid row is not the same as an absent row.
             if si in il._awaiter_spec_indices[mi] or object_shared_entry(il,mi)!=target:continue
-        sources={}
-        if _receiver(il,method,byip,pred,call.ip,md.declaring,producers=sources):
+        sources={}; from_element=False
+        if element_loads:
+            defs=_definitions(byip,pred,method.addr,call.ip,R.RCX)
+            if len(defs)==1:
+                ip,r=defs.pop();arr=element_loads.get(ip)
+                if arr is not None and byip[ip].op0_register==r:
+                    elem=il.type_from_ptr(arr[0])
+                    from_element=bool(elem and il._closed_type_key(elem)==(0x12,elem[0],0) and md.declaring in il.base_chain_tds(elem[0]))
+        if from_element or _receiver(il,method,byip,pred,call.ip,md.declaring,producers=sources):
             result[call.ip]=(si,md.declaring,args[0],md.name,False)
             if producers is not None:producers.update(sources)
     if result and conversions is not None:

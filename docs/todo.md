@@ -1528,6 +1528,21 @@ both flags independently and reject the same vector copy routed through
 XMM1, an AH store, or an adjacent stack byte. Search-token batch:
 `c32c462` (85 exact-build checks and 2,328 single-worker portable checks).
 
+**Saved query arrays and checked component receivers.** The three
+`InventoryManager.Toggle*Radii` methods each make one native tag query.
+Previously the loop bound repeated the query and the element was an
+untyped byte-pointer expression. A registered reference-vector return is
+now captured at the producer; the checked qword load selects the current
+element on each iteration. In the bear-trap and stun-mine variants the
+caught test uses the first lookup and the action uses a second lookup on
+that same element. The landmine variant has just one lookup. All three
+complete emitted methods passed with changing array elements, both Boolean
+inputs, caught elements, missing components and throwing callbacks. The
+batch passed 16 exact-build tests including the two whole-spawner gates,
+and 2,328 single-worker portable tests. Other width/stride, index, and
+exception edges do not establish this checked-load proof. Previous mixed
+forward batch: `8580483` (20 exact-build, 2,328 single-worker portable).
+
 **Whole-method behavior gate: `GasCollisionSpawner.OnParticleCollision`.**
 At `0x1806efcda` the RPC takes two different by-value arguments: the saved
 intersection (XMM6 + EBX, 8+4 bytes copied through RDX) and the full 16-byte

@@ -11,6 +11,19 @@ if HAVE_ICED:
     _INFO=InstructionInfoFactory();_WRITE={OpAccess.WRITE,OpAccess.READ_WRITE,OpAccess.COND_WRITE,OpAccess.READ_COND_WRITE}
 
 
+def reference_vector(il,rt):
+    """Only SZARRAY of a closed, by-value reference element. Keeping a
+    reference is independent of proving a later header or element load."""
+    if not rt or il._type_enum(rt)!=0x1d:return False
+    key=il._closed_type_key(rt)
+    if not key or key[0]!=0x1d or key[-1]!=0:return False
+    elem=key[1]
+    if elem==(14,0):return True
+    if not elem or elem[0]!=0x12 or elem[-1] or not 0<=elem[1]<len(il.meta.typedefs):return False
+    td=il.meta.typedefs[elem[1]]
+    return not td.is_valuetype and td.generic_container==-1
+
+
 def _saved_array(il,call,after):
     if call.op0_kind!=K.NEAR_BRANCH64:return False
     ids=il.addr_candidates.get(call.near_branch_target,())
@@ -18,7 +31,7 @@ def _saved_array(il,call,after):
     m=il.meta.methods[ids[0][1]]
     if not 0<=m.return_type<len(il.types):return False
     rt=il.types[m.return_type]
-    if not rt or il._type_enum(rt)!=0x1d or il._closed_type_key(rt)!=(0x1d,(14,0),0):return False
+    if not reference_vector(il,rt):return False
     ip=call.next_ip
     for i in after:
         if i.ip!=ip or i.flow_control!=F.NEXT or i.has_segment_prefix or i.has_lock_prefix:return False
@@ -71,7 +84,7 @@ def capture_saved_reference(lift,ins,mi,recv,result,dispatch):
     il=lift.il;m=il.meta.methods[mi];key=il._closed_type_key;rt=result.ty
     if (not rt or m.generic_container!=-1 or not 0<=m.return_type<len(il.types) or key(il.types[m.return_type])!=key(rt) or
             m.flags&0x800 or not 0<=m.declaring<len(il.meta.typedefs) or il.meta.typedefs[m.declaring].generic_container!=-1):return False
-    if key(rt)!=(0x1d,(14,0),0) and (key(rt)!=(0x12,rt[0],0) or not 0<=rt[0]<len(il.meta.typedefs) or il.meta.typedefs[rt[0]].generic_container!=-1):return False
+    if not reference_vector(il,rt) and (key(rt)!=(0x12,rt[0],0) or not 0<=rt[0]<len(il.meta.typedefs) or il.meta.typedefs[rt[0]].generic_container!=-1):return False
     if fact[0]=='method':
         if (fact[1]!=mi or m.addr!=ins.near_branch_target or
                 m.flags&0x40 and not (m.flags&0x20 or il.meta.typedefs[m.declaring].flags&0x100)):return False

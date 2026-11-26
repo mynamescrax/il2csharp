@@ -38,6 +38,8 @@ class _AnalyzeMixin:
         L._saved_fp_consumers = saved_fp_consumers(blocks)
         from il2cpp.saved_ref import saved_references
         L._saved_references=saved_references(L,blocks)
+        from il2cpp.array_member import checked_ref_elements
+        checked_ref_loads=checked_ref_elements(L,m,blocks,self._pad_bids)
         scalar_fields,scalar_getters=scalar_sites(L,m,td,blocks,self._pad_bids)
         vector_getter = vector_field_getter(L,m) if len(blocks)==1 and len(blocks[0].insns)==6 and not self._pad_bids else None
         dec_getter = decrement_body(L,m) if len(blocks)==1 and len(blocks[0].insns)==3 and not self._pad_bids else None
@@ -69,7 +71,7 @@ class _AnalyzeMixin:
         L._component_lookups.update(L._parent_lookup_sites)
         L._ordinary_lookups=set()
         lookup_producers={};L._lookup_conversions={}
-        for ip,lookup in closed_lookup_sites(L,m,blocks,self._pad_bids,producers=lookup_producers,conversions=L._lookup_conversions).items():
+        for ip,lookup in closed_lookup_sites(L,m,blocks,self._pad_bids,producers=lookup_producers,conversions=L._lookup_conversions,element_loads=checked_ref_loads).items():
             if ip not in L._component_lookups:
                 L._component_lookups[ip]=lookup;L._ordinary_lookups.add(ip)
         L._snapshot_srets, packed_loads, snapshot_getters = snapshot_plans(L, td, blocks, self._pad_bids)
@@ -95,7 +97,8 @@ class _AnalyzeMixin:
             L._checked_element_getters={}
             binary_values.clear()
             kickoff_values.clear()
-            L._ref_array_loads = {}
+            L._ref_array_loads = dict(checked_ref_loads)
+            L._snapshot_ref_elements = checked_ref_loads.keys()
             app_values.clear()
             L._ref_array_elements = set()
             replaced_selects.clear()
