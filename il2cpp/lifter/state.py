@@ -1464,6 +1464,7 @@ class _StateMixin:
         self._this_reloads = {}
         self._ref_field_copies = {}
         self._saved_fp_consumers = {}
+        self._saved_references = {}
         self._snapshot_srets = set()
         self._signed_module_slots = set()
         self._converted_modules = {}

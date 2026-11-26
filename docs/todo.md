@@ -1458,6 +1458,19 @@ fault boundaries; five negative controls include conflicting registration
 and an incorrect Count leaf. The enclosing networking method has other
 unresolved code. Prior whole-method batch: `5cb3b57`.
 
+**Saved reference return cohort.** The lifter now evaluates a registered
+reference producer at its call when native code parks RAX across a class
+guard or stores it in an address-taken home. The profile-picture lookup
+and player lookup in `UserInfoWidget` and `PerPlayerVolumeUI` each go from
+two evaluations to one. Their compiled lookup/guard slices test the exact
+returned object, null/destroyed objects, virtual dispatch and exceptions.
+In `PurchaseManager.GenerateShopNodesCoroutine.MoveNext` the native code
+has **16 distinct** `SpawnItem` call instructions; the rendered method
+previously showed 32, now 16. `ParticleShowcase.Start` acquires **one**
+cursor, previously three, for `MoveNext` and `Current`. Those two larger
+methods were measured by call count; their arguments/cleanup are not a
+whole-method gate. Queue slice batch: `785c8cc` (12 targeted checks).
+
 **Whole-method behavior gate: `GasCollisionSpawner.OnParticleCollision`.**
 At `0x1806efcda` the RPC takes two different by-value arguments: the saved
 intersection (XMM6 + EBX, 8+4 bytes copied through RDX) and the full 16-byte

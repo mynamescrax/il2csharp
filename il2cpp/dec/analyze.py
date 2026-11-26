@@ -36,6 +36,8 @@ class _AnalyzeMixin:
     def _analyze(self, m, td, blocks, bmap):
         L = self.L
         L._saved_fp_consumers = saved_fp_consumers(blocks)
+        from il2cpp.saved_ref import saved_references
+        L._saved_references=saved_references(L,blocks)
         scalar_fields,scalar_getters=scalar_sites(L,m,td,blocks,self._pad_bids)
         vector_getter = vector_field_getter(L,m) if len(blocks)==1 and len(blocks[0].insns)==6 and not self._pad_bids else None
         dec_getter = decrement_body(L,m) if len(blocks)==1 and len(blocks[0].insns)==3 and not self._pad_bids else None

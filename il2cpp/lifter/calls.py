@@ -3887,6 +3887,7 @@ class _CallsMixin:
                     args = args[:mx]
             call = '/*vtable slot %s*/ %s(%s)' % (
                 vt_slot, recv0.text if recv0 else '?', ', '.join(args))
+        saved_dispatch=self.vt_recv
         self.vt_recv_slot = None
         self.vt_recv = None
 
@@ -3997,6 +3998,9 @@ class _CallsMixin:
                 if not base.startswith('get_'):
                     self._bind(result)
                     return
+            if ins.ip in getattr(self,'_saved_references',{}):
+                from il2cpp.saved_ref import capture_saved_reference
+                if capture_saved_reference(self,ins,mi,gpr_exprs[0],result,saved_dispatch):return
             # An ignored non-void result would otherwise vanish: the call
             # runs for effect, so hold it pending and flush a bare statement
             # at the next emit when no use renders it first. Used calls keep
