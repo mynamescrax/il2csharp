@@ -8,7 +8,7 @@ cross-referenced against IL2CPP metadata.
 **Current source (2026-11-26):** On the second *Shift At Midnight* v31 build,
 the strict game-script rebuild lifted 6,791 bodies into 503 files with no
 failures or fallbacks. All files passed the syntax gate. The latest census
-still has **383 unresolved shared calls** and **3,151 `object objN`
+still has **382 unresolved shared calls** and **3,149 `object objN`
 declarations**. See [recovery notes and compiled behavior checks](docs/todo.md#shift-at-midnight-second-v31-build-2026-11-25).
 
 **Promoted fixture: r11 (2026-10-01).** 1435 tests passed (1197 portable + 238 game

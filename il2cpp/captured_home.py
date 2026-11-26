@@ -32,8 +32,8 @@ def _qload(i, base):
             i.memory_index == IReg.NONE and not i.has_segment_prefix)
 
 
-def _predecessors(insns, eh):
-    """Normal edges and actual EH span-to-pad edges, not RPO adjacency."""
+def _normal_predecessors(insns):
+    """Use the decoded branches, including edges removed by structuring."""
     ips = {i.ip for i in insns}
     pred = defaultdict(set)
     lo, hi = insns[0].ip, insns[-1].next_ip
@@ -48,6 +48,16 @@ def _predecessors(insns, eh):
             pred[t].add(i.ip)
         if fc in (FlowControl.NEXT, FlowControl.CONDITIONAL_BRANCH, FlowControl.CALL, FlowControl.INDIRECT_CALL):
             pred[i.next_ip].add(i.ip)
+    return pred
+
+
+def _predecessors(insns, eh):
+    """Normal edges and actual EH span-to-pad edges, not RPO adjacency."""
+    pred = _normal_predecessors(insns)
+    if pred is None:
+        return None
+    ips = {i.ip for i in insns}
+    hi = insns[-1].next_ip
     ranges, groups = eh.get('try_ranges') or (), eh.get('try_pads') or ()
     if (not ranges or len(ranges) != len(groups) or
             {p for g in groups for p in g} != set(eh['pads'])):

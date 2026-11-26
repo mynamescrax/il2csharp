@@ -12,8 +12,9 @@ if HAVE_ICED:
     _WRITE = {OpAccess.WRITE, OpAccess.COND_WRITE, OpAccess.READ_WRITE, OpAccess.READ_COND_WRITE}
 
 
-def _fixed_frame(insns, unwind):
-    """Match the prologue to its unwind codes, including one RCX home save."""
+def _fixed_frame(insns, unwind, *, require_receiver_home=True):
+    """Match the prologue to unwind codes. Receiver reloads need a saved RCX;
+    frame-only clients can instead validate the nonvolatile home stores."""
     if (len(unwind) < 4 or unwind[0] & 7 != 1 or unwind[3] != 0 or
             len(unwind) < 4 + 2 * unwind[2]):
         return None
@@ -41,7 +42,7 @@ def _fixed_frame(insns, unwind):
                 if saved is not None:
                     return None
                 saved = ins.ip
-            elif off < 16 and off + MemorySizeExt.size(ins.memory_size) > 8:
+            elif require_receiver_home and off < 16 and off + MemorySizeExt.size(ins.memory_size) > 8:
                 return None
         elif ins.mnemonic == Mnemonic.PUSH and ins.op0_register in (
                 IReg.RBX, IReg.RBP, IReg.RSI, IReg.RDI, IReg.R12, IReg.R13, IReg.R14, IReg.R15):
@@ -67,7 +68,7 @@ def _fixed_frame(insns, unwind):
         if off + 16 > 0 or not 0 <= off - sp <= 0xffff * 16 or (off - sp) % 16:
             return None
         codes[idx] = bytes([n, (reg << 4) | 8]) + struct.pack('<H', (off-sp)//16)  # UWOP_SAVE_XMM128
-    if saved is None or not codes or codes[-1][0] != unwind[1]:
+    if (require_receiver_home and saved is None) or not codes or codes[-1][0] != unwind[1]:
         return None
     return (saved, sp, entry_rax) if unwind[4:4+2*unwind[2]] == b''.join(reversed(codes)) else None
 

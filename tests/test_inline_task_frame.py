@@ -5,7 +5,7 @@ from iced_x86 import Decoder
 import pytest
 
 from il2cpp.captured_home import _predecessors
-from il2cpp.inline_task import _frame_isolated, _kickoff_frame
+from il2cpp.inline_task import _discarded_bool, _frame_isolated, _kickoff_frame
 
 
 @pytest.mark.parametrize('base,frame,home',[(0x14000,0x50,0x28),(0x820000,0x70,0x38)])
@@ -40,3 +40,23 @@ def test_nonvolatile_save_must_match_its_unwind_row(base,alloc,change):
     if change=='code offset':row[0]-=1
     raw=bytes([0x19,end,4,0,*row,end,(alloc//8-1)*16+2,11,0x60]);seq=list(Decoder(64,pro,ip=base))
     assert bool(_kickoff_frame(seq,raw))==(change=='valid')
+
+
+@pytest.mark.parametrize('prefix,ok',[('4c8b642478 31c0',True),('30c0',True),
+                                       ('48894308 31c0',False),('488bc8 31c0',False),
+                                       ('488b5c2418',False),('30e4',False)])
+def test_boolean_epilogue_cannot_use_task(prefix,ok):
+    seq=list(Decoder(64,bytes.fromhex(prefix+' 4883c468 415c c3'),ip=0x12000))
+    assert _discarded_bool(seq)==ok
+
+
+@pytest.mark.parametrize('change',['valid','handler flags','wrong save offset','wrong register'])
+def test_no_receiver_home_requires_plain_registered_frame(change):
+    # Save R14 instead of RCX, then push RSI. The unwind offset is relative
+    # to final RSP; an image with handler/chain flags is not an EH-free one.
+    pro=bytes.fromhex('4c89742418 56 4883ec50');end=len(pro)
+    raw=bytearray([1,end,4,0,end,0xe4,14,0,end,0x92,6,0x60]);seq=list(Decoder(64,pro))
+    if change=='handler flags':raw[0]=0x19
+    if change=='wrong save offset':raw[6]-=1
+    if change=='wrong register':raw[5]=0xf4
+    assert bool(_kickoff_frame(seq,bytes(raw),plain=True))==(change=='valid')

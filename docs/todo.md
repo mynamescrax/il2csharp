@@ -1185,6 +1185,24 @@ markers (64 addresses), 3,153 → 3,151 untyped locals. Four markers at the
 shared factory remain in the iterator and Steam scripts. Report:
 `work/shift_inline_shutdown_census.json`.
 
+**Discarded Task in an iterator:** In `LobbyUIManager.DelayedStart.MoveNext`
+the shared `Create` at `0x180555e53` supplies the builder used by closed
+MethodSpec 151445 (`Start<…HostLobby…>`, call at `0x180555ea2`). `get_Task`
+at `0x180555eae` uses the same RSP+0x40 receiver. The Boolean return path
+clears AL; it neither returns the task nor waits for it. The recovered
+iterator keeps the null check on the captured manager before `Start`.
+The rule uses the registered Win64 frame without exception handlers, actual
+branch predecessors, the metadata field, and the def/use chain of the task.
+It declines a different checked receiver, missing `Create` registration or
+a still-live task result. A .NET test compiles the entire iterator MoveNext
+with a stand-in wait instruction and an instrumented child: first yield,
+manager replacement between calls, synchronous, pending, faulted, and null
+cases all pass. Only `LobbyUIManager.cs` changed in the strict 503-file
+rebuild: 383 → 382 shared markers (64 addresses) and 3,151 → 3,149 untyped
+locals. The three remaining markers for this factory in `PlatformManager_Steam`
+come from two native kickoffs that reuse the same stack storage. Report:
+`work/shift_discarded_kickoff_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;
