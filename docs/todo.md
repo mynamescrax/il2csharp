@@ -1495,6 +1495,19 @@ Changing the byte home or the preserved register declines the pairing.
 Ray inputs and nearest-hit retention still need separate gates. Packed
 projection batch: `aed0623` (9 targeted, 2,324 single-worker portable).
 
+**By-value placement and effect wrappers.** `InventoryManager.PlaceItem`
+used to pass `pos.x` as an entire vector and the address of an object as
+rotation. The outgoing Win64 homes now trace all 12 position bytes and 16
+rotation bytes back to distinct incoming parameters, including the fifth
+argument on the incoming stack. `PlaceItem`, `GasCollisionSpawner.SpawnParticle`
+and `GasPumpHoses.ChangeRopeBulge`, `ConnectRope`, `DisconnectRope` forward
+their managed arguments unchanged. Tests compile the five original methods
+and exercise distinct lanes, reference identity, true/false and throwing
+sinks. A repeated lane, overlapping destination, wrong incoming home or
+partial/misplaced hidden argument cannot establish the forward. Payload
+decoding in RPC invokers is separate. Boolean restore batch: `b56ca4d`
+(12 targeted, 2,324 single-worker portable).
+
 **Whole-method behavior gate: `GasCollisionSpawner.OnParticleCollision`.**
 At `0x1806efcda` the RPC takes two different by-value arguments: the saved
 intersection (XMM6 + EBX, 8+4 bytes copied through RDX) and the full 16-byte

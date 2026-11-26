@@ -307,6 +307,9 @@ class _BuildMixin:
         from il2cpp.packed_projection import packed_projection
         projected=packed_projection(L,m,td,insns,self.eh)
         if projected is not None:return projected
+        from il2cpp.byval_forward import byval_forward
+        forwarded=byval_forward(L,m,td,insns,self.eh)
+        if forwarded is not None:return forwarded
         L._entry_ref_zeros = entry_ref_zeros(L, m, insns, (self.eh or {}).get('pads') or ())
         L._entry_reference_loads = entry_reference_loads(L, m, insns, skip, (self.eh or {}).get('pads') or ())
         L._this_reloads = saved_this_reloads(L.il, m, td, insns, self.eh)
