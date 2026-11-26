@@ -1037,6 +1037,20 @@ pattern. Across 14 files this fixed 32 guards. All 6,791 bodies lifted, all
 393 shared calls with `object objN` unchanged at 3,186. Report:
 `work/shift_voice_cleanup_census.json`.
 
+**VoiceVolumeHandler.Despawned (28386):** The byte at `[rsp+0x20]` passed
+to the exported `il2cpp_value_box` is a copy of SIL, the saved `hasState`.
+It lies above the 32-byte outgoing shadow area and below the saved RDI at
+`rsp+0x30`. The box reads one Boolean, and no cleanup path alters RDI
+(`this`), RBP (`runner`), or RSI (`hasState`). The tail at `0x1806174ee`
+restores those inputs to RCX, RDX and R8D and selects the same slot-26 base
+implementation. Emit the boxed argument directly in `string.Format` and
+preserve the singleton reload between the Unity comparison and unregister.
+The complete override compiled. Both flags logged correctly; a successful
+remote cleanup stopped the coroutine and unregistered with the reloaded
+manager before the base call. Throws preserved each earlier effect. Across
+503 files only VoiceVolumeHandler.cs changed: 393 → 392 shared calls and
+3,186 → 3,185 `object objN`. Report: `work/shift_voice_box_cleanup_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;

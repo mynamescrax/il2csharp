@@ -11,6 +11,7 @@ from il2cpp.frame_args import entry_reference_loads
 from il2cpp.this_home import saved_this_reloads
 from il2cpp.captured_home import captured_receiver
 from il2cpp.list_append import fold_terminal_appends
+from il2cpp.cleanup_box import fold_boxed_cleanup
 from il2cpp.parent_lookup import fold_lookup_list_tail
 from il2cpp.iterator_ctor import fold_iterator_creation
 from il2cpp.names import safe_ident
@@ -348,6 +349,7 @@ class _BuildMixin:
         self._prune_nonreturning(blocks)
         L._array_allocation_loop_guard = self._allocation_needs_loop_guard(blocks)
         self._analyze(m, td, blocks, bmap)
+        fold_boxed_cleanup(L,m,blocks,self._pad_bids)
         fold_lookup_list_tail(L,blocks)
         fold_terminal_appends(L,m,td,blocks,self._pad_bids)
         fold_iterator_creation(L,td,blocks,self._pad_bids)

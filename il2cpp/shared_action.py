@@ -138,7 +138,27 @@ def _guarded_ref_bool_forward(lift, block, ins):
             call.mnemonic==M.CALL and call.op0_kind==K.NEAR_BRANCH64)
 
 
-def _cleanup_tail_forward(lift, block, jump):
+def _boxed_flag_borrow(lift,window,flag_reg,frame):
+    """One nonescaping value_box(bool, &local) borrow. Its entire input
+    byte lies above outgoing shadow space and below the saved registers."""
+    if len(window)!=4: return False
+    klass,addr,store,box=window; il=lift.il
+    off=sdisp(addr.memory_displacement)
+    if (klass.mnemonic!=M.MOV or klass.op0_register!=R.RCX or klass.memory_base!=R.RIP or
+            addr.mnemonic!=M.LEA or addr.op0_register!=R.RDX or addr.memory_base!=R.RSP or addr.memory_index!=R.NONE or
+            not 0x20<=off<frame or store.mnemonic!=M.MOV or store.memory_base!=R.RSP or store.memory_index!=R.NONE or
+            sdisp(store.memory_displacement)!=off or store.op1_register!=flag_reg or
+            not RegisterExt.is_gpr8(flag_reg) or flag_reg in (R.AH,R.BH,R.CH,R.DH) or
+            box.mnemonic!=M.CALL or box.op0_kind!=K.NEAR_BRANCH64 or box.near_branch_target!=getattr(lift,'rt_value_box',None) or
+            il.bin.exports.get(box.near_branch_target)!='il2cpp_value_box' or il.addr_candidates.get(box.near_branch_target)): return False
+    u=il.decode_slot(klass.ip_rel_memory_address) or {}; ti=u.get('td',-1)
+    if u.get('kind') not in (1,2) or not 0<=ti<len(il.meta.typedefs): return False
+    td=il.meta.typedefs[ti]
+    return (td.is_valuetype and not td.is_enum and il.typedef_full(ti)=='System.Boolean' and
+            0<=td.byval<len(il.types) and il._closed_type_key(il.types[td.byval])==(2,0) and il.value_type_size(ti)==1)
+
+
+def _cleanup_tail_forward(lift, block, jump, *, boxes=None):
     """Follow saved Win64 inputs through cleanup to a shared void tail.
 
     Use the original instruction stream: some metadata-init/throw edges have
@@ -146,23 +166,33 @@ def _cleanup_tail_forward(lift, block, jump):
     parked argument, or frame/home alias can precede the argument reloads.
     """
     blocks=getattr(lift,'_blocks',()); method=lift._current_method
-    if (not blocks or block is not blocks[-1] or len(block.insns)!=10 or block.succs or
+    if (not blocks or block is None or not 0<=block.bid<len(blocks) or blocks[block.bid] is not block or len(block.insns)!=10 or block.succs or
             not blocks[0].is_entry or blocks[0].preds or len(blocks[0].insns)!=10): return False
     start=blocks[0].insns; out=block.insns
+    # A compiler may put the nonreturning null/bounds exits after the
+    # epilogue. Only allow entry at the CALL of an exact raise; INT3 pair.
+    traps=set()
+    for dead in blocks[block.bid+1:]:
+        if len(dead.insns)!=2 or dead.succs: return False
+        call,trap=dead.insns
+        if (call.mnemonic!=M.CALL or call.op0_kind!=K.NEAR_BRANCH64 or trap.mnemonic!=M.INT3 or
+                lift._named_raise_throw(call.near_branch_target,lift._call_name(call.near_branch_target)) not in
+                ('System.NullReferenceException','System.IndexOutOfRangeException')): return False
+        traps.add(call.ip)
     if (start[0].ip!=method.addr or out[-1].ip!=jump.ip or jump.mnemonic!=M.JMP or jump.op0_kind!=K.NEAR_BRANCH64 or
-            lift.il.function_extent(method.addr)!=(method.addr,jump.next_ip) or lift.il.eh_regions(method.addr)):
+            lift.il.function_extent(method.addr)!=(method.addr,blocks[-1].insns[-1].next_ip) or lift.il.eh_regions(method.addr)):
         return False
     one,two,three,push,sub,cmp,flag,arg,recv,branch=start
     zero,flag2,arg2,recv2,r1,r2,r3,add,pop,_=out
     saved=[i.op1_register for i in (one,two,three)]; pushed=push.op0_register
     if (len(set(saved+[pushed]))!=4 or not set(saved+[pushed])<=set(_NONVOL) or push.mnemonic!=M.PUSH or
-            sub.mnemonic!=M.SUB or sub.op0_register!=R.RSP or sub.op1_kind!=K.IMMEDIATE8TO64 or sub.immediate8to64!=0x20 or
-            add.mnemonic!=M.ADD or add.op0_register!=R.RSP or add.op1_kind!=K.IMMEDIATE8TO64 or add.immediate8to64!=0x20 or
+            sub.mnemonic!=M.SUB or sub.op0_register!=R.RSP or sub.op1_kind!=K.IMMEDIATE8TO64 or sub.immediate8to64 not in (0x20,0x30) or
+            add.mnemonic!=M.ADD or add.op0_register!=R.RSP or add.op1_kind!=K.IMMEDIATE8TO64 or add.immediate8to64!=sub.immediate8to64 or
             pop.mnemonic!=M.POP or pop.op0_register!=pushed): return False
     for spill,reload,reg,off in zip((one,two,three),(r1,r2,r3),saved,(8,16,24)):
         if (spill.mnemonic!=M.MOV or spill.memory_base!=R.RSP or spill.memory_index!=R.NONE or spill.memory_displacement!=off or
                 reload.mnemonic!=M.MOV or reload.op0_register!=reg or reload.memory_base!=R.RSP or reload.memory_index!=R.NONE or
-                reload.memory_displacement!=off+0x28): return False
+                reload.memory_displacement!=off+8+sub.immediate8to64): return False
     if (cmp.mnemonic!=M.CMP or cmp.memory_base!=R.RIP or cmp.memory_size!=1 or cmp.op1_kind!=K.IMMEDIATE8 or cmp.immediate8!=0 or
             branch.mnemonic!=M.JNE or branch.op0_kind!=K.NEAR_BRANCH64 or flag.mnemonic!=M.MOVZX or flag.op1_register!=R.R8L or
             not RegisterExt.is_gpr32(flag.op0_register) or arg.mnemonic!=M.MOV or arg.op1_register!=R.RDX or
@@ -176,21 +206,31 @@ def _cleanup_tail_forward(lift, block, jump):
             recv2.mnemonic!=M.MOV or recv2.op0_register!=R.RCX or recv2.op1_register!=recv.op0_register): return False
     seq=[i for b in blocks for i in b.insns]
     if any(a.next_ip!=b.ip for a,b in zip(seq,seq[1:])) or any(i.has_segment_prefix or i.has_lock_prefix or i.has_rep_prefix or i.has_repne_prefix for i in seq): return False
-    middle=seq[len(start):-len(out)]; ips={i.ip for i in middle}|{zero.ip}
+    middle=[i for b in blocks[1:block.bid] for i in b.insns]; ips={i.ip for i in middle}|{zero.ip}
+    # Only the start of a boxing sequence is an admissible jump target.
+    # This excludes paths into the call with a stale pointer or class.
+    borrows=[]; stack_ops=set()
+    for k,i in enumerate(middle):
+        if i.mnemonic==M.LEA and i.memory_base==R.RSP:
+            if k==0 or not _boxed_flag_borrow(lift,middle[k-1:k+3],flag2.op1_register,sub.immediate8to64): return False
+            borrows.append((i.ip,middle[k+2].ip));stack_ops.update((i.ip,middle[k+1].ip))
+            ips.difference_update(x.ip for x in middle[k:k+3])
     if branch.near_branch_target not in ips: return False
     fac=InstructionInfoFactory(); writes={OpAccess.WRITE,OpAccess.READ_WRITE,OpAccess.COND_WRITE,OpAccess.READ_COND_WRITE}
     for i in middle:
+        if i.ip in stack_ops: continue # bounded LEA and one-byte store, no change to a parked register
         if i.flow_control==F.CALL and i.op0_kind==K.NEAR_BRANCH64:
-            if method.addr<=i.near_branch_target<jump.next_ip or not lift.il.bin.is_exec_va(i.near_branch_target): return False
+            if method.addr<=i.near_branch_target<seq[-1].next_ip or not lift.il.bin.is_exec_va(i.near_branch_target): return False
             continue  # Win64 direct callees preserve the parked registers and restore RSP.
         if i.flow_control in (F.CONDITIONAL_BRANCH,F.UNCONDITIONAL_BRANCH):
-            if i.op0_kind!=K.NEAR_BRANCH64 or i.near_branch_target not in ips: return False
+            if i.op0_kind!=K.NEAR_BRANCH64 or i.near_branch_target not in ips and i.near_branch_target not in traps: return False
         elif i.flow_control!=F.NEXT: return False
-        # No intervening stack reference (including LEA) or stack-pointer
+        # No other intervening stack reference (including LEA) or stack-pointer
         # copy; the saved nonvolatiles/return address remain in their homes.
         for u in fac.info(i).used_registers():
             r=RegisterExt.full_register(u.register)
             if r==R.RSP or (r in parked and u.access in writes): return False
+    if boxes is not None: boxes.extend(borrows)
     return True
 
 

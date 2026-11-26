@@ -74,3 +74,68 @@ def test_inexact_cleanup_tail_keeps_fallback(shift_runtime,monkeypatch,defect):
                 p.setattr(block,'insns',block.insns[:k]+[new]+block.insns[k+1:]);return fold(l,ins,l.out.block.insns,args,regs)
         monkeypatch.setattr(analyze,'shared_action_tail',changed)
     text='\n'.join(d.lift_method(md,td));assert 'base.Despawned(' not in text and 'sub_180507120/*shared body,' in text
+
+
+def test_voice_handler_box_and_cleanup_precede_base(body,tmp_path):
+    method=body('VoiceVolumeHandler','Despawned',0x180617230)
+    assert method.count('base.Despawned(runner, hasState)')==1 and 'sub_180507120' not in method
+    runner=tmp_path/'runner';runner.mkdir()
+    (runner/'Program.cs').write_text('''using System;
+using System.Collections.Generic;
+using UnityEngine;
+foreach(bool flag in new[]{false,true}) foreach(bool haveRunner in new[]{false,true})
+foreach(string mode in new[]{"remote","local","no routine","no manager","replaced with null","log throws","stop throws","unregister throws","base throws"}) {
+    var tr=new List<string>();var self=new VoiceVolumeHandler();var runner=haveRunner?new NetworkRunner():null;
+    var routine=mode=="no routine"?null:new Coroutine();self.registerCoroutine=routine;self.__field_thisPlayerUsername="before";
+    var original=new VoiceVolumeManager();var replacement=new VoiceVolumeManager();var active=mode=="no manager"?null:original;
+    Debug.Write=(s,ctx)=>{tr.Add("log");if(s!=$"[VoiceVolumeHandler] Despawned | GO='voice' | Username='before' | HasState={flag}" || !ReferenceEquals(ctx,self))throw new Exception("boxed flag, context or text");
+        if(mode=="log throws")throw new ApplicationException("log");self.__field_thisPlayerUsername="after";};
+    self.Stop=c=>{tr.Add("stop");if(!ReferenceEquals(c,routine))throw new Exception("wrong coroutine");if(mode=="stop throws")throw new ApplicationException("stop");};
+    self.Local=()=>{tr.Add("authority");if(self.registerCoroutine is not null)throw new Exception("uncleared coroutine");return mode=="local";};
+    VoiceVolumeManager.Read=()=>{tr.Add("manager");return active;};
+    VoiceVolumeManager.Alive=m=>{tr.Add("alive");active=mode=="replaced with null"?null:replacement;return m is not null;};
+    original.Unregister=(_,_)=>throw new Exception("stale singleton");
+    replacement.Unregister=(user,handler)=>{tr.Add("unregister");if(user!="after" || !ReferenceEquals(handler,self))throw new Exception("wrong unregister");
+        if(mode=="unregister throws")throw new ApplicationException("unregister");};
+    self.Base=(r,s)=>{tr.Add("base");if(!ReferenceEquals(r,runner) || s!=flag)throw new Exception("wrong base arguments");if(mode=="base throws")throw new ApplicationException("base");};
+    string failure=null;try {((Behaviour)self).Despawned(runner,flag);}catch(ApplicationException e){failure=e.Message;}catch(NullReferenceException){failure="null";}
+    string wanted=mode switch {"log throws"=>"log","stop throws"=>"log;stop","local"=>"log;stop;authority;base",
+        "no manager"=>"log;stop;authority;manager;alive;base","replaced with null"=>"log;stop;authority;manager;alive;manager",
+        _=>(mode=="no routine"?"log":"log;stop")+";authority;manager;alive;manager;unregister"+(mode=="unregister throws"?"":";base")};
+    if(string.Join(";",tr)!=wanted || failure!=(mode.EndsWith(" throws")?mode.Split(' ')[0]:mode=="replaced with null"?"null":null))throw new Exception(mode+": "+string.Join(";",tr));
+    if(mode=="remote" && haveRunner)Console.WriteLine($"hasState={flag}: {wanted}");
+}
+class NetworkRunner {} class Coroutine {} class GameObject {public string name="voice";}
+namespace UnityEngine {class Debug {public static Action<string,object> Write;public static void Log(string s,object o)=>Write(s,o);} }
+class Behaviour {public Action<NetworkRunner,bool> Base; public virtual void Despawned(NetworkRunner runner,bool hasState)=>Base(runner,hasState);}
+class VoiceVolumeManager {public static Func<VoiceVolumeManager> Read; public static VoiceVolumeManager Instance=>Read();
+    public static Func<VoiceVolumeManager,bool> Alive;public static bool operator !=(VoiceVolumeManager a,VoiceVolumeManager b)=>Alive(a);
+    public static bool operator ==(VoiceVolumeManager a,VoiceVolumeManager b)=>!Alive(a);public override bool Equals(object o)=>ReferenceEquals(this,o);public override int GetHashCode()=>base.GetHashCode();
+    public Action<string,VoiceVolumeHandler> Unregister;public void UnregisterPlayer(string s,VoiceVolumeHandler h)=>Unregister(s,h);}
+class VoiceVolumeHandler:Behaviour {public GameObject gameObject=new(); public string __field_thisPlayerUsername; public Coroutine registerCoroutine;
+    public Action<Coroutine> Stop;void StopCoroutine(Coroutine c)=>Stop(c);public Func<bool> Local;bool HasLocalInputAuthority()=>Local();
+    public override void Despawned(NetworkRunner runner,bool hasState){\n'''+method+'\n}}',encoding='utf-8')
+    print(run_case(tmp_path,runner).strip())
+
+
+@pytest.mark.parametrize('defect',['wrong boxed type','other box helper','jump into borrow','wrong trap'])
+def test_voice_handler_requires_bounded_boolean_box(shift_runtime,monkeypatch,defect):
+    from il2cpp import shared_action
+    meta,il=shift_runtime; d=Decompiler(Lifter(il));m=meta.methods[28386];td=meta.typedefs[m.declaring]
+    if defect=='wrong boxed type':
+        old=il.decode_slot
+        monkeypatch.setattr(il,'decode_slot',lambda slot:{'kind':2,'td':td.index,'text':'typeof(VoiceVolumeHandler)'} if slot==0x183e9f1b8 else old(slot))
+    else:
+        check=shared_action._cleanup_tail_forward
+        def changed(l,b,ins,**kwargs):
+            if ins.ip!=0x1806174ee:return check(l,b,ins,**kwargs)
+            ip={'other box helper':0x18061738f,'jump into borrow':0x18061736b,'wrong trap':0x1806174f3}[defect]
+            dest=next(bb for bb in l._blocks if any(i.ip==ip for i in bb.insns));j=next(j for j,i in enumerate(dest.insns) if i.ip==ip)
+            # Redirect the near bounds branch into the store, bypassing the
+            # LEA that bound RDX. All instruction boundaries stay the same.
+            i=dest.insns[j].copy();i.near_branch64=0x18061738a if defect=='jump into borrow' else 0x1804353d0
+            with monkeypatch.context() as p:
+                p.setattr(dest,'insns',dest.insns[:j]+[i]+dest.insns[j+1:]);return check(l,b,ins,**kwargs)
+        monkeypatch.setattr(shared_action,'_cleanup_tail_forward',changed)
+    text='\n'.join(d.lift_method(m,td))
+    assert 'base.Despawned(' not in text and 'sub_180507120/*shared body,' in text

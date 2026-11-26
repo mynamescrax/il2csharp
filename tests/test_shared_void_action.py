@@ -6,7 +6,7 @@ import pytest
 
 from il2cpp.binary import PE
 from il2cpp.expr import Expr
-from il2cpp.shared_action import _bool_transfer, _cleanup_tail_forward, _entry_forward, _guarded_helper_forward, _guarded_this_forward, _guarded_ref_bool_forward, shared_action_tail, shared_base_action, shared_bool_tail, shared_void_action
+from il2cpp.shared_action import _bool_transfer, _boxed_flag_borrow, _cleanup_tail_forward, _entry_forward, _guarded_helper_forward, _guarded_this_forward, _guarded_ref_bool_forward, shared_action_tail, shared_base_action, shared_bool_tail, shared_void_action
 from iced_x86 import Register as R
 
 
@@ -331,6 +331,19 @@ def test_cleanup_tail_requires_preserved_arguments_and_homes(cleanup,ok):
     il=NS(function_extent=lambda _:(va,ip),eh_regions=lambda _:None,bin=NS(is_exec_va=lambda _:True))
     lift=NS(_current_method=NS(addr=va),_blocks=blocks,il=il)
     assert _cleanup_tail_forward(lift,blocks[3],blocks[3].insns[-1])==ok
+
+
+@pytest.mark.parametrize('case',['local byte','overlaps shadow','overlaps saved register','different home','wide store','different size','not exported box'])
+def test_box_borrow_covers_only_the_boolean_local(case):
+    off={'overlaps shadow':0x1f,'overlaps saved register':0x30}.get(case,0x20)
+    buf=bytes.fromhex('488b0d00010000 488d5424')+bytes([off])+bytes.fromhex('40887424' if case!='wide store' else '48897424')
+    buf+=bytes([off+int(case=='different home')])+bytes.fromhex('e800010000')
+    seq=list(Decoder(64,buf,ip=0x2000));target=seq[-1].near_branch_target
+    il=NS(meta=NS(typedefs=[NS(is_valuetype=True,is_enum=False,byval=0)]),types=[(0,2<<16)],
+          bin=NS(exports={target:'il2cpp_value_box'} if case!='not exported box' else {}),addr_candidates={},
+          decode_slot=lambda p:{'kind':2,'td':0},typedef_full=lambda n:'System.Boolean',_closed_type_key=lambda t:(2,0),
+          value_type_size=lambda n:4 if case=='different size' else 1)
+    assert _boxed_flag_borrow(NS(il=il,rt_value_box=target),seq,R.SIL,0x30)==(case=='local byte')
 
 
 @pytest.mark.parametrize('change',['wrong source','other call','other flag','clobber before branch','other edge','handler entry'])
