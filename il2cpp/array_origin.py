@@ -1,5 +1,6 @@
 """Prove which freshly allocated SZARRAY reaches a native bounds check."""
 from bisect import bisect_right
+from struct import pack
 
 from il2cpp.binary import PE
 from il2cpp.prelude import HAVE_ICED
@@ -22,7 +23,7 @@ def _reachable(edges, roots):
     return seen
 
 
-def _graph(il, seq, *, allow_tail=False, runtime_tails=()):
+def _graph(il, seq, *, allow_tail=False, runtime_tails=(), chained=False):
     """Instruction edges, including both arms of every skipped init guard."""
     lo, hi = seq[0].ip, seq[-1].next_ip
     if il.eh_regions(lo):
@@ -35,9 +36,16 @@ def _graph(il, seq, *, allow_tail=False, runtime_tails=()):
         return None
     start, end, unwind = il._eh4_entries[n]
     header = il.bin.read(image + unwind, 4) or b''
-    if (lo != image + start or hi != image + end or len(header) != 4 or header[0] != 1 or
+    if (lo != image + start or len(header) != 4 or header[0] != 1 or
             any(a.next_ip > b.ip for a, b in zip(seq, seq[1:]))):
         return None
+    parent=pack('<III',start,end,unwind)
+    while chained and image+end<hi and n+1<len(il._eh4_entries):
+        n+=1;entry,stop,ui=il._eh4_entries[n];h=il.bin.read(image+ui,4) or b''
+        if (entry!=end or stop<=entry or len(h)!=4 or h[0]!=0x21 or
+                il.bin.read(image+ui+4+2*((h[2]+1)&~1),12)!=parent):return None
+        end=stop
+    if hi!=image+end:return None
 
     pred = {i.ip: [] for i in seq}
     succ = {}

@@ -1342,6 +1342,19 @@ identity, a hidden derived method, and a throwing second lookup. See
 public spelling of the authority receiver; a closed lookup alone does not
 validate that whole method. Previous checked-contact batch: `a81688d`.
 
+**Scalar reads across a callback (`ThrownObject.Update`):** The getter at
+`0x18060c4bc` runs after the damage load. After the first field store, a
+second field load precedes the getter at `0x18060c4d7`. `addss xmm0,xmm0`
+doubles this second return; the old C# invoked the second getter twice and
+could read each damage field after a callback had changed it. The new rule
+materializes both values at their reaching definitions. Contiguous chained
+unwind ranges are admitted only if they refer back to the same plain parent.
+The compiled `Update` test injects different time values, mutations, NaN,
+and faults on either call: two reads on the active path, none if inactive,
+and the first store survives a second-call fault. Other apparent getter
+replays (including the lerps in `AmbientMusicSystem`) need their own operand
+and effect-order evidence. Closed lookup batch: `9d15afb`.
+
 **Whole-method behavior gate: `GasCollisionSpawner.OnParticleCollision`.**
 At `0x1806efcda` the RPC takes two different by-value arguments: the saved
 intersection (XMM6 + EBX, 8+4 bytes copied through RDX) and the full 16-byte

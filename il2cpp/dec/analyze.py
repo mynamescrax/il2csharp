@@ -30,11 +30,13 @@ from il2cpp.indexed_binary import binary_sites, binary_use, echo_at, store_value
 from il2cpp.checked_element import element_sites,element_step
 from il2cpp.parent_lookup import parent_lookup_sites
 from il2cpp.closed_lookup import closed_lookup_sites
+from il2cpp.scalar_snapshot import scalar_sites,capture_field
 
 class _AnalyzeMixin:
     def _analyze(self, m, td, blocks, bmap):
         L = self.L
         L._saved_fp_consumers = saved_fp_consumers(blocks)
+        scalar_fields,scalar_getters=scalar_sites(L,m,td,blocks,self._pad_bids)
         vector_getter = vector_field_getter(L,m) if len(blocks)==1 and len(blocks[0].insns)==6 and not self._pad_bids else None
         dec_getter = decrement_body(L,m) if len(blocks)==1 and len(blocks[0].insns)==3 and not self._pad_bids else None
         # _rpo appends the unreachable tail (the EH pads, entered only by the
@@ -113,6 +115,7 @@ class _AnalyzeMixin:
                 e._unk = True         # fix 58: never written yet
                 L.regs[r] = e
             L._setup_entry(m, td)
+            L._module_reads.update(scalar_getters)
 
         FLAGS = '!flags'
 
@@ -187,6 +190,8 @@ class _AnalyzeMixin:
                     L.regs['RDI'] = Expr(snapshot, capture[2], 'obj')
                     continue
                 mn = ins.mnemonic
+                if ins.ip in scalar_fields:
+                    capture_field(L,ins,scalar_fields[ins.ip]);continue
                 if element_plan and element_step(L,element_plan,element_values,ins):continue
                 if mn==Mnemonic.XOR and idx and b.insns[idx-1].mnemonic==Mnemonic.CALL:
                     unary_store=unary_argument(L,b.insns,idx)
