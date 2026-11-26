@@ -163,3 +163,36 @@ def test_start_game_declines_mismatched_layout_or_capture(shift_runtime,ip,chang
     else:raw[-1]^=8
     seq=seq[:k]+list(Decoder(64,bytes(raw),ip=ip))+seq[k+1:]
     assert async_task_start(d.L,md,td,seq,d.eh) is None
+
+
+def test_leave_game_returns_the_live_bcl_task(shift_runtime,tmp_path):
+    meta,il=shift_runtime;md=meta.methods[26431];td=meta.typedefs[md.declaring];out=tmp_path/'out'
+    Emitter(il,str(out))._emit_one_top(td,meta.images[md.image],td.name)
+    source=next(out.rglob('FusionNetworkManager.cs')).read_text(encoding='utf-8')
+    method=re.search(r'public Task LeaveGame\(\)\s*\{.*?^    }',source,re.S|re.M)
+    sm=re.search(r'private partial struct _LeaveGame_d__45 : IAsyncStateMachine\s*\{\s*public int __1__state;.*?private TaskAwaiter __u__1;',source,re.S)
+    assert method and sm and 'sub_' not in method[0] and 'TStateMachine' not in method[0]
+    runner=tmp_path/'runner';runner.mkdir()
+    (runner/'Program.cs').write_text('''using System;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+foreach(string mode in new[]{"pending","sync","fault"}) {
+    var manager=new FusionNetworkManager {Mode=mode};var returned=manager.LeaveGame();
+    if(manager.Moves!=1 || !ReferenceEquals(returned,manager.Seen))throw new Exception("different task or no synchronous Start");
+    if(mode=="pending") {if(returned.IsCompleted)throw new Exception("premature completion");manager.Gate.SetResult();}
+    if(mode=="fault") {try {returned.GetAwaiter().GetResult();throw new Exception("missing fault");}catch(ApplicationException e)when(ReferenceEquals(e,manager.Failure)){} }
+    else if(!returned.Wait(TimeSpan.FromSeconds(3)) || !returned.IsCompletedSuccessfully)throw new Exception("lost completion");
+    if(manager.Moves!=(mode=="pending"?2:1))throw new Exception("wrong resumption count");
+    Console.WriteLine($"{mode}: same Task, MoveNext calls={manager.Moves}, status={returned.Status}");
+}
+class FusionNetworkManager {public string Mode;public int Moves;public Task Seen;public TaskCompletionSource Gate=new();public ApplicationException Failure=new();
+'''+method[0]+'\n'+sm[0]+'''
+    public void MoveNext(){var owner=__4__this;owner.Moves++;
+        if(__1__state==-1){if(!__u__1.Equals(default(TaskAwaiter)))throw new Exception("stale awaiter");
+            if(owner.Mode=="pending"){__1__state=0;__u__1=owner.Gate.Task.GetAwaiter();__t__builder.AwaitUnsafeOnCompleted(ref __u__1,ref this);}
+            else if(owner.Mode=="fault")__t__builder.SetException(owner.Failure);else __t__builder.SetResult();
+            owner.Seen=__t__builder.Task;
+        }else if(__1__state==0){__u__1.GetResult();__1__state=-2;__t__builder.SetResult();}else throw new Exception("wrong state");}
+    public void SetStateMachine(IAsyncStateMachine m)=>__t__builder.SetStateMachine(m);
+}}''',encoding='utf8')
+    print(run_case(tmp_path,runner).strip())

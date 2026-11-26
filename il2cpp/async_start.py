@@ -4,8 +4,6 @@ The shared Start address is not an identity. Its closed MethodRef, the two
 addresses passed by reference, and the Create result copied between them
 must all agree with the generated state machine's metadata layout.
 """
-import re
-
 from il2cpp.awaiter import _spec_entry
 from il2cpp.binary import PE
 from il2cpp.metadata import source_params
@@ -13,9 +11,10 @@ from il2cpp.names import safe_ident
 from il2cpp.prelude import HAVE_ICED
 from il2cpp.sret_copy import _own_field
 from il2cpp.text import sdisp
+from il2cpp.x64 import KLASS_INITIALIZED
 
 if HAVE_ICED:
-    from iced_x86 import Mnemonic as M, OpKind as K, Register as R, RegisterExt
+    from iced_x86 import Decoder, MemorySizeExt, Mnemonic as M, OpKind as K, Register as R, RegisterExt
     _SAVED={R.RBX,R.RBP,R.RDI,R.RSI,R.R12,R.R13,R.R14,R.R15}
 
 
@@ -72,7 +71,6 @@ def _start_binding(il,method,td,slot,start):
     if not ty or key(ty)!=(0x11,ty[0],0) or not 0<=ty[0]<len(il.meta.typedefs):return None
     sm=il.meta.typedefs[ty[0]];m=il.meta.methods[mi];bt=il.meta.typedefs[m.declaring];ps=il.meta.method_params(m)
     if (not sm.is_valuetype or sm.generic_container!=-1 or il._nested_owner(sm.index)!=td.index or
-            not re.fullmatch('<'+re.escape(method.name)+r'>d__\d+',sm.name) or
             not bt.is_valuetype or
             m.name!='Start' or m.is_static or m.flags&7!=6 or m.flags&0x40 or not 0<=m.generic_container<len(il.meta.generic_containers) or
             len(ps)!=1 or m.param_count!=1 or not 0<=ps[0].type<len(il.types) or not 0<=m.return_type<len(il.types) or key(il.types[m.return_type])!=(1,0) or
@@ -176,27 +174,96 @@ def _task_member(il,slot,call,bt,ci,name,ret):
             il._closed_type_key(il.candidate_return_type(('generic',si)))==ret and _call(call,_spec_entry(il,si,mi)))
 
 
-def _stack_copy24(seq,source,dest,bias=None):
-    """The 24-byte Create result is copied from its own home, not old RAX."""
-    if len(seq)!=6:return False
-    xy,home,zero,z,store,tail=seq
-    return (xy.mnemonic==M.MOVUPS and R.XMM0<=xy.op0_register<=R.XMM5 and _home(xy,bias)==source and
-            _borrow(home,R.RCX,bias)==dest and _rr(zero,M.XOR,R.EDX,R.EDX) and
-            z.mnemonic==M.MOVSD and R.XMM0<=z.op0_register<=R.XMM5 and z.op0_register!=xy.op0_register and
-            _home(z,bias)==source+16 and store.mnemonic==M.MOVUPS and _home(store,bias)==dest and store.op1_register==xy.op0_register and
-            tail.mnemonic==M.MOVSD and _home(tail,bias)==dest+16 and tail.op1_register==z.op0_register)
+def _builder_copy(seq,source,dest,width,bias,echo=False):
+    """Follow byte ranges through volatile XMM scratch in instruction order.
+    Require the barrier on the builder field and exactly one whole copy."""
+    pieces={};writes=[];borrow=zero=False
+    for i in seq:
+        if not zero and _rr(i,M.XOR,R.EDX,R.EDX):zero=True;continue
+        if not borrow and _borrow(i,R.RCX,bias)==dest:borrow=True;continue
+        if i.mnemonic not in (M.MOVUPS,M.MOVDQU,M.MOVSD,M.MOVSS):return False
+        n=MemorySizeExt.size(i.memory_size);reg=i.op0_register
+        if i.op1_kind==K.MEMORY and R.XMM0<=reg<=R.XMM5:
+            pos=sdisp(i.memory_displacement) if echo and i.memory_base==R.RAX else None
+            if not echo:
+                home=_home(i,bias);pos=home-source if home is not None else None
+            if pos is None or not 0<=pos<=width-n:return False
+            pieces[reg]=(pos,n)
+        elif i.op0_kind==K.MEMORY and i.op1_register in pieces:
+            pos,w=pieces[i.op1_register]
+            if w!=n or _home(i,bias)!=dest+pos:return False
+            writes.append((pos,n))
+        else:return False
+    return borrow and zero and _covers(writes,0,width)
 
 
-def _task_captures(il,sm,base,width,bias,regs,groups):
+def _zero_tiles(seq,bias):
+    """Stack byte ranges definitely initialized before class initialization.
+    Follow the value zero rather than requiring a particular scratch lane."""
+    zeros=set();tiles=[]
+    for i in seq:
+        dst=i.op0_register
+        if _rr(i,M.XORPS,dst,dst) and R.XMM0<=dst<=R.XMM5:zeros.add(dst);continue
+        if _rr(i,M.XOR,dst,dst) and dst in (R.EAX,R.EDX,R.R8D,R.R9D,R.R10D,R.R11D):
+            zeros.add(RegisterExt.full_register(dst));continue
+        off=_home(i,bias)
+        if off is None or i.op0_kind!=K.MEMORY:return None
+        if i.mnemonic in (M.MOVDQU,M.MOVAPS,M.MOVUPS) and i.op1_register in zeros:
+            if i.mnemonic==M.MOVAPS and off%16:return None
+            n=16
+        elif i.mnemonic==M.MOV and (i.op1_kind==K.IMMEDIATE32TO64 and i.immediate32to64==0 or i.op1_register in zeros):n=8
+        else:return None
+        tiles.append((off,n))
+    return tiles,zeros
+
+
+def _zero_sret_echo(il,target,width):
+    """A folded Create must do exactly a default-value write and echo its
+    destination. Derive the size from the closed builder, not its address."""
+    if not il.bin.is_exec_va(target):return False
+    raw=il.bin.read(target,128) or b''; zeros=set();writes=[];echo=False
+    for i in Decoder(64,raw,ip=target):
+        if i.is_invalid or i.has_segment_prefix or i.has_lock_prefix or i.has_rep_prefix or i.has_repne_prefix or i.memory_index!=R.NONE:return False
+        reg=i.op0_register
+        if i.mnemonic==M.RET:return not i.op_count and echo and _covers(writes,0,width)
+        if _rr(i,M.MOV,R.RAX,R.RCX):echo=True;zeros.discard(R.RAX);continue
+        if i.mnemonic==M.XOR and i.op1_register==reg and reg in (R.EAX,R.EDX,R.R8D,R.R9D,R.R10D,R.R11D):
+            zeros.add(RegisterExt.full_register(reg))
+            if reg==R.EAX:echo=False
+        elif i.mnemonic==M.XORPS and i.op1_register==reg and R.XMM0<=reg<=R.XMM5:zeros.add(reg)
+        elif (i.mnemonic in (M.MOV,M.MOVUPS,M.MOVDQU,M.MOVSD,M.MOVSS) and i.op0_kind==K.MEMORY and i.memory_base==R.RCX and
+              i.op1_kind==K.REGISTER and (i.op1_register in zeros or RegisterExt.is_gpr(i.op1_register) and RegisterExt.full_register(i.op1_register) in zeros)):
+            n=MemorySizeExt.size(i.memory_size);off=sdisp(i.memory_displacement)
+            if not 0<=off<=width-n:return False
+            writes.append((off,n))
+        else:return False
+    return False
+
+
+def _ordinary_task_members(lift,bt,ci,rt,bk,rk,create,get):
+    il=lift.il
+    if (ci!=-1 or bt.generic_container!=-1 or il.typedef_full(bt.index)!='System.Runtime.CompilerServices.AsyncTaskMethodBuilder' or
+            bk!=(0x11,bt.index,0)):return False
+    for call,name,is_static,result in ((create,'Create',True,bk),(get,'get_Task',False,rk)):
+        rows=[j for j in il.meta.type_methods(bt) if il.meta.methods[j].name==name and not il.meta.methods[j].param_count]
+        if len(rows)!=1:return False
+        j=rows[0];m=il.meta.methods[j];ids=il.addr_candidates.get(call.near_branch_target,())
+        if (not _call(call,m.addr) or ('method',j) not in ids or m.declaring!=bt.index or m.is_static!=is_static or m.flags&7!=6 or m.flags&0x40 or
+                m.generic_container!=-1 or not 0<=m.return_type<len(il.types) or il._closed_type_key(il.types[m.return_type])!=result):return False
+        if not is_static and (len(ids)!=1 or lift._accessor_prop(j)!=('get','Task',0)):return False
+    return _zero_sret_echo(il,create.near_branch_target,il._sf_field_size(rt,0))
+
+
+def _task_captures(il,sm,base,width,bias,regs,groups,scalars=()):
     """Record actual stores in order. Each barrier must describe the sole
     reference store in its group; an interleaved scalar store needs no barrier."""
     writes=[]; seen=set()
-    for group in groups:
+    for barrier,group in [(True,g) for g in groups]+[(False,scalars)]:
         source=addr=reference=None
         for i in group:
-            if i.mnemonic==M.MOV and i.op0_register==R.RDX and source is None:
+            if barrier and i.mnemonic==M.MOV and i.op0_register==R.RDX and source is None:
                 source=i.op1_register;continue
-            if i.mnemonic==M.LEA and i.op0_register==R.RCX and addr is None:
+            if barrier and i.mnemonic==M.LEA and i.op0_register==R.RCX and addr is None:
                 addr=_borrow(i,R.RCX,bias)
                 if addr is None:return None
                 continue
@@ -206,37 +273,40 @@ def _task_captures(il,sm,base,width,bias,regs,groups):
             if not base<=off<=base+width-n or RegisterExt.size(reg)!=n:return None
             row=_own_field(il,sm,off-base+16,n)
             if not row or row[0] in seen or row[1][1]&0x27!=6 or il._closed_type_key(row[1])!=key:return None
-            if row[0] in ('this.<>1__state','this.<>t__builder'):return None
             if ref:
-                if reference is not None:return None
+                if not barrier or reference is not None:return None
                 reference=(reg,off)
             seen.add(row[0]);writes.append((row[0][5:],val))
-        if reference!=(source,addr):return None
+        if barrier and reference!=(source,addr):return None
     return writes
 
 
 def async_task_start(lift,method,td,seq,eh):
-    """Task<T> wrapper that captures the entry arguments, starts the nested
-    machine, then reads Task on exactly the same builder field."""
+    """Task or Task<T>: capture inputs, start the closed machine by reference,
+    then read Task on the same builder field after Start has returned."""
     il=lift.il
-    if (not HAVE_ICED or eh or len(seq)<42 or len(seq)>96 or method.is_static or method.param_count>3 or td.is_valuetype or
+    if (not HAVE_ICED or eh or not seq or method.is_static or method.param_count>3 or td.is_valuetype or
             method.generic_container!=-1 or td.generic_container!=-1 or not isinstance(getattr(il,'bin',None),PE) or
-            not il.bin.is64 or il.meta.version!=31 or not 0<=method.return_type<len(il.types)):return None
+            not il.bin.is64 or not 0<=method.return_type<len(il.types)):return None
     result=il.types[method.return_type];key=il._closed_type_key
-    if not result or il._type_enum(result)!=0x15:return None
+    if not result or il._type_enum(result) not in (0x12,0x15):return None
     task=il.td_of_ty(result); rk=key(result)
-    if task is None or il.typedef_full(task)!='System.Threading.Tasks.Task`1' or not rk:return None
+    plain=il._type_enum(result)==0x12
+    if task is None or not rk or il.typedef_full(task)!=('System.Threading.Tasks.Task' if plain else 'System.Threading.Tasks.Task`1'):return None
+    if plain and rk!=(0x12,task,0):return None
     calls=[k for k,i in enumerate(seq) if i.mnemonic==M.CALL]
-    if (not 10<=len(calls)<=13 or any(seq[k].op0_kind!=K.NEAR_BRANCH64 for k in calls) or seq[0].ip!=method.addr or
+    ninit=2 if plain else 4 # plain Create/get_Task carry null MethodInfo; generic members each load a MethodRef
+    if (len(calls)<ninit+5 or any(seq[k].op0_kind!=K.NEAR_BRANCH64 for k in calls) or seq[0].ip!=method.addr or
             il.function_extent(method.addr)!=(method.addr,seq[-1].next_ip) or any(a.next_ip!=b.ip for a,b in zip(seq,seq[1:])) or
             any(i.has_segment_prefix or i.has_lock_prefix or i.has_rep_prefix or i.has_repne_prefix or i.memory_index!=R.NONE for i in seq)):return None
-    init=calls[0]; cl,create,wb,*captures,start,get=calls[4:];cap=captures[-1]
-    if (calls[:4]!=list(range(init,init+8,2)) or init<5 or cl-init<13 or create!=cl+3 or wb!=create+7 or
-            start!=cap+5 or get!=start+3 or any(seq[k].near_branch_target!=lift.rt_init_meta for k in calls[:4]) or
+    init=calls[0]; cl,create,wb,*captures,start,get=calls[ninit:];cap=captures[-1] if captures else wb
+    hot_idx=calls[ninit-1]+2
+    if (calls[:ninit]!=list(range(init,init+ninit*2,2)) or init<3 or cl-hot_idx<4 or create!=cl+3 or wb<=create+1 or
+            start<cap+5 or get!=start+3 or any(seq[k].near_branch_target!=lift.rt_init_meta for k in calls[:ninit]) or
             seq[wb].near_branch_target not in lift.rt_wbarrier or any(seq[k].near_branch_target!=seq[wb].near_branch_target for k in captures)):return None
     p=next((j for j,i in enumerate(seq[:init-2]) if i.mnemonic==M.CMP),-1)
     if p<0:return None
-    cmp=seq[p];branch=seq[init-2];ready=seq[init+7]; klass=seq[init+8];guard=seq[cl-2];hot=seq[cl-1]
+    cmp=seq[p];branch=seq[init-2];ready=seq[hot_idx-1]; klass=seq[hot_idx];guard=seq[cl-2];hot=seq[cl-1]
     frame=_task_frame(seq[:p],seq[get+1:])
     if (not frame or cmp.memory_base!=R.RIP or cmp.memory_size!=1 or cmp.op1_kind!=K.IMMEDIATE8 or cmp.immediate8 or
             branch.mnemonic!=M.JNE or branch.near_branch_target!=klass.ip or ready.mnemonic!=M.MOV or ready.memory_base!=R.RIP or
@@ -245,61 +315,63 @@ def async_task_start(lift,method,td,seq,eh):
     parked=_saved_inputs(il,method,td,seq[p+1:init-2],saved,enums=True)
     if not parked:return None
     inputs,regs=parked
-    slots=[_slot_load(i,r) for i,r in ((klass,R.RCX),(seq[cl+1],R.RDX),(seq[cap+1],R.R8),(seq[start+1],R.RDX))]
-    if not all(slots) or len(set(slots))!=4:return None
-    inits=[seq[k-1] for k in calls[:4]]
+    klass_slot=_slot_load(klass,R.RCX); start_slot=_slot_load(seq[cap+1],R.R8);slots=[klass_slot,start_slot]
+    create_ctx,get_ctx=seq[cl+1],seq[start+1]
+    if plain:
+        if not all(_rr(i,M.XOR,R.EDX,R.EDX) for i in (create_ctx,get_ctx)):return None
+    else:
+        create_slot=_slot_load(create_ctx,R.RDX);get_slot=_slot_load(get_ctx,R.RDX);slots.extend((create_slot,get_slot))
+    if not all(slots) or len(set(slots))!=ninit:return None
+    inits=[seq[k-1] for k in calls[:ninit]]
     if (any(i.mnemonic!=M.LEA or i.op0_register!=R.RCX or i.memory_base!=R.RIP for i in inits) or
             {i.ip_rel_memory_address for i in inits}!=set(slots)):return None
-    binding=_start_binding(il,method,td,slots[2],seq[start])
+    binding=_start_binding(il,method,td,start_slot,seq[start])
     if not binding:return None
-    sm,ty,bt,ci=binding;args=il._method_spec_type_args(ci)
-    if (not args or len(args)!=1 or not key(args[0]) or il.typedef_full(bt.index)!='System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1' or
-            rk!=(0x15,(0x12,task,0),(key(args[0]),),0)):return None
-    u=il.decode_slot(slots[0]) or {}; rt=u.get('type');bk=(0x15,(0x11,bt.index,0),rk[2],0)
-    if (u.get('kind')!=1 or u.get('td')!=bt.index or key(rt)!=bk or not il.returns_sret(rt) or il._sf_field_size(rt,0)!=24 or
-            not _task_member(il,slots[1],seq[create],bt,ci,'Create',bk) or not _task_member(il,slots[3],seq[get],bt,ci,'get_Task',rk)):return None
-    get_spec=il.decode_slot(slots[3])['idx']
-    if lift._accessor_prop(il.method_specs[get_spec][0])!=('get','Task',0):return None
-    if (guard.mnemonic!=M.CMP or guard.memory_base!=R.RCX or guard.memory_displacement!=0xe4 or hot.mnemonic!=M.JNE or hot.near_branch_target!=seq[cl+1].ip or
+    sm,ty,bt,ci=binding
+    u=il.decode_slot(klass_slot) or {};rt=u.get('type');bk=key(rt)
+    if u.get('kind')!=1 or u.get('td')!=bt.index or not bk or not il.returns_sret(rt):return None
+    builder_width=il._sf_field_size(rt,0)
+    if not builder_width or builder_width<=0:return None
+    if plain:
+        if not _ordinary_task_members(lift,bt,ci,rt,bk,rk,seq[create],seq[get]):return None
+    else:
+        args=il._method_spec_type_args(ci)
+        if (not args or len(args)!=1 or not key(args[0]) or il.typedef_full(bt.index)!='System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1' or
+                rk!=(0x15,(0x12,task,0),(key(args[0]),),0) or bk!=(0x15,(0x11,bt.index,0),rk[2],0) or
+                not _task_member(il,create_slot,seq[create],bt,ci,'Create',bk) or not _task_member(il,get_slot,seq[get],bt,ci,'get_Task',rk)):return None
+        get_spec=il.decode_slot(get_slot)['idx']
+        if lift._accessor_prop(il.method_specs[get_spec][0])!=('get','Task',0):return None
+    if (guard.mnemonic!=M.CMP or guard.memory_base!=R.RCX or guard.memory_displacement!=KLASS_INITIALIZED or hot.mnemonic!=M.JNE or hot.near_branch_target!=seq[cl+1].ip or
             il.bin.exports.get(seq[cl].near_branch_target)!='il2cpp_runtime_class_init'):return None
 
-    machine,builder,state=seq[cap+2:start];source=seq[create-1];after=seq[get-1]
+    machine,builder=seq[cap+2:cap+4];state=seq[start-1];source=seq[create-1];after=seq[get-1]
     buf=_borrow(source,R.RCX,bias);home=_borrow(machine,R.RDX,bias);dest=_borrow(builder,R.RCX,bias);width=il.value_type_size(sm.index)
-    if (None in (buf,home,dest) or not width or width<24 or not 32<=home<=size-width or not 32<=buf<=size-24 or not (buf+24<=home or home+width<=buf) or
-            not home<=dest<=home+width-24 or _borrow(after,R.RCX,bias)!=dest or not _stack_copy24(seq[create+1:wb],buf,dest,bias)):return None
-    bf=_own_field(il,sm,dest-home+16,24)
-    if not bf or bf[0]!='this.<>t__builder' or key(bf[1])!=bk or bf[1][1]&0x27!=6:return None
-    # Unlike the void wrapper, only the bytes *outside* the builder are
-    # zeroed. Together with the Create copy they cover the entire machine.
-    zero=seq[init+9]
-    if not _rr(zero,M.XORPS,R.XMM0,R.XMM0):return None
-    tiles=[(dest,24)];stores=seq[init+10:cl-2]
-    zero_rax=bool(stores and _rr(stores[0],M.XOR,R.EAX,R.EAX))
-    if not (guard.op1_kind==K.IMMEDIATE8TO32 and guard.immediate8to32==0 or zero_rax and guard.op1_register==R.EAX):return None
-    for i in stores[int(zero_rax):]:
-        off=_home(i,bias)
-        if off is None:return None
-        if i.mnemonic in (M.MOVDQU,M.MOVAPS) and i.op1_register==R.XMM0:
-            if i.mnemonic==M.MOVAPS and off%16:return None
-            n=16
-        elif i.mnemonic==M.MOV and (i.op1_kind==K.IMMEDIATE32TO64 and i.immediate32to64==0 or zero_rax and i.op1_register==R.RAX):n=8
-        else:return None
-        tiles.append((off,n))
-    if not _covers(tiles,home,width):return None
-    writes=_task_captures(il,sm,home,width,bias,regs,(seq[a+1:b] for a,b in zip([wb]+captures,captures)))
-    if not writes or ('<>4__this','this') not in writes:return None
+    if (None in (buf,home,dest) or not width or width<builder_width or not 32<=home<=size-width or not 32<=buf<=size-builder_width or
+            not (buf+builder_width<=home or home+width<=buf) or not home<=dest<=home+width-builder_width or _borrow(after,R.RCX,bias)!=dest or
+            not _builder_copy(seq[create+1:wb],buf,dest,builder_width,bias,echo=plain)):return None
+    bf=_own_field(il,sm,dest-home+16,builder_width)
+    if not bf or key(bf[1])!=bk or bf[1][1]&0x27!=6:return None
+    zeroes=_zero_tiles(seq[hot_idx+1:cl-2],bias)
+    if zeroes is None:return None
+    tiles,regs_zero=zeroes
+    if not (guard.op1_kind==K.IMMEDIATE8TO32 and guard.immediate8to32==0 or
+            guard.op1_kind==K.REGISTER and RegisterExt.is_gpr32(guard.op1_register) and RegisterExt.full_register(guard.op1_register) in regs_zero):return None
+    if not (_covers(tiles,home,width) or _covers(tiles+[(dest,builder_width)],home,width)):return None
+    writes=_task_captures(il,sm,home,width,bias,regs,(seq[a+1:b] for a,b in zip([wb]+captures,captures)),seq[cap+4:start-1])
+    if writes is None:return None
     off=_home(state,bias)
     if off is None or not home<=off<=home+width-4:return None
     sf=_own_field(il,sm,off-home+16,4)
-    if (not sf or sf[0]!='this.<>1__state' or key(sf[1])!=(8,0) or sf[1][1]&0x27!=6 or state.mnemonic!=M.MOV or
+    if (not sf or key(sf[1])!=(8,0) or sf[1][1]&0x27!=6 or any(f==sf[0][5:] for f,_ in writes) or state.mnemonic!=M.MOV or
             state.op1_kind!=K.IMMEDIATE32 or state.immediate32!=0xffffffff):return None
     tn=il.type_name(ty); builder_name=il.type_name(rt)
     name='stateMachine'
     while name in {v[0] for v in inputs.values()}:name+='Local'
+    receiver=f'{name}.{bf[0][5:]}'
     return ([f'{tn} {name} = default;',
             f'System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof({builder_name}).TypeHandle);',
-            f'{name}.<>t__builder = {builder_name}.Create();']+[f'{name}.{f} = {v};' for f,v in writes]+
-            [f'{name}.<>1__state = -1;',f'{name}.<>t__builder.Start<{tn}>(ref {name});',f'return {name}.<>t__builder.Task;'])
+            f'{receiver} = {builder_name}.Create();']+[f'{name}.{f} = {v};' for f,v in writes]+
+            [f'{name}.{sf[0][5:]} = -1;',f'{receiver}.Start<{tn}>(ref {name});',f'return {receiver}.Task;'])
 
 
 def async_void_start(lift,method,td,seq,eh):

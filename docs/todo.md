@@ -1139,6 +1139,25 @@ FusionNetworkManager.cs changed in the strict tree. The 503-file census is
 still 391 shared calls across 64 addresses and 3,167 `object objN`.
 Report: `work/shift_start_game_census.json`.
 
+**Non-generic Task kickoff:** In `FusionNetworkManager.LeaveGame` the
+registered `AsyncTaskMethodBuilder.Create` at a shared address writes the
+entire metadata-sized result and returns its address. The wrapper copies
+that result into its machine. MethodSpec 151389 selects `Start` at
+`0x18055917e`; `get_Task` at `0x18055918a` uses the same RSP+0x40 builder
+*after* Start. The emitted kickoff compiled with the real .NET non-generic
+builder. Its returned task was reference-identical to the task seen in
+MoveNext on suspension/resumption, synchronous completion and fault.
+
+The recognizer takes names, types, MethodSpec registrations and field
+offsets from the input, tracking byte ranges through scratch registers.
+A game-independent synthetic Win64 fixture varies code/metadata addresses,
+spec indices, stack homes, registers, builder size, machine and field names;
+a detached Task receiver or a factory writing beyond its result declines.
+Six ordinary Task wrappers lost a shared marker; one Task<bool> wrapper
+also gained a concrete kickoff. The strict 503-file census fell from 391 to
+385 shared calls (64 addresses) and 3,167 to 3,155 `object objN` across five
+changed files. Report: `work/shift_leave_task_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;

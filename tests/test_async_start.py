@@ -1,7 +1,7 @@
 import pytest
 from iced_x86 import Decoder,Register as R
 
-from il2cpp.async_start import _covers,_frame,_stack_copy24,_task_frame
+from il2cpp.async_start import _builder_copy,_covers,_frame,_task_frame
 
 
 @pytest.mark.parametrize('change',['none','wrong restore displacement','different stack reset','overlapping home','wrong saved reg'])
@@ -33,7 +33,7 @@ def test_live_builder_copy_preserves_both_pieces(change):
     if change=='different borrow':code=code.replace('4c2460','4c2430')
     if change=='swapped high store':code=code.replace('5c2470','542470')
     seq=list(Decoder(64,bytes.fromhex(code)))
-    assert _stack_copy24(seq,0x30,0x60)==(change=='none')
+    assert _builder_copy(seq,0x30,0x60,24,None)==(change=='none')
 
 
 @pytest.mark.parametrize('change',['ok','wrong frame register','changed R11 anchor','different high half'])
@@ -47,5 +47,5 @@ def test_builder_alias_across_stack_bases(change):
     if change=='different high half':copy=copy.replace('4dd8','4de0')
     seq=lambda raw:list(Decoder(64,bytes.fromhex(raw)))
     f=_task_frame(seq(pro),seq(epi))
-    ok=f and f[1]=={R.RBX} and _stack_copy24(seq(copy),0x70,0x28,f[2])
+    ok=f and f[1]=={R.RBX} and _builder_copy(seq(copy),0x70,0x28,24,f[2])
     assert bool(ok)==(change=='ok')
