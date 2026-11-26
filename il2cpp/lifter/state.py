@@ -1,7 +1,7 @@
 from il2cpp.prelude import *  # noqa: F401,F403
 from il2cpp.expr import Expr, _BINDABLE_KINDS, _RegState, _USE_BIND_MIN, _bind_replace, _is_unresolved_gp, _mentions
 from il2cpp.initguard import metadata_init_guards
-from il2cpp.metadata import MethodDef, TypeDef
+from il2cpp.metadata import MethodDef, TypeDef, source_params
 from il2cpp.names import safe_ident
 from il2cpp.runtime.core import Il2Cpp
 from il2cpp.text import imm_of, reg_name, sdisp, strip_outer
@@ -1459,7 +1459,18 @@ class _StateMixin:
         self.regs = self._new_regs()
         self.dry = False   # a mid-lift_method exception can leave this set
         self._memory_rhs_loop_guard = False  # flat lift preserves native labels
+        self._entry_ref_zeros = {}  # flat decode can truncate at an early return
+        self._entry_reference_loads = {}
+        self._this_reloads = {}
+        self._ref_field_copies = {}
+        self._saved_fp_consumers = {}
+        self._snapshot_srets = set()
+        self._signed_module_slots = set()
+        self._converted_modules = {}
+        self._hierarchy_bindings = {}
+        self._reparent_sites = {}
         self._array_allocation_loop_guard = False
+        self._single_array_allocs, self._single_array_counts = set(), {}
         self._cur_ip = 0
         self.rsp_delta = 0
         # this method established no frame pointer until it runs `mov rbp,rsp`.
@@ -1638,6 +1649,14 @@ class _StateMixin:
         # same-type target is `: this(...)`; an ancestor target is `: base(...)`.
         self._current_method = m
         self._current_td = td
+        self._module_reads = {}
+        self._module_conversion = self._converted_setter = None
+        self._stored_getter_lane = None
+        self._hierarchy_values = {}
+        self._scratch_getter_lanes = None
+        self._last_sret = None
+        self.__dict__.pop('_copied_frame', None)
+        self._masked_single = None
         # reset per method/pass: t-names repeat across methods and v-names
         # differ between the two analysis passes, so leftovers mis-type
         self._var_types = {}
@@ -1679,7 +1698,7 @@ class _StateMixin:
         self.stack_values = {}
         byval_bits = (0x12 << 16)
         this_ty = (td.index, byval_bits)
-        args = self.meta.method_params(m)
+        args = source_params(self.meta, m)
         # fix 57: ONE shared Win64 positional counter, the same walk
         # _positional_args (fix 42b) and _hint_arg_types (fix 53) do on
         # the caller side -- argument N takes register slot N, as RCX/
@@ -2197,7 +2216,8 @@ class _StateMixin:
         off = sdisp(off)
         key = off + self.rsp_delta
         if key not in self.stack_map:
-            self.stack_map[key] = 's_%x' % abs(off)
+            fmt = 's_0%x' if off in getattr(self, '_signed_module_slots', ()) else 's_%x'
+            self.stack_map[key] = fmt % abs(off)
         return self.stack_map[key]
 
     @staticmethod

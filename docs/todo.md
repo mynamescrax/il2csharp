@@ -1,5 +1,827 @@
 # il2csharp — TODO (open work and historical triage)
 
+## No-game validation
+
+`python il2csharp.py --demo --strict` reads an original synthetic Win64/v31
+pair (two images, three types, nine method bodies). `tests/test_demo.py`
+compares the emitted serial and pool trees and, with a .NET 8+ SDK, runs
+both generated assemblies. One case caught a silent wrong result even with
+zero reported lift failures: `mov eax,ecx; bswap eax; ret` returned the input
+unchanged. A three-instruction leaf that copies an argument to EAX/RAX,
+swaps before or after the copy, and returns now recovers `ReverseEndianness`
+when the copy, swap and by-value integer signature agree on width. Other
+consumers, in particular a dword swap widened into a qword result, remain
+unproven.
+
+## Shift At Midnight: second v31 build (2026-11-25)
+
+This build has 16,945 types and 129,160 methods; its hashes differ from the
+frozen fixture. A strict `Assembly-CSharp` run lifted 6,791 bodies into 503
+C# files, with no failures, fallbacks or syntax errors. Two signed/unsigned
+32-bit `BinaryPrimitives.ReverseEndianness` overloads share a native body:
+rendering the intrinsic there produced a recursive self-call. The ushort
+overload uses a word rotate by eight followed by a zero-extension into EAX;
+it previously returned the input. The three implementations now reverse
+their bytes directly. With `IL2CSHARP_METADATA` and `IL2CSHARP_BINARY` set,
+`python -m pytest -q tests/test_game_byte_order.py` compiles the actual emitted
+type and exercises every ushort plus signed and unsigned 32-bit edge cases.
+The test locates the type by name and checks behavior rather than MethodDef
+indices, so it does not need replacement goldens for this build.
+
+**Shared calls:** The one- and two-dword Win64 cached-icall forwarders now
+render an equivalent public call when both closed static candidates have the
+same owner and signature. Both paths must forward the same arguments to the
+same cell, and the resolve string, resolver call and cache store must agree.
+`/* shared icall */` marks equivalence without attributing the original call
+to one MethodDef. On the strict game-script build unresolved shared markers
+fell from 1,458 to 1,175; 288 uses now spell `Range`, `GetKey`, `GetKeyDown`
+or `GetKeyUp`. All 503 files passed the parse gate.
+
+**Branches:** Packed XOR zeroing no longer changes EFLAGS. The next conditional
+jump still tests the preceding comparison: the `GoToTarget` entry branch now
+tests `chasingNonPlayerObject` instead of the constant false `0f != 0`.
+Across `Assembly-CSharp`, comparisons of `0f` against literal zero fell from
+31 to 1; the strict rebuild still lifts all 6,791 bodies with zero fallbacks
+and all 503 files parse.
+
+**Scalar sign masks:** A single-precision arithmetic instruction consuming a
+packed XOR sign bit or AND magnitude mask can now use `-x` or `Math.Abs(x)`.
+The proof uses the low four bytes of a 16-byte read-only mask and the exact
+input register; packed reads retain their own spelling. `CraneController.Update`
+now scales `-this.speed` instead of XORing a float with a `float2`. The portable
+behavior test compiles the lifted expressions and compares bits, including
+negative zero and a signed NaN payload.
+The arithmetic slice reduced the `float2` sign-mask XORs from 61 to 47 and
+`float2` ANDs from 86 to 84 on this game-script build. A directly returned
+by-value `float` in XMM0 also consumes only lane zero: the `InAirTime` and
+`StoppedTime` getters now return the negated timer fields.
+
+**Compiler check:** `compile_corpus.py` used to discard the bodies of the stubs
+it merged, producing 175 spurious CS1002 errors on this game-script baseline
+and preventing Roslyn from reaching binding. It now merges whole generated
+methods and checks that duplicate definitions agree. The isolated Assembly-CSharp
+probe then reaches 9,837 binding diagnostics (9,487 CS0246) without the other
+90 images included; this is not a whole-game compile error count.
+
+**91-image baseline:** 11,199 C# files, 112,718 lifted bodies, no failed
+bodies, structured fallbacks or type-emission failures. Roslyn initially
+stopped at 17 syntax diagnostics across three files. The null-conditional
+pass now keeps an `if` with a live `else`; long resolved virtual comparisons
+on closed generic receivers bind the boolean result once at the call rather
+than falling back to a raw owner name and a fabricated zero. Re-emitting those
+three files brought the full diagnostic unit through parsing to 620 errors.
+Keeping a distinct top-level base globally qualified when its nested subtype
+has the same name eliminated all five CS0146 errors (620 → 615). The
+11,199-file gate with eight freshly emitted type files passed tree-sitter
+with zero errors, missing tokens or recovery nodes. Roslyn's largest buckets
+at this stage are CS0111 (291) and CS0102 (247); the single diagnostic unit
+combines duplicate internal types from separate input assemblies. Investigate
+these with assembly identity intact before changing recovered declarations.
+
+**Duplicate parameters:** Method signatures and lifted argument references now
+use the same positional aliases when metadata names collide after C# escaping.
+The raw parameter table retains the original names and tokens. Re-emitting
+`DebugDisplaySettingsMaterial` and `DebugDisplaySettingsRendering` (305 bodies,
+zero failures or fallbacks) removed all five CS0100 errors from the 11,199-file
+Roslyn gate: 615 → 610 diagnostics, with every other count unchanged.
+`tests/test_duplicate_params.py` compiles and runs a lifted method that reads
+two register arguments and a stack argument all originally named `_`.
+
+**Explicit interface getters:** Seven `ICanvasElement.transform` implementations
+and one `IClippable.gameObject` implementation had explicit MethodDefs but no
+implementing property rows. The emitter uses the matching read-only property
+on the directly implemented interface to wrap the existing body in `get`.
+All eight regenerated bodies and their RVA/VA/slot annotations match the
+previous output. Roslyn over 11,199 files: CS0683 8 → 0, total 610 → 602.
+
+**Duplicate-member census and named indexers:** The 291 CS0111 and 247 CS0102
+diagnostics group into 153 (original assembly, fully qualified declaring type)
+pairs across 53 assemblies (`work/shift_duplicate_groups.json`). The location
+identifies the reported declaration, not necessarily the assembly of its twin.
+`System.Xml.XmlNodeList` reproduces CS0102 even compiled *alone*: it has a real
+`Item(int)` method and its indexer's PropertyDef is `ItemOf`, not the C# default
+`Item`. Preserving the metadata name with `IndexerName` makes that file compile
+by itself (1 → 0). Four re-emitted types retain six custom indexer names.
+The raw single-unit probe reports six CS0616 errors on these attributes: the
+host SDK's `IndexerNameAttribute` does not derive from the *recovered* copy of
+`System.Attribute`. The explicit compiler-only control is `--support-source
+tools/compiler_support/LocalIndexerNameAttribute.cs` on both sides; support
+inputs are fingerprinted separately in the reports. They are not game types.
+With the identical marker, 11,199-source Roslyn runs give CS0102 247 → 246,
+CS0111 unchanged at 291, total 602 → 601. Without the marker the new raw
+single-unit count is 608 (`work/shift_all_indexers_compile.json`).
+
+**CS0507 assembly boundary:** All 16 diagnostics pair a Family override in
+one image with a FamORAssem base member in another (`work/shift_cs0507_metadata.json`).
+For example, slot 6 is `System.Configuration.dll:ConfigurationElement.Reset`
+(0x1c5, `protected internal virtual`) and `System.dll:DefaultProxySection.Reset`
+(0xc4, `protected override`). These are the correct C# modifiers for that split.
+`tools/compile_boundary.py --base <tree>/System.Configuration --derived <tree>/System
+--scope System/Net/Configuration --report <file>` verifies this using the emitted
+declarations: merged 12 CS0507; base reference DLL clean; derived reference DLL
+clean. The other four pairs have the same metadata pattern but were not part of
+that Roslyn run. The reference check does not compile method bodies.
+
+**Base dispatch in a direct tail:** `NoThrowExpressionVisitor.VisitConditional`
+(MethodDef 77696) restores `this` and `node` to RCX and RDX and jumps directly
+to `0x182082f00`, whose sole owner is `ExpressionVisitor.VisitConditional`
+(MethodDef 101692, immediate base slot 7). It now returns
+`base.VisitConditional(node)`. The targeted strict build changed only that
+receiver. A fixture regression compiles the lifted fallback statement against
+a counting .NET visitor and checks one override entry and one base call.
+
+**Byref zero initializers:** In `SaveSystem.TryGetDayAndMoney` (27305), R15
+and R14 retain the incoming `ref int` and `ref float` addresses across a
+metadata-init guard. The two four-byte stores of zeroed EDI now render as
+`day = 0;` and `money = 0f;`. A bounded entry-prefix proof tracks full-width
+address copies, intersects evidence at guard joins and kills volatile registers
+at init calls. Only the two initialization lines changed in the strict
+SaveSystem build. The game regression compiles those lines and checks the
+caller's integer and float bits after starting with nonzero values.
+
+**Success-path copies:** The v31 checked-reference select identifies the
+`SaveData` slot. An acyclic register proof carries that object-or-null fact
+and the two byref addresses across calls. Adjacent dword loads/stores at
+offsets `0x10` and `0x18` copy `curDay` and `money`; they now emit typed
+assignments. The compiled success-path statements preserve positive and
+negative days and the exact bits of fractional balances. This check covers
+the stores, not deserialization or the rest of the save method.
+
+**Checked reference select:** The same zero-destination and hierarchy proof
+now binds the select itself: `SaveData saveData = obj11 as SaveData;`.
+The field stores use `saveData.curDay` and `saveData.money`. A Roslyn test
+compiles the complete lifted `TryGetDayAndMoney` body with a controlled
+deserializer, checks null and wrong-type rejection, exact and derived-type
+success, and verifies one deserialize and a closed stream on all four paths.
+
+**Allocation types and shared icalls:** Returning a decoded class TypeInfo
+from the value-producing metadata-init thunk now supplies `object_new` with
+the actual class. In the 503-file strict AC run, `object objN` declarations
+fell from 6,297 to 6,183; all 100 `NotSupportedException` allocations that
+used that spelling are gone. A compiled iterator Reset throws the expected
+exception. Two more shared Input calls recover their public operation when
+the caller supplies a tracked int and the verified overload takes a dword
+enum. With KeybindsManager and ShelfManager re-emitted, 1,173 shared
+markers remain (`work/shift_enumarg_census.json`).
+
+**Hittable string equality:** In `Rpc_Hit` (25444), five pushes precede
+`mov rbp,rsp`, so `[rbp+0x58]` loads the incoming string `damageType` at
+entry RSP + 0x30. R15 holds it across calls and supplies RCX to the three
+shared `System.String.Equals`/`op_Equality` sites. Their value comparisons
+compile and select the correct multipliers for distinct equal strings; null,
+a case mismatch, and an unknown label take the default. The strict 6,791-body
+game-script rebuild parses all 503 files cleanly: shared markers 1,173 →
+1,170 and `object objN` declarations 6,183 → 6,179 (`work/shift_frame_string_census.json`).
+
+**Computer search-token equality:** In `GetAdvancedSearchScore` (24611),
+`candidate.Split(...)` returns `string[]` in RAX. R12 retains the array;
+the qword load at `0x1806a5be2` indexes its reference elements at stride 8
+and offset `0x20`. The former `obj36` comparison now reads
+`textArray2[num9] == search`. Both shared string-comparison sites in this
+method are gone. A compiled test covers distinct equal strings, a case
+mismatch, and null on either or both sides. Strict AC census: shared markers
+1,170 → 1,166; `object objN` declarations 6,179 → 6,177; 503 files parse
+cleanly (`work/shift_string_element_census.json`).
+
+**Inventory placement equality:** In the unboxed `Rpc_CMD_PlaceItem` state
+machine's `MoveNext` (25765), `[rbx+0x30]` loads `this.type`, the string at
+boxed field offset `0x40`. RSI feeds both `ComputeStringHash` and the shared
+string comparisons. Correcting the aggregate field lookup for a struct's
+own `this` removes the mistaken `builder.m_task` read. All 31 shared string
+comparisons in InventoryManager now use value equality. The lifted `"atm"`
+test runs true on a distinct equal string and false on `"ATM"`, `"books"`
+and null. Strict AC: 6,791 bodies, 503 files parse cleanly; shared markers
+1,166 → 1,132 and `object objN` declarations 6,177 → 6,108
+(`work/shift_unboxed_this_census.json`).
+
+**Shared reference getter:** `LAM_ImpulsesOnStopAndOnLand.OnUpdate` passes
+`this` to `0x180513390`, a qword load from RCX + 0x18 followed by `ret`.
+Its base class owns exactly one reference at that offset: the private
+`<Owner>k__BackingField` of type `LegsAnimator`. The accessible nonvirtual
+`Owner` getter is itself that leaf. The emitted `base.Owner` read preserves
+the field identity without choosing between the shared `LA`, `LegsAnim` and
+`Owner` MethodDefs. In a compiled test the captured reference stays correct
+across replacements and nulls. Strict AC: this VA's markers 257 → 45;
+all shared markers 1,132 → 919; `object objN` declarations 6,108 → 5,836;
+6,791 bodies, 503 files, zero fallbacks or parse errors
+(`work/shift_shared_field_census.json`).
+
+**Saved scalar before a shared getter:** At `0x1806946ee` in
+`LAM_ParamChanger_UnglueOnAngle.OnUpdate`, XMM0 still held `GetFloat()`;
+the purity guard correctly declined dropping it. The caller saves it in
+XMM6 before the getter. Binding that scalar at its producer and preserving
+each Owner snapshot through CSE recovers the field read in native order.
+A compiled OnUpdate regression changes Owner inside GetFloat: the old owner
+is updated from the replacement's blend, the call runs once, and throwing
+stops the second read. The strict AC census gives 45 → 36 remaining calls
+to this leaf, 919 → 910 shared calls overall, and 5,836 → 5,847 `object objN`
+declarations. All 503 files parse (`work/shift_saved_fp_census.json`).
+
+**Copied tail locals:** In `LAM_RotationStability.OnPreLateUpdate`, `obj99`
+was the copy of the `LegsAnimator` reference loaded at `0x180694f4f` (native
+temp `t1011`, copied temp `t1075`). The branch-tail duplication pass minted
+a new identifier without carrying its recorded type. Copies now retain
+uncontested declaration evidence and avoid occupied type-map and parameter
+names. A compiled regression checks both arms: `GetFloat` changes Owner,
+then the read captures the replacement exactly once. RotationStability's
+`object objN` count falls 63 → 34; all 16 `object` Owner snapshots are typed.
+Strict AC: 5,847 → 3,988 `object objN` declarations; 910 → 911 shared markers
+(two more in TMPForceSingleLine and one fewer in StoreManager); 6,791 bodies,
+all 503 files parse cleanly (`work/shift_tail_types_census.json`).
+
+**TMPForceSingleLine.SanitiseText:** LF and CR tests converge at `0x1806372a8`.
+There are three native getter calls: `0x1806372bb` before replacement,
+`0x180637367` after setting the caret, `0x180637387` after setting the anchor.
+The last two run in sequence on either sanitising path. A two-test guard
+now short-circuits into a single body when no live edge work would be lost.
+The complete lifted method compiles and logs three reads in order for LF,
+CR, or CRLF; plain text and re-entry make none. The getter's source name
+is still ambiguous. Strict AC: six textual references in this method → three;
+911 → 908 shared markers, 3,988 → 3,962 `object objN` declarations; 6,791
+bodies, zero fallbacks, 503 files parse (`work/shift_short_circuit_census.json`).
+
+**TMP caret getter aliases:** All three PropertyDefs at `0x182aab550` are
+nonvirtual, parameterless `TMP_InputField` getters returning int. Their body
+returns `m_CaretSelectPosition`, adding `compositionString.Length` unless
+`m_ReadOnly` is set; entry RDX (the hidden MethodInfo) is not read. The public
+`caretPosition` spelling is therefore equivalent. `SanitiseText` now has three
+separate property reads and zero stubs for this VA. Compiled LF/CR/CRLF tests
+preserve read/set order, plain text and re-entry still make no reads. Strict
+AC: 908 → 905 shared markers, 3,962 `object objN` declarations, 6,791 bodies,
+503 files parse cleanly (`work/shift_caret_alias_census.json`).
+
+**Coroutine aliases:** `MonoBehaviour.StartCoroutine(IEnumerator)` and
+`StartCoroutine_Auto(IEnumerator)` (56499/56500) share `0x182bf4460`.
+The wrapper preserves RCX/RDX in RBX/RSI and tail-calls the resolved
+`StartCoroutineManaged2_Injected` with the receiver's native pointer and
+the same iterator. The bounded path check covers the split unwind ranges
+and error paths, checking hidden R8 independence. Direct calls and tails
+can use the public `StartCoroutine` spelling when receiver and iterator
+types are proved. Two compiled CarComputer sites each construct the iterator
+and start it exactly once. Strict AC census: this VA 190 → 5, all shared
+markers 905 → 720, `object objN` unchanged at 3,962. All 6,791 bodies lift
+without fallback and all 503 files parse (`work/shift_coroutine_alias_census.json`).
+
+**PurchaseManager coroutine receiver:** The iterator at `0x18058d09f` was
+already proved; the first `sub_180514360` result had no receiver type. The
+helper and public `SaveManager.Instance` getter initialize the same type-info
+slot and read the same zero-offset static reference. Each read now binds a
+separate typed local. A compiled regression supplies two different instances:
+the second creates one iterator and the first starts that same iterator once
+in both rendered copies. Strict AC: outstanding coroutine markers 5 → 3,
+all shared markers 720 → 717, `object objN` 3,962 → 3,417, and this helper's
+45 raw calls → 0. All 503 files parse (`work/shift_static_receiver_census.json`).
+
+**TransactionManager receiver:** At the `Rpc_StartTransaction` cleanup join,
+the normal edge retains `this` in RDI. The EH continuation reloads it at
+`0x18060eb8f`: `[rsp+0xa0]` is the saved `[entry rsp+8]` after seven pushes
+and `sub rsp,0x60`, confirmed by the parent PE unwind record. Both edges
+now agree; the call at `0x18060ebdb` emits `this.StartCoroutine(this.SpawnItems())`.
+A compiled regression observes one factory call followed by one start on the
+same receiver with the returned iterator; a throwing factory makes no start.
+Strict AC: coroutine markers 3 → 2, shared markers 717 → 716, 3,417 `object
+objN` declarations, all 503 files parse (`work/shift_this_home_census.json`).
+
+**ShelfManager receiver:** `InitObjectQueue` saves entry RCX through RAX at
+`[entry rsp+8]`. Seven pushes, a 0xB0 allocation and the two XMM spills
+match the PE unwind record. At `0x1805b7ce1` the in-frame cleanup reloads
+the same `this` into RSI from `[rsp+0xf0]`; the ordinary edge keeps RSI.
+The start at `0x1805b818d` uses it and the fresh `SwapProductPos` iterator.
+The compiled allocation/capture/start ran once on the original shelf.
+Strict AC: 2 → 1 shared coroutine markers, 716 → 715 shared markers overall,
+3,417 `object objN` declarations; all 503 files parse (`work/shift_shelf_home_census.json`).
+
+**Computer.Search's captured receiver:** `MoveNext` (24640) loads RDI at
+`0x1806bdd52` from `[rbx+0x28]`, the unboxed state machine's `<>4__this :
+Computer` field, and saves it to `[rsp+0x78]` at `0x1806bdd56`. The normal
+edge keeps RDI; the inner cleanup reloads precisely that spill at `0x1806bdf3c`.
+The adjacent 24-byte list enumerator ends at +0x78. Its borrowed address is
+also copied via the cleanup descriptor; it does not overlap the receiver.
+The resulting local is captured before the state test and survives both
+paths to `0x1806be210`. Compiling the emitted capture and call with a mutable
+state-machine field verifies one factory and one start on the original
+Computer, or no start if the factory throws. Strict AC: 1 → 0 unresolved
+calls to `0x182bf4460`, 715 → 714 total shared markers, 3,417 `object objN`
+declarations. All 6,791 bodies lift with zero failures or fallbacks, all 503
+files parse (`work/shift_capture_final_census.json`).
+
+**Computer.Search awaiter completion:** In `MoveNext` (24640), `0x1806bde01`
+produces the awaiter, and `0x1806bde06` stores its eight bytes at `[rsp+0x108]`.
+The call at `0x1806bde18` takes the address of that same word. On the false
+edge it is copied to `<>u__1 : TaskAwaiter` and passed to
+`AwaitUnsafeOnCompleted<TaskAwaiter, …>`. The shared getter loads `m_task`
+from the unboxed awaiter and tail-jumps to `Task.get_IsCompleted`, with a
+null-reference throw on the null-task path. The emitted branch now tests
+`taskAwaiter1.IsCompleted`. With the recovered decision compiled against .NET,
+a completed task proceeded immediately, a pending task suspended and resumed
+once, and a faulted task proceeded to `GetResult` and propagated its exception.
+Strict AC: unresolved sites at this address 32 → 8; all shared markers
+714 → 690; `object objN` declarations 3,417 → 3,393. All 6,791 bodies lifted
+without failures or fallbacks, and all 503 files parsed cleanly
+(`work/shift_awaiter_bool_census.json`).
+
+**Fusion awaiter completion after cleanup joins:** In `ShutdownSession.MoveNext`
+(26500), `0x1805904b1` reads the eight-byte awaiter at `[rsp+0x28]`. The old
+proof required the merged RBX value to render as `this`. On the incomplete
+path, the word is copied to `[rbx+0x28]` (`<>u__1` at boxed offset `0x38`),
+and the same stack address is passed in RDX to the builder with RBX in R8.
+MethodRef 151275 in R9 closes the arguments to `TaskAwaiter` and this state
+machine; its explicit generic method-pointer index 139013 resolves to the
+actual call target `0x180afc400`. This proves the borrow's type without
+claiming identity for a merged pointer. The compiled completion gates for
+Fusion and Computer passed for completed, pending→resumed and faulted tasks.
+Strict AC: `0x1811f7db0` markers 8 → 0, all shared markers 690 → 682,
+`object objN` 3,393 → 3,385; 6,791 bodies, 503 files parse cleanly
+(`work/shift_await_builder_census.json`).
+
+**Fusion yield suspension:** At `0x18059068c` in `ShutdownSession.MoveNext`,
+RCX addresses the byte at `[rsp+0xd0]`. The shared leaf clears AL and returns;
+`test al,al; je` takes the suspension edge. That edge copies the byte to
+`<>u__2 : YieldAwaitable.YieldAwaiter` and passes its address to builder
+MethodRef 151370, registered at the actual call target `0x180afc880`.
+Seven game-script yield checks now render `YieldAwaiter.IsCompleted`. Their
+two byte-producing calls use the equivalent public `Task.Yield()` and
+`YieldAwaitable.GetAwaiter()` spellings where the class-init guards,
+fieldless struct returns, native body and stack homes agree. A compiled
+test of the recovered setup and guard posted one continuation, did not
+resume inline, and resumed once when the test context ran the callback.
+Strict AC: this leaf's unresolved calls 21 → 0, total shared markers
+682 → 661, `object objN` declarations 3,385 → 3,358; all 6,791 bodies
+lifted and all 503 files parsed (`work/shift_yield_bool_census.json`).
+
+**Fusion yield resumption:** Both renderings of `GetResult` in `ShutdownSession`
+come from `0x1805906b8`. The resume edge copies the byte from `<>u__2` to
+`[rsp+0xd0]`, clears the field, and rejoins the type-init guard. RCX then
+addresses that same home; MethodDef 8561 is the sole `YieldAwaiter` member
+registered at the no-op `ret 0` leaf. The returned-register use check declines
+when a native result might still be live. A compiled test of the recovered
+gate and invocation counted zero `GetResult` calls before dispatching the
+queued continuation and one afterward. Strict AC: 11 of 12 textual yield
+result stubs recovered; shared markers 661 → 650, `object objN` declarations
+3,358 → 3,348. GamerTagsScreen's remaining site encounters an indirect call
+before the return-lane check can finish. All 6,791 bodies lifted without
+fallbacks and all 503 files parsed (`work/shift_yield_result_census.json`).
+
+**GamerTagsScreen yield result:** In `OnEnable.MoveNext` (25371), RAX from
+`0x1806f8d68` is overwritten at `0x1806f8db3`. The non-null path loads
+`PlatformManager`'s static reference at +0x30 and dispatches slot 19
+(`GetLobbyMembers`, MethodDef 26101) through its method pointer at +0x268
+and MethodInfo at +0x270. The `call rax` at `0x1806f8ddf` consumes the
+new pointer, RCX receiver and RDX MethodInfo; it takes no XMM0 argument.
+The null branch is checked separately. The emitted resume statements ran
+in order: no calls before dispatching the continuation, then one GetResult
+and one virtual lobby query. Strict AC: yield result stubs 1 → 0, all shared
+markers 650 → 649, `object objN` 3,348 → 3,347. Only `GamerTagsScreen.cs`
+changed in the 503-file tree (`work/shift_yield_vslot_census.json`).
+
+**Performance-test starts:** In `DEMO_LegsAnim_CharacterControllerTest.Update`
+(30264), `[rdi+0x28]` is `this.performanceTest : FDebug_PerformanceTest`.
+The caller saves it before evaluating `Component.gameObject`; after the null
+test it passes the captured receiver in RCX, the GameObject in RDX, `true` in
+R8B, and a null MethodInfo in R9. Neither return lane from `0x1806830b6` is
+used. The shared `ret 0` is equivalent to the sole matching nonvirtual
+instance action, `Start(GameObject,bool)` (28993). `SpiderMover.Update` has
+the same setup at `0x18068850c`. Compiled call-site tests replace the field
+inside the getter: each starts the original receiver once, or raises on a
+null receiver after one getter evaluation. Strict AC: this VA 43 → 41,
+total shared markers 649 → 647, `object objN` 3,347 → 3,345. Only those
+two type files changed (`work/shift_perf_start_census.json`).
+
+**CharacterController performance-test finish:** At `0x180683141`, Update
+loads `this.performanceTest` before `get_gameObject`. The conversion call at
+`0x18068316c` produces the Boolean in AL; only then is the saved receiver
+tested for null. `movzx edx,al` and `mov rcx,rbx` forward the two values to
+the void tail at `0x18068318e`. `FDebug_PerformanceTest.Finish(bool)` (28996)
+is the matching instance operation. The C# tail evaluates the getter and
+Unity conversion once; the previous output had also flushed the conversion
+as a separate call. A compiled regression covers true/false, receiver
+replacement, a null receiver, and getter/conversion exceptions. Strict AC:
+this leaf 41 → 40, all shared markers 647 → 646, `object objN` still 3,345.
+Only `DEMO_LegsAnim_CharacterControllerTest.cs` changed in the 503-file
+tree (`work/shift_perf_finish_census.json`).
+
+**SpiderMover performance-test finish:** In `Update` (30294) the position
+setter returns before `[rdi+0x128]` loads `this.perf` into RCX. The null arm
+raises; on the non-null arm `mov dl,1` supplies `true`, R8 is zero, and the
+XMM/GPR restores leave both receiver and flag intact for the void tail at
+`0x18068a076`. `Finish(bool)` (28996) is the matching public instance action.
+Compiled setter/tail regression: replacing `perf` calls the replacement once
+with `true`; clearing it throws after the setter and invokes no `Finish`.
+Only `DEMO_LegsAnim_SpiderMover.cs` changed in the strict AC rebuild: shared
+markers 646 → 645 (this leaf 40 → 39), `object objN` still 3,345; all 503
+files parsed cleanly (`work/shift_perf_literal_census.json`).
+
+**CreatingPoster.Despawned:** The direct call at `0x1806b2e0c` forwards
+entry RCX/RDX/R8 (`this`, `runner`, `hasState`) with R9 zero. Slot 26 is
+MethodDef 24722 on the caller and 59669 on its immediate base
+`Fusion.NetworkBehaviour`; both signatures are `void Despawned(NetworkRunner,
+bool)`. The latter is the sole registered two-argument instance candidate on
+the receiver chain at the `ret 0` target. No return register feeds the void
+tail to `CancelCreating`. The emitted `base.Despawned(runner, hasState)`
+ran once before cleanup for both flag values and preserved runner identity
+in a compiled test. Strict AC: this leaf 39 → 38, all shared markers 645 →
+644, `object objN` 3,345 → 3,344; of the 503 files only `CreatingPoster.cs`
+changed (`work/shift_poster_base_census.json`).
+
+**CreatingPoster.Spawned:** Slot 25 maps the override (24719) to
+`Fusion.NetworkBehaviour.Spawned()` (59668) on the immediate base. At
+`0x1806b3b5b` RCX still holds `this`, EDX has been zeroed for MethodInfo,
+and neither RAX nor XMM0 from the bare `ret 0` is consumed. Other nullary
+owners share this leaf, so `base.Spawned() /* shared implementation */`
+denotes equivalent behavior rather than a unique original callee. In a
+compiled test the instrumented base ran once and set both fields before
+the poster checks: only an initialized, nonempty poster was loaded and
+then cleared. Strict AC: seven more base calls recovered, shared markers
+644 → 637 (this leaf 38 → 31), `object objN` 3,344 → 3,337. All 503 files
+parsed cleanly (`work/shift_poster_spawn_census.json`).
+
+**RemoteTrap.Spawned:** MethodDef 27078 at `0x180501870` clears EDX (the
+hidden MethodInfo) and jumps at `0x180501872` without touching RCX or RSP.
+The immediate parent's slot 25 is `NetworkBehaviour.Spawned` (59668), whose
+entry is precisely the jump target `0x180507120` (`ret 0`). The emitted
+`base.Spawned()` is an equivalent spelling for this override. The compiled
+virtual-dispatch regression observed one entry and one base call without
+recursion. The same proof recovered `base.CopyStateToBackingFields()` in
+DumpsterMonster. Strict AC: 31 → 29 markers at this leaf, 637 → 635 shared
+markers overall, 3,337 `object objN` declarations. All 503 files parse
+(`work/shift_spawn_tail_census.json`).
+
+**HeightStabilizer.OnInit:** Slot 6 maps MethodDef 30207 to the immediate
+base's `LegsAnimatorControlModuleBase.OnInit` (30135). The metadata-init
+guard saves RDX (`helper`) in RBX and RCX (`this`) in RDI on both paths;
+the join restores both, clears R8 and calls `0x180507120` at `0x180692ac9`.
+The next call, exported `il2cpp_value_box(klass, data)`, takes RCX/RDX and
+produces a new RAX. No return lane from the shared `ret 0` is consumed.
+`base.OnInit(helper)` is an equivalent operation, not a unique source name.
+The complete lifted body compiled against an instrumented base and helper:
+one base call on the original helper preceded the four requests (Blend,
+Reaction Speed, Blend Y, Extra Push Down Blend), including a base call
+before the first request failed for null. Strict AC: four such sites, leaf
+29 → 25, all shared markers 635 → 631, `object objN` 3,337 → 3,333;
+503 files parse (`work/shift_height_base_census.json`).
+
+**IKAlgorithmSwitch.OnInit:** The stack write at `0x18069a1a6` saves RSI;
+the call at `0x18069a1b1` receives the original `this` and `helper` from
+RDI and R14. Its immediate base slot 6 points to the `ret 0` leaf. The
+remaining liveness blocker was `0x1804363c0`: this allocator thunk jumps to
+the same core as the exported `il2cpp_object_new` calls with RCX unchanged.
+It needs no old XMM0 and introduces the fresh object subsequently read from
+RAX. A compiled test of the emitted prefix observed `base;allocate;owner;`,
+with the same helper and newly stored processor list. A throwing base did
+not allocate. Only `LAM_IKAlgorithmSwitch.cs` changed: shared markers
+631 → 630 (this leaf 25 → 24), `object objN` 3,333 → 3,332, all 503 files
+parse (`work/shift_ik_init_census.json`).
+
+**IKAlgorithmSwitch.OnValidateAfterManualChanges:** Slot 13 maps override
+30349 to immediate base MethodDef 30142. After metadata initialization,
+`test rdi,rdi; je 0x18069a38b` skips the call for a null helper. Otherwise
+RCX/RDX are restored from RBX/RDI and R8 is zeroed before `0x18069a386`.
+The return is unused: RAX is replaced before the list access; the shared
+indexer uses integer instructions and nullary error helpers. XMM0 is still
+tracked after the indexer until dead. The emitted guard compiled and ran:
+non-null `base;join;` with the original helper, null `join;`. Only
+`LAM_IKAlgorithmSwitch.cs` changed in the rebuilt game scripts. Strict AC:
+630 → 629 shared markers (24 → 23 at this leaf), 3,332 → 3,331 `object
+objN` declarations; 503 files parse (`work/shift_ik_validate_census.json`).
+
+**IK axis-lock mask:** In `LAM_IKAlgorithmSwitch.OnValidateAfterManualChanges`
+(30349), `0x18069a3bf` loads the Boolean byte at `this+0x28`. `neg cl`
+sets CF iff the byte was nonzero; `sbb edx,edx; and edx,2` therefore
+selects bit 2 independently of incoming EDX. The two `or`/`cmove` pairs
+select 4 and 8 using `this+0x29` and `this+0x2a`. The dword store at
+`0x18069a3e9` is `FirstBoneAxisLock`; enum 4052 declares None=0, X=2,
+Y=4, Z=8. The same rule recovers `GetLock` (30347) with different registers.
+Both complete lifted bodies compiled against a test fixture: for inputs in
+binary order (X least significant), the getter and both loop elements gave
+0, 2, 4, 6, 8, 10, 12, 14. Each mask read the fields once in X/Y/Z order.
+The validation list guard now compares the list reference to null; the other
+nine changed files contain only such list-guard corrections. Strict AC:
+two undefined mask expressions → zero, shared markers still 629 (23 at
+`0x180507120`), `object objN` still 3,331. All 6,791 bodies lifted and all
+503 files parsed (`work/shift_ik_mask_census.json`).
+
+**Transform.parent:** `FimpIK_Limb.SetBones(startBone,endBone)` (29083) sends
+the `Transform endBone` in RCX and zero in EDX to `0x182c02190` at
+`0x180647472`. RAX becomes the middle `Transform` argument of the three-bone
+overload. All three MethodDefs share the same instance/zero-parameter/
+`Transform`-return signature; only `parent` is public. The wrapper forwards
+the cached native receiver to `Transform::GetParent_Injected(System.IntPtr)`
+on either cache path, then passes the result and its own closed MethodRef
+to `UnmarshalUnityObject<Transform>` (object-shared code). Both null exits
+are checked. A compiled test of the recovered overload verified one read,
+exact argument identities, null parent forwarding and no downstream call
+when the receiver was null or the getter threw. Four mutated wrappers
+were rejected. Strict AC: parent markers 104 → 5; root markers 3 → 0;
+all shared markers 629 → 527; `object objN` declarations still 3,331.
+Three remaining parent sites have an unproved receiver after a generic
+array/loop merge; two have unaccounted-for expressions in surplus SIMD
+registers. All 6,791 bodies lifted, all 503 files parsed
+(`work/shift_transform_parent_census.json`).
+
+**SkeletonRecognize.GetBottomMostChildTransform (29313):** At `0x18064e6de`
+RCX comes from RBX on both incoming paths. MethodRef 174228 closes
+`Component.GetComponentsInChildren<T>(bool)` with `T=Transform`; the call
+target matches the registered `<object>` code entry. R14 holds its array
+result, and the qword load at `0x18064e6ca` seeds RBX from `[r14+rbx*8+0x20]`.
+On the back edge `0x18064e74c` copies the third parent getter's `Transform`
+return into RBX. All three reads now emit `.parent`. The signed maximum
+in R12D also survives the outer loop instead of reverting to its initial zero.
+The full lifted method compiled and ran with one array query, independent
+getter reads, and later shallow/tied candidates preserving the first deepest
+result. Changing either incoming definition made recovery decline. Strict AC:
+parent markers 5 → 2, all shared markers 527 → 524, `object objN` 3,331 →
+3,330. Only SkeletonRecognize.cs and VFXController.cs changed; all 503 files
+parsed (`work/shift_skeleton_loop_census.json`).
+
+**UniRotateBone.RefreshCustomAxis (29258):** At `0x1806521d9` the surplus
+XMM0 is the low eight bytes of the Vector3 returned by Quaternion's multiply
+operator at `0x1806521b0`. The qword store at `0x1806521bc` and dword store
+at `0x1806521c4` copy the entire result to `forwardReference`; RCX then
+reloads the Transform at `this+0x10`. The marked parent read uses that fresh
+receiver and doesn't evaluate the stored SIMD lane again. A compiled test
+of the product/store/getter slice verified the exact vector bits and order
+when multiplication replaces the receiver, clears it, or throws, and when
+the parent getter throws. Only UniRotateBone.cs changed. Strict AC: parent
+markers 2 → 1, total shared markers 524 → 523, `object objN` still 3,330;
+all 503 files parse (`work/shift_unitransform_copy_census.json`).
+
+**UniRotateBone.RotateCustomAxis (29260):** The rotation getter at
+`0x1806539b0` and `LookRotation` at `0x1806539f7` reuse a native return
+buffer, but the first quaternion is already saved in XMM8 before the
+second call. XMM7 receives the second result. The intervening scalar
+products and shuffles account for XMM0–3 at `0x180653af4`: none is an
+argument of `Transform.parent`. Track the two results separately, keep
+the nonvolatile computations and spill in the lift, and reload the receiver
+from `[rbx+0x10]` after `LookRotation`. A compiled test of the affected
+slice verified one execution per producer/getter, including replacement,
+null, and throwing paths. This does not validate the method's final
+quaternion return. Strict AC: parent markers 1 → 0, total shared markers
+523 → 522, `object objN` still 3,330; 6,791 bodies lifted and 503 files
+parsed (`work/shift_simd_parent_census.json`).
+
+**UniRotateBone.RotateCustomAxis: two writable Vector3 references.** At
+`0x180653943` RCX/RDX point to distinct 12-byte homes at RSP+0x20/+0x30.
+Both MethodDefs (55762, 55763) declare `void (ref Vector3, ref Vector3)`;
+the wrapper restores both 64-bit addresses before jumping to the cached
+`Vector3::OrthoNormalize2(Vector3&,Vector3&)` icall on either path. The
+8+4 byte reloads copy the updated normal to RSP+0x40 and the updated tangent
+to `this.dynamicUpReference`; `0x180653983` takes those two addresses. The
+initial tangent is copied from `oRef`, the fifth ABI slot at entry RSP+0x28.
+A compiled test of both emitted calls and their consumer checked independent
+mutations, field aliasing, and exceptions in either call: `LookRotation`
+received `(21,22,23)` and `(24,25,26)` from the second call. Strict AC:
+this target 2 → 0, total shared calls 522 → 520, `object objN` 3,330 →
+3,325. All 6,791 bodies lifted and 503 files parsed. The final quaternion
+return is still unresolved (`work/shift_ortho_ref_census.json`).
+
+**UniRotateBone.RotateCustomAxis: quaternion return recovered.** Entry RCX
+is the hidden 16-byte result address, saved in RSI at `0x180653716` and
+echoed in RAX. Tracing the final SHUFPS selectors E1/C6/27/39 and the
+interleaved MOVSS inserts puts the original low floats of XMM8, XMM4,
+XMM2, XMM7 into the four slots of `movups [rsi],xmm8` at `0x180653db0`.
+Metadata maps offsets 0/4/8/12 to x/y/z/w. The typed store preserves the
+separate quaternion snapshots even when native calls reuse a return home.
+The complete lifted method compiled against instrumented Unity operations;
+noncommuting inputs gave `(-2,24,34,22) * (2,-3,5,7) = (252,180,306,60)`.
+Mutating the receiver-pointer save, spilled component, or final lane selector
+made the proof decline. Strict AC: this method's unknown return writes 1 → 0;
+520 shared markers and 3,325 `object objN` declarations unchanged; all 6,791
+bodies lifted without fallbacks and all 503 files parsed
+(`work/shift_quat_return_census.json`).
+
+**ActorSpawner.Update: reparent the clone.** At `0x180514905`, RCX is the
+clone's Transform captured at `0x1805148d6`; RDX is the spawner's parent
+read at `0x1805148f2`. Both owners of `0x182c03c70` take one Transform
+argument and return void. The wrapper forwards child and nullable parent
+native pointers to `Transform::SetParent_Injected` with `worldPositionStays`
+set to true. The recovered public `SetParent` call preserves getter order
+and runs before incrementing `instances` or resetting the timer. Compiling
+the complete Update against an instrumented hierarchy verified attachment
+and detachment (world position 23 in both), plus no count increment when
+the child was null, the parent getter threw, or SetParent threw. The same
+proof recovered RopeBetweenTwoPoints; PurchaseNode's array-sourced parent
+remains unresolved. Strict AC: this target 3 → 1, all shared markers
+520 → 518, `object objN` still 3,325; 6,791 bodies lifted, 503 files
+parsed (`work/shift_actor_reparent_census.json`).
+
+**PurchaseNode.AttachToFirstAvailableNode (26983):** `nodePositions` at
+`PurchaseManager+0xf0` is a `Transform[]`. After the bounds check, the qword
+load at `0x180594e36` saves its element in RSI. The child-count getter and
+the subsequent receiver getters preserve RSI; `0x180594e94` copies that
+same reference into RDX for `SetParent` at `0x180594e9a`. The array and its
+selected element now have separate snapshots. Exhaustion at `0x180594e24`
+returns; only a match continues to reparent and reset local position and
+rotation. The complete lifted method compiled against a hierarchy fixture:
+even replacing the array and then its selected slot did not change the
+chosen parent. Empty/full arrays and throwing paths did not run the resets.
+Strict AC: this wrapper 1 → 0, all shared markers 518 → 517, `object objN`
+still 3,325; 6,791 bodies lifted and all 503 files parsed
+(`work/shift_purchase_reparent_census.json`).
+
+**Particle-system module getters:** The 517 remaining markers grouped into
+68 addresses. `0x18088e4a0` had 64, against 36 each for the next two.
+In `ParticleHandler.<StopParticleAfterTime>d__14.MoveNext` (28683), RCX
+loads `this.particleSystem` from +0x28. After its null check, EDX is cleared
+for MethodInfo and `0x18063859f` calls the shared body without managed
+parameters. The body stores the entire reference, runs the write barrier
+on that slot, and reloads it into RAX. The caller spills all eight bytes at
+RSP+0x40 and takes the address of that same slot for
+`EmissionModule.set_rateOverTimeMultiplier(float)` (127952). That identifies
+`ParticleSystem.get_emission` (127915): the returned value type has a single
+ParticleSystem reference. Other callers borrow a MainModule instead.
+
+The re-emitted iterator method compiled and ran: the first move yielded
+`WaitForSeconds(1.75f)` without reading emission; on resume it read once,
+wrote `0f` once to the original system and returned false. Null and throwing
+paths did not retry. Compiled consumer slices checked a single maxParticles
+read and four module/curve reads with separate receiver and return storage.
+Biased RBP frames still mix stack naming conventions, so those sites retain
+their markers. Other operations in these callers (including repeated particle
+array expressions in GasCollisionSpawner) are separate outstanding issues.
+Strict Assembly-CSharp census: target **64 → 49**, all shared calls **517 →
+502**, `object objN` **3,325 → 3,307**. No other address count increased.
+All 6,791 bodies lifted with no failures/fallbacks; all 503 files parsed;
+1,886 portable and four targeted game-backed tests passed. Reports:
+`work/shift_module_getter_census.json`, `work/shift_module_getter_shared_groups.json`.
+
+**InventoryManager.Update: gas-pump smoke emission (25657).** At
+`0x1806fd597` RCX holds `this.gasPumpSmokeParticles` (+0x608); RAX returns
+the eight-byte module. `0x1806fd59f` stores RAX at `[rbp-0x60]`, and
+`0x1806fd5a3` passes that same address in RDX to `EmissionModule.get_rateOverTime`
+(127947). The prologue and unwind record agree on a 0x2878-byte allocation:
+RBP is live RSP+0x100. The module occupies `[rsp+0xa0,rsp+0xa8)`. The
+32-byte curve result at RSP+0x27d8, mutable copy at +0x508, and by-value
+setter argument at +0x60 are all disjoint. The setter for `constant` at
+`0x180934d20` writes just the float at curve offset +0x1c. Both 16-byte
+halves are copied before calling `set_rateOverTime` on the original module.
+
+Compiled the emitted read/modify/write slice. Even when the emission getter
+replaced the inventory field, the original particle system received one
+write, preserving the other curve fields and both reference identities.
+The null and four throwing cases stopped at the expected operation. Only
+InventoryManager.cs changed in the strict AC tree: target 49 → 48, curve
+setter 29 → 28, total shared calls 502 → 500, `object objN` 3,307 → 3,305.
+1,901 portable and 3 targeted game-backed tests passed; 6,791 bodies lifted
+without failures/fallbacks and all 503 files parsed
+(`work/shift_biased_emission_census.json`).
+
+**InventoryManager.Update: gas curve before smoke (25657).** The call at
+`0x1806fd519` receives `this.gasPumpGasParticles` (+0x600). The full RAX
+result is stored at `[rbp-0x68]` (`0x1806fd521`). `lea rdx,[rbp-0x68]`
+passes that home to the curve getter at `0x1806fd530`; `lea rcx,[rbp-0x68]`
+passes it to the setter at `0x1806fd580`. This is RSP+0x98, distinct from
+the curve return at +0x27b8, the edited copy at +0x5c8 and the outgoing
+32-byte argument at +0x60. The following smoke update shares only the
+argument area and fills it with its own two 16-byte stores before use.
+
+Compiled the two adjacent emitted updates together. Both wrote their own
+original module once, preserved every curve field except `constant`, and
+observed a replacement smoke system installed by the gas setter. A throwing
+gas setter prevented the smoke read; a null or throwing smoke path left the
+gas write intact. Strict AC census: `0x18088e4a0` 48 → 47, `0x180934d20`
+28 → 27, all shared calls 500 → 498, `object objN` 3,305 → 3,303. Only
+InventoryManager.cs changed. 1,902 portable and 3 targeted game-backed tests
+passed; all 6,791 bodies lifted without failures/fallbacks and 503 files
+parsed (`work/shift_gas_curve_pair_census.json`).
+
+**InventoryManager.Update: smoke curve across the branch join.** The
+eight-byte RAX result at `0x1806fd858` is the emission module of the smoke
+system at `this+0x608`. At `0x1806fd860` the caller stores it at RBP−0x58
+(live RSP+0xa8). The curve getter borrows that address in RDX; RCX takes
+the same address at `0x1806fd8a7` and remains unchanged on the jump to
+`0x1806fda73`. The other edge supplies RBP−0x48 (RSP+0xb8). On each
+edge XMM0 and XMM1 carry the two halves of **that edge's** edited curve;
+the join copies them to RSP+0x60/+0x70 and calls the setter at `0x1806fda85`.
+The read-only float literal is 10 on the jump edge, versus +0 on fallthrough.
+Emit the write in each selected arm only after both incoming paths and the
+subsequent lifetime of all affected stack slots have been verified.
+
+Compiled branch checks (threshold 2, distances 1/2/3) wrote 10/0/0 once
+to the originally read smoke system, preserving the other curve fields.
+The throw paths stopped at the expected operation. Five modified native
+windows (wrong getter/setter receivers, duplicate lower half, or a later
+read of a supposedly dead slot) each rejected the join as a whole. Census:
+`0x18088e4a0` 47 → 45, `0x180934d20` 27 → 25, all shared markers 498 →
+494, `object objN` 3,303 → 3,296. Only InventoryManager.cs changed.
+1,902 portable and eight targeted game-backed tests passed; all 6,791
+bodies lifted without failures/fallbacks and all 503 files parsed
+(`work/shift_curve_join_census.json`).
+
+**InventoryManager.Update: active gas emission (25657).** `0x1806fd8b7`
+loads `this.gasPumpGasParticles` before the distance store. The getter at
+`0x1806fd8d1` returns an eight-byte module in RAX. `0x1806fd8d9` spills it
+at RBP−0x50 (RSP+0xb0); `0x1806fd8dd` borrows it in RDX for the curve
+getter, and `0x1806fd92f` borrows the same home in RCX for the setter.
+The edited curve has its own storage at RSP+0x548. `movss` at `0x1806fd90c`
+loads `00 00 0c 42` from read-only data (`35f`) for `set_constant`; both
+halves of the edited curve are passed at RSP+0x60/+0x70. The gas write
+finishes before the notification and audio calls. Those calls receive only
+heap references and scalar values; the next smoke update overwrites the
+outgoing argument before use.
+
+The emitted active branch compiled and wrote 35 once to the captured gas
+system, then 0 once to the replacement smoke system. Replacing the gas
+field during the distance store and replacing audio-source fields during
+their getters preserved the original receivers. A throwing gas write
+prevented the notification; a throwing notification preserved the gas write
+and prevented the smoke write. Six native mutations rejected the prefix.
+Strict AC: `0x18088e4a0` 45 → 44, `0x180934d20` 25 → 24, all shared
+markers 494 → 492, `object objN` 3,296 → 3,295. Only InventoryManager.cs
+changed; 1,909 portable and eight targeted game-backed tests passed. All
+6,791 bodies lifted without failures/fallbacks and all 503 files parsed
+(`work/shift_gas35_census.json`).
+
+**FPSController.UpdateLocalVisuals (25284):** `0x1806e0122` receives the
+null-checked `runParticles` at `this+0xc8`. `0x1806e0136` saves the whole
+RAX module at `[rbp+0x67]`. Here RBP=live RSP+0x79: that slot is RSP+0xe0
+(entry RSP+8), separate from the conversion output at +0x50 and its copied
+argument at +0x30. `MinMaxCurve.op_Implicit(float)` (127981) receives `13f`
+in XMM1, writes all 32 result bytes, and echoes its buffer in RAX. Its two
+write barriers operate on private local slots. At `0x1806e0146` RCX takes
+the address of the original module. Both 16-byte halves of the converted
+curve go to the by-value argument before `EmissionModule.set_rateOverTime`
+(127948) at `0x1806e0159`.
+
+The compiled running slice read emission, converted once, set the complete
+curve on the original module, then evaluated the animation preferences.
+Replacing `runParticles` during conversion did not redirect the setter.
+Null and throwing paths stopped at the expected step. Wrong spill, borrow,
+hidden-argument, result-buffer and half-copy variants all declined. In the
+503-file census the target's textual markers fell 44 → 31 (none left in
+FPSController.cs), all shared markers 492 → 479 and `object objN` 3,295 →
+3,282. Only FPSController.cs changed. All 6,791 bodies lifted with zero
+failures/fallbacks, all 503 files parsed, and 1,921 portable and five
+targeted game-backed tests passed (`work/shift_fps_curve_cast_census.json`).
+
+**GasCollisionSpawner.KillCollidedParticles (25376):** At `0x1806ef8cc`,
+MethodRef 68132 in R9 closes `List<ParticleCollisionEvent>.get_Item(int)`;
+its explicit method-pointer index 61637 matches the call target. The caller
+copies its 40-byte result from RSP+0x78 to +0x50 in 16+16+8 byte pieces.
+At `0x1806ef904` RDX addresses that copy, R8 is null MethodInfo and RCX
+addresses the distinct result at RSP+0x40. The shared leaf copies receiver
+offsets 0..11 and returns the output address. Of the nine registrations,
+the event's nullary `get_intersection` (128004) returns the `Vector3` at
+that offset. The caller forwards all three lanes to `KillClosestParticleAt`.
+Keep the shared annotation; other receiver types at this address need their
+own proof.
+
+The complete emitted method compiled with instrumented Unity operations.
+Zero through three events used one filled array and one final writeback;
+three events produced indices 0,1,2 and three distinct intersection vectors
+in that order. Exceptions in the indexer, getter or helper stopped the loop
+before writeback. The pre-loop fill result must be captured, and the native
+latch comparison must not run again after its back-edge counter assignment.
+Measured against the FPS conversion baseline: `0x1808a5780` 36 → 35,
+all shared calls 479 → 478, `object objN` 3,282 → 3,280. Only
+GasCollisionSpawner.cs changed. 1,930 portable and four targeted
+game-backed tests passed, including rejection of altered source lanes,
+return home, producer target and leaf bytes. All 6,791 bodies lifted
+without failures/fallbacks; all 503 files parsed
+(`work/shift_collision_intersection_census.json`).
+
+**GasCollisionSpawner.KillClosestParticleAt (25377):** `0x1806ef65d`
+receives `particles[index]` in RDX. RDI is the original `Particle[]` from
+entry RDX. The unsigned array-length check uses EBX, then MOVSXD and
+IMUL scale that index by 0x84, the metadata size of one Particle; +0x20
+skips the array header. R8 is zero MethodInfo, with no managed arguments.
+RCX points to the separate 12-byte Vector3 output at RSP+0x40. The shared
+leaf copies the first 8+4 bytes of the element (`m_Position`) to that
+buffer and echoes it in RAX: `Particle.get_position` (127967). Preserve
+both floats of the hitPos XY spill when lifting the distance calculation.
+On the match edge, the same checked element receives +0f at unboxed offset
++0x6c (`m_Lifetime`); `remainingLifetime` is a public equivalent setter.
+The exhausted latch leads to a void epilogue, so it must return without
+executing that setter. A compiled test of the whole method distinguished
+x/y/z-only misses, the first of multiple in-range particles, a match on
+the final iteration, strict equality, NaN and bounds/exception paths.
+Against the previous collision-event census, `0x1808a5780` fell 35 → 34,
+`0x18092f3f0` 1 → 0, total shared calls 478 → 476 and `object objN`
+3,280 → 3,279. The loop-exit correction also affected FusionNetworkManager's
+exhausted search path. All 6,791 bodies lifted without failures/fallbacks;
+all 503 files parsed. 1,940 portable and four targeted game-backed tests
+passed (`work/shift_indexed_particle_census.json`).
+
+**ParticleCollisionSpawner.OnParticleCollision (26545):** The old line 63
+is on the counter-not-equal arm (`jne` at `0x18058106a`), not the nearby
+array-of-particles read. At `0x18058143c` MethodRef 68132 selects the
+closed `List<ParticleCollisionEvent>.get_Item` and its registered code
+pointer. Its 40-byte result is at RSP+0x88. RBP=RSP+0x100, so the qword
+store at `[rbp-0x80]` supplies the last eight bytes after the two 16-byte
+stores at RSP+0x60/+0x70. At `0x180581469` RDX addresses that complete
+event and RCX is the distinct Vector3 return buffer at RSP+0xe0. The leaf
+returns the first three floats (`intersection`, 128004); RAX is echoed and
+the caller takes XY into XMM6 and Z into R15D. Mixed-base recovery requires
+the unwind saves, indexer registration, copy bounds and register homes to
+agree. The two emitted event/indexer-getter slices compiled and returned
+`(7,-11,23)` even when the indexer callback replaced the stored list entry.
+
+Compared with the indexed-particle census, markers at `0x1808a5780`
+fell 34 → 28, all shared calls 476 → 470 and `object objN` 3,279 → 3,274.
+Only ParticleCollisionSpawner.cs and GasCollisionSpawner.cs changed. All
+6,791 bodies lifted without failures/fallbacks; all 503 files parsed.
+The full callback still contains unresolved inner particle operations.
+Report: `work/shift_event_frame_census.json`.
+
 ## Current work: fixes 126-145 compile-gate slices (2026-10-06 .. 2026-10-27, on `main`)
 
 **Fix 146 (2026-11-04, metadata v39 / Unity 6.3-6.4 frontend;

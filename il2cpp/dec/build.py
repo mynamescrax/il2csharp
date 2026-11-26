@@ -1,10 +1,15 @@
 from il2cpp.prelude import *  # noqa: F401,F403
 from il2cpp.cfg import Block, _objop_fold
 from il2cpp.lifter import Lifter
-from il2cpp.metadata import MethodDef, TypeDef
+from il2cpp.metadata import MethodDef, TypeDef, source_params
 from il2cpp.stmt_text import _cond_dewrap
 from il2cpp.text import imm_of, reg_name
 from il2cpp.initguard import metadata_init_guards
+from il2cpp.byref_zero import entry_ref_zeros
+from il2cpp.byref_fields import ref_field_copies
+from il2cpp.frame_args import entry_reference_loads
+from il2cpp.this_home import saved_this_reloads
+from il2cpp.captured_home import captured_receiver
 from il2cpp.names import safe_ident
 from il2cpp.expr import unwrap_accessor_markers
 import collections
@@ -293,6 +298,13 @@ class _BuildMixin:
         insns, skip = self._decode(m)
         if not insns:
             return ['/* no code */']
+        L._entry_ref_zeros = entry_ref_zeros(L, m, insns, (self.eh or {}).get('pads') or ())
+        L._entry_reference_loads = entry_reference_loads(L, m, insns, skip, (self.eh or {}).get('pads') or ())
+        L._this_reloads = saved_this_reloads(L.il, m, td, insns, self.eh)
+        self._captured_receiver = captured_receiver(L, m, td, insns, self.eh)
+        self._checked_selects = {}
+        L._ref_field_copies = ref_field_copies(L, m, insns, (self.eh or {}).get('pads') or (),
+                                              cast_sites=self._checked_selects)
         L._sqrt_low_sites = self._sqrt_low_lane_sites(
             insns, getattr(L, 'rt_sqrt', None))
         L._xor_twin_loads = self._xor_twin_load_sites(insns, getattr(L, 'bin', None))
@@ -342,7 +354,7 @@ class _BuildMixin:
         lines = drop_empty_init_guards(lines)
         lines = drop_gc_cardmarks(lines)
         try:
-            params = {safe_ident(p.name) for p in self.L.meta.method_params(m)}
+            params = {safe_ident(p.name) for p in source_params(self.L.meta, m)}
         except Exception:
             params = set()
         params.update(('this', 'value'))

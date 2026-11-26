@@ -1361,7 +1361,10 @@ class _DataflowMixin:
             avail = []
             depth = 0
             changed = False
+            last_call = -1
             for i, st in enumerate(lines):
+                if i and self._IMPURE_GTX.search(clean[i-1]):
+                    last_call = i-1
                 s = st.strip()
                 if s == '{':
                     depth += 1
@@ -1391,6 +1394,15 @@ class _DataflowMixin:
                          and not in_loop[i] and not back[a[0]] and not back[i]],
                         key=lambda a: -len(a[2])):
                     if a_tok == m.group(1):
+                        continue
+                    # The marker requests a fresh read. Replacing its whole
+                    # operand with an earlier snapshot defeats that barrier.
+                    if m.group(2) == '__accget(%s)' % a_frag:
+                        continue
+                    # Aggregate call arguments spell the individual native
+                    # reads as a struct initializer. A call between those
+                    # reads and a cached field value can mutate the field.
+                    if a_idx < last_call and '.' in a_frag and 'new ' in m.group(2) and ' { ' in m.group(2):
                         continue
                     spans = self._sub_code_spans(st)
                     cspans = self._sub_comment_spans(st)

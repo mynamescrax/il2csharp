@@ -6,6 +6,19 @@ from il2cpp.runtime.meta import IMM_OPS
 from il2cpp.text import _int_lit, _deref_spans_all, _norm_twin, _paren_spans_all, _term_up, disp_add, reg_name, rty_has_value, strip_outer
 from il2cpp.x64 import ARG_REGS, ARG_XMM, KLASS_VTABLE, VOLATILE
 from il2cpp.entrylive import entry_live_args, xmm0_result_width
+from il2cpp.shared_icall import shared_icall
+from il2cpp.shared_getter import shared_getter
+from il2cpp.module_getter import module_getter
+from il2cpp.copied_getter import copied_struct_getter
+from il2cpp.indexed_particle import indexed_particle
+from il2cpp.reparent import reparent_call
+from il2cpp.sret_copy import copied_product
+from il2cpp.generic_array import ref_array_call
+from il2cpp.shared_coroutine import shared_coroutine
+from il2cpp.static_getter import static_getter
+from il2cpp.awaiter import awaiter_completion, yield_producer, yield_result
+from il2cpp.shared_field import shared_field_read
+from il2cpp.shared_action import shared_base_action, shared_void_action
 
 def _fp32_arg_ok(text):
     """True when an argument text is spellable enough to print.
@@ -1530,7 +1543,7 @@ class _CallsMixin:
         loop-header placement alone does not establish those properties.
         """
         if getattr(self, '_array_allocation_loop_guard',
-                   getattr(self, '_memory_rhs_loop_guard', False)):
+                   getattr(self, '_memory_rhs_loop_guard', False)) and ip not in getattr(self, '_single_array_allocs', ()):
             # the loop guard keeps the old full-text representation (no
             # per-allocation temp until per-iteration identity is proved),
             # but the value is still this exact newarr on every execution,
@@ -2540,6 +2553,18 @@ class _CallsMixin:
             if slot_e is not None and not slot_e._unk and slot_e.text \
                     and slot_e.text.strip() not in ('?', '_'):
                 res = self._mk(slot_e.text, slot_e.ty, slot_e.kind)
+                # The value-returning init thunk dereferences its TypeInfo
+                # slot. Its result is now the class, just as with a direct
+                # slot load, not the slot address. This lets object_new keep
+                # the allocated class when binding and resolving shared ctors.
+                if (slot_e.kind == 'usage' and getattr(slot_e, '_typeinfo_slot', None) is not None
+                        and slot_e.ty and self.il._type_enum(slot_e.ty) == 0x12
+                        and not (slot_e.ty[1] & (1 << 29)) and slot_e.ty[0] == getattr(slot_e, '_td', None)
+                        and 0 <= slot_e.ty[0] < len(self.meta.typedefs)
+                        and self.meta.typedefs[slot_e.ty[0]].generic_container == -1
+                        and res.text == 'typeof(%s)' % self.il.type_name(slot_e.ty)):
+                    res.kind = 'klass'
+                    res._td = slot_e._td
                 res._no_bind = True
                 self.regs['RAX'] = res
             if self.asm_comments and asm:
@@ -2659,6 +2684,14 @@ class _CallsMixin:
                 if self.asm_comments and asm:
                     self.emit(ins.ip, '', asm)
                 return
+
+        # Inspect the freshly stored awaiter before unknown calls invalidate
+        # stack slots passed by address. Only consume this proof if normal
+        # call resolution still has no MethodDef.
+        awaiter = (awaiter_completion(self, ins, gpr_exprs, xmm_exprs) if target and
+                   '/*shared body,' in name else None)
+        yielded = (yield_producer(self, ins, gpr_exprs, xmm_exprs) if target and not awaiter and
+                   '/*shared body,' in name else None)
 
         # These two System.String names share one native string-equality
         # body. Emit its string == behavior without assigning a MethodDef.
@@ -2837,6 +2870,26 @@ class _CallsMixin:
                     if i < len(args):
                         args = args[:i] + args[i + 1:]
                     break
+        void_action = None
+        copied_getter = (copied_struct_getter(self,ins,gpr_exprs)
+                         if target and cands and len(cands)>1 else None)
+        if copied_getter and info is not None and info != ('method',copied_getter[0]):
+            copied_getter = None
+        indexed_setter = None
+        if info is None and target and '/*shared body,' in name:
+            indexed = None if copied_getter else indexed_particle(self,ins,gpr_exprs)
+            if indexed:
+                info = ('method',indexed[1])
+                if indexed[0]:
+                    indexed_setter = indexed[2]
+                else:
+                    copied_getter = indexed[1:]
+            else:
+                info = ('method',copied_getter[0]) if copied_getter else yield_result(self, ins, gpr_exprs, xmm_exprs)
+            if info is None:
+                void_action = info = shared_void_action(self, ins, gpr_exprs, xmm_exprs)
+            if info is not None:
+                name = self._info_name(info)
         # A fresh delegate plus its metadata method pointer proves the ctor,
         # even when the native body is shared with Invoke specializations.
         delegate_target = None
@@ -2866,6 +2919,7 @@ class _CallsMixin:
         rty = None
         mi = None
         shared_rty = False
+        array_call = None
         if info and info[0] in ('method', 'generic'):
             mi = info[1] if info[0] == 'method' else self.il.method_specs[info[1]][0]
             if mi is not None and 0 <= mi < len(self.meta.methods):
@@ -2875,6 +2929,10 @@ class _CallsMixin:
                     closed_return = self.il.candidate_return_type(info)
                     if closed_return is not None:
                         rty = closed_return
+                    elif rty and self.il._type_enum(rty) == 0x1d:
+                        array_call = ref_array_call(self, ins, info, gpr_exprs, xmm_exprs)
+                        if array_call:
+                            rty = array_call[0]
                     self._call_class_args = self.il._method_spec_type_args(
                         self.il.method_specs[info[1]][1])
         if info and info[0] == 'generic':
@@ -3226,13 +3284,14 @@ class _CallsMixin:
             stack_address = getattr(arg_exprs[0], '_stack_offset', None) if arg_exprs else None
             if stack_address is not None and hasattr(self.il, '_sf_field_size'):
                 prev = getattr(self, '_sret_home_buf', {}).get(stack_address)
-                if prev is not None and prev[1] == rty:
+                fresh = ins.ip in getattr(self, '_snapshot_srets', ())
+                if not fresh and prev is not None and prev[1] == rty:
                     buf = prev[0]
                 else:
                     buf = self.new_var()
                     self._var_types[buf] = rty
                     hb = getattr(self, '_sret_home_buf', None)
-                    if hb is not None:
+                    if hb is not None and not fresh:
                         hb[stack_address] = (buf, rty)
             rest = args[1:]
             short2 = None
@@ -3309,7 +3368,23 @@ class _CallsMixin:
                         _sg2 = self._accessor_sugar(mi, _r2, list(rest[1:]))
                     if _sg2 is not None and _sg2[0] == 'expr':
                         short2 = _sg2[1]
+                if short2 is None and m2.name == 'op_Multiply':
+                    short2 = copied_product(self, ins, m2, rest, arg_exprs)
+            converted = getattr(self,'_converted_setter',None)
+            if (converted and converted[0].conversion == ins.ip and rty == converted[0].curve_type and
+                    stack_address == converted[0].homes[1] and mi is not None and m2.name == 'op_Implicit' and rest == [converted[0].value]):
+                # This is a user-defined conversion with observable effects.
+                # Materialize it at the call, using legal C# cast syntax.
+                short2 = acc_get('(%s)%s' % (self.il.type_name(rty),rest[0]))
+            elif converted and converted[0].conversion == ins.ip:
+                self._converted_setter = None
             self._kill_stale(buf)
+            if copied_getter is not None:
+                short2 = acc_get(copied_getter[1]) + ' /* shared getter */'
+            if (short2 and mi is not None and (ins.ip in getattr(self, '_snapshot_srets', ()) or
+                    getattr(self, '_module_reads', {}).get(ins.ip) == mi) and
+                    m2.name.startswith('get_') and not short2.startswith('__accget(')):
+                short2 = acc_get(short2)
             if short2 is not None:
                 self.emit(ins.ip, '%s = %s;' % (buf, short2), asm)
             else:
@@ -3337,6 +3412,7 @@ class _CallsMixin:
             # too would re-lose the cases it cannot see (a struct whose
             # single field is a 64-byte struct has no offset >= 0x18).
             self.regs['RAX'] = Expr('&%s' % buf, rty, 'ptr')
+            self._last_sret = ins.ip, dict.get(self.regs, 'RAX')
             self.regs['RAX']._stack_offset = stack_address
             return
 
@@ -3349,6 +3425,7 @@ class _CallsMixin:
 
         # --- trim args to the known signature; instance-style rendering
         short = None
+        bind_long_virtual = False
         if mi is not None and 0 <= mi < len(self.meta.methods):
             m2 = self.meta.methods[mi]
             want = m2.param_count + (0 if m2.is_static else 1)
@@ -3394,7 +3471,9 @@ class _CallsMixin:
                 mbase = 'get_Item' if _ap137[0] == 'get' else 'set_Item'
             # a proved generic identity (exact hidden-slot match) prints its
             # closed token; the metadata open name feeds only the guards
-            if info is not None and info[0] == 'generic':
+            if array_call:
+                mdot = array_call[1]
+            elif info is not None and info[0] == 'generic':
                 try:
                     gname = self.il.generic_method_name(info[1])
                 except Exception:
@@ -3518,6 +3597,18 @@ class _CallsMixin:
                         short = cand
                 elif mbase.startswith('set_') and len(rest) == 1 and not rty_has_value(self, rty):
                     cand = None
+                    if indexed_setter:
+                        self.emit(ins.ip, '%s.%s = 0f /* shared implementation */;' % (indexed_setter, mbase[4:]), asm)
+                        return
+                    converted = getattr(self,'_converted_setter',None)
+                    if converted and converted[0].setter == ins.ip:
+                        plan, module = converted
+                        ip, echo = self._last_sret or (None,None)
+                        if (ip == plan.conversion and echo.ty == plan.curve_type and echo.text.startswith('&') and
+                                (getattr(gpr_exprs[0],'_stack_offset',None),getattr(echo,'_stack_offset',None),
+                                 getattr(gpr_exprs[1],'_stack_offset',None)) == plan.homes):
+                            recv_txt, rest = module.text, [echo.text[1:]]
+                        self._converted_setter = None
                     lv = '%s.%s' % (_recv_fold(recv_txt), mbase[4:])
                     acc_hint = self._hint_accessor_recv(recv, m2)
                     if acc_hint is not None:
@@ -3552,6 +3643,16 @@ class _CallsMixin:
                     cand = '%s.%s(%s)' % (_recv_fold(recv_txt), mdot, ', '.join(rest))
                     if len(cand) < 150:
                         short = cand
+                    elif (vt_slot is not None and self._call_class_args and
+                          recv.kind == 'obj' and _BARE_TOKEN_RX.fullmatch(recv_txt) and
+                          m2.generic_container == -1 and not m2.flags & 0x800 and
+                          rty is not None and self.il._type_enum(rty) == 2 and
+                          not (rty[1] & (1 << 29))):
+                        # A closed virtual comparer can have two fully expanded
+                        # struct arguments. Its size changes neither its receiver
+                        # nor its result. Bind once here before a later movzx
+                        # can turn the oversized expression into a zero temp.
+                        short, bind_long_virtual = cand, True
         if short is None and mi is not None and 0 <= mi < len(self.meta.methods):
             m2 = self.meta.methods[mi]
             if m2.is_static and m2.name.startswith('get_') and m2.param_count == 0:
@@ -3669,6 +3770,47 @@ class _CallsMixin:
                 args = args[:mx2]
             self.ind_slot = None
         call = short if short is not None else '%s(%s)' % (name, ', '.join(args))
+        if void_action is not None and mi == void_action[1]:
+            call += ' /* shared implementation */'
+        if mi is None and target and short is None and name == 'sub_%x' % target:
+            getter = static_getter(self, target, gpr_exprs, xmm_exprs)
+            if getter:
+                member, rty = getter
+                call = acc_get(member)
+                shared_rty = True  # snapshot this static read at the native call site
+        base_action = (shared_base_action(self, ins, gpr_exprs, xmm_exprs) if
+                       mi is None and short is None and target and '/*shared body,' in name else None)
+        if base_action:
+            self.emit(ins.ip, base_action + ';', asm)
+            return
+        if awaiter and mi is None and short is None and '/*shared body,' in name:
+            member, rty = awaiter
+            call, shared_rty = acc_get(member), True
+        elif yielded and mi is None and short is None and '/*shared body,' in name:
+            call, rty = yielded
+            shared_rty = True
+        elif shared_rty and short is None and '/*shared body,' in name:
+            # Keep the original unresolved-call evaluation and result binding.
+            # Only the spelling changes, with no claim about MethodDef identity.
+            call = (reparent_call(self, ins, args, gpr_exprs, xmm_exprs) or
+                    shared_icall(self, target, args, gpr_exprs) or
+                    shared_getter(self, target, args, gpr_exprs, xmm_exprs) or
+                    shared_coroutine(self, target, args, gpr_exprs, xmm_exprs) or call)
+        elif mi is None and target and short is None and '/*shared body,' in name:
+            module = module_getter(self, ins, gpr_exprs, xmm_exprs)
+            if module is not None:
+                call, rty = module
+                shared_rty = True
+            field = None if module else shared_field_read(self, target, gpr_exprs, xmm_exprs)
+            if field is not None:
+                # Bind the loaded reference at the call just like a shared
+                # consensus result. No managed MethodDef has been selected.
+                call, rty = field
+                # The field can change during an intervening managed call.
+                # Protect this native snapshot from member-read CSE until
+                # final rendering, like an ordinary resolved getter.
+                call = acc_get(call)
+                shared_rty = True
         # conversion-operator twins (Decimal.op_Explicit x4...): decls
         # render as `explicit/implicit operator`, so a `T.op_X(a)` call
         # names a member that no longer exists. Recast `(R)(a)` for the
@@ -3747,12 +3889,47 @@ class _CallsMixin:
             result = Expr(call, rty,
                           'obj' if te >= 0x10 else ('float' if isf else 'int'))
             self.regs[dstreg] = result
+            if mi is not None and getattr(self,'_single_array_counts',{}).get(ins.ip)==mi:
+                self._bind(result)
+                return
+            if mi is not None and getattr(self, '_module_reads', {}).get(ins.ip) == mi:
+                # The generated client may render a size several times. The
+                # module getter and its scalar property each ran only once.
+                if not call.startswith('__accget('):
+                    result.text = acc_get(call)
+                self._bind(result)
+                return
+            binding = getattr(self, '_hierarchy_bindings', {}).get(ins.ip)
+            if binding and (binding == ('method',mi) or (binding == ('parent',target) and call.endswith(' /* shared getter */'))):
+                # A call-shaped RHS keeps this native snapshot distinct from
+                # a second property access across a hierarchy-changing call.
+                if binding[0] == 'method' and not call.startswith('__accget('):
+                    result.text = acc_get(call)
+                self._bind(result)
+                # A use as Instantiate<T>'s original does not turn the
+                # GameObject returned by the getter into an open T.
+                self._type_hints.setdefault(result.text, rty)
+                self._hierarchy_values[ins.ip] = result
+                return
+            if isf and mi is not None and te in (0x0c, 0x0d):
+                saved = getattr(self, '_saved_fp_consumers', {}).get(ins.ip)
+                if saved is not None:
+                    consumer, reg = saved
+                    if shared_field_read(self, consumer, [dict.get(self.regs, reg)], ()) is not None:
+                        # Evaluate the producer now. Both the nonvolatile copy
+                        # and stale XMM0 will refer to this same local. Thus the
+                        # field read need not drop or duplicate a deferred call.
+                        self._bind(result)
+                        return
             # An unresolved shared call was always materialized at its call
             # instruction.  Keep that ordering guarantee when consensus adds
             # its type: identity/purity is still unknown, and delaying a
             # one-use expression could move the call across visible effects.
-            if shared_rty:
+            if shared_rty or bind_long_virtual or array_call:
                 self._bind(result)
+                if getattr(self,'_module_conversion',None) is not None:
+                    self._converted_setter = self._module_conversion,result
+                    self._module_conversion = None
                 return
             # An interface dispatch result regularly flows through a stack
             # home (the enumerator) and a phi copy; left lazy, the home's

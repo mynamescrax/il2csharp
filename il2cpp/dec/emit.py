@@ -166,7 +166,14 @@ class _EmitMixin:
                         out.append('if (%s)' % (cond if ex == t else '!(%s)' % cond))
                         out.append('{')
                         self._edge(cur, ex, out)
-                        out.append(self._leave_loop(blocks, ex))
+                        done = getattr(self, '_latch_return', None)
+                        if done and (cur,ex) == done[0]:
+                            for a,z in done[1]:
+                                self._edge(a,z,out)
+                            out.append('return;')
+                            done[2] = True
+                        else:
+                            out.append(self._leave_loop(blocks, ex))
                         out.append('}')
                         self._edge(cur, nxt, out)
                         cur = nxt
@@ -531,20 +538,29 @@ class _EmitMixin:
             out.append('%sL_%x:' % (LBL, h.insns[0].ip))
         out.extend(h.stmts)
         hdr_exit = -1
+        success_exit = None
         if cond_at_top:
             t_in = h_term[1] in body_ids
             f_in = h_term[2] in body_ids
             c = h.cond or 'true'
-            if t_in and not f_in:
-                out.append('while (%s)' % c)
-                hdr_exit = h_term[2]
-            elif f_in and not t_in:
-                out.append('while (!(%s))' % c)
-                hdr_exit = h_term[1]
-            else:
-                out.append('while (true)')
+            if t_in != f_in:
+                hdr_exit = h_term[2] if t_in else h_term[1]
+            # A search can have two different exits: exhaustion returns,
+            # while a match breaks to code that uses the selected element.
+            # A compact while condition would send *both* to that code.
+            if (hdr_exit >= 0 and len(exits) == 2 and not outer_loop and not self._seh_regions and
+                    blocks[hdr_exit].term == ('ret',) and blocks[hdr_exit].ret == '' and not blocks[hdr_exit].stmts and
+                    not any(hdr_exit in blocks[n].succs for n in body_ids if n != hdr)):
+                success_exit, = exits - {hdr_exit}
+            condition = (c if t_in else '!(%s)' % c) if hdr_exit >= 0 and success_exit is None else 'true'
+            out.append('while (%s)' % condition)
             out.append('{')
             self._brace_push('loop')
+            if success_exit is not None:
+                out.append('if (%s)' % ('!(%s)' % c if t_in else c))
+                out.append('{')
+                self._edge(hdr, hdr_exit, out)
+                out.extend(('return;', '}'))
             start = h_term[1] if t_in else h_term[2]
             if start == hdr or start not in body_ids:
                 start = h_term[2] if h_term[2] in body_ids and h_term[2] != hdr else None
@@ -566,8 +582,33 @@ class _EmitMixin:
         saved_sw = self._sw_depth
         self._sw_depth = 0
         if start is not None:
+            saved_return = getattr(self,'_latch_return',None)
+            self._latch_return = None
+            if (cond_at_bottom and not outer_loop and not self._seh_regions and not saved_sw and len(exits)==2 and
+                    not latch_b.consumed and all(hdr not in blocks[n].succs for n in body_ids if n!=latch_b.bid)):
+                # Bottom-tested search: one internal match edge leads to work;
+                # the exhausted latch may instead just unwind and return. A
+                # break for both exits would run the match action on a miss.
+                other = next((n for n in latch_b.succs if n in exits),None)
+                k = other; path = []; seen = set()
+                while k is not None and k >= 0 and k not in seen and k not in body_ids and not blocks[k].stmts:
+                    term = blocks[k].term
+                    if term == ('ret',) and blocks[k].ret == '':
+                        if not any(other in blocks[n].succs for n in body_ids if n!=latch_b.bid):
+                            self._latch_return = [(latch_b.bid,other),path,False]
+                        break
+                    if not term or term[0] not in ('jmp','fall'):
+                        break
+                    seen.add(k); path.append((k,term[1])); k=term[1]
+            simple_latch = (cond_at_bottom and body_ids == {hdr,latch_b.bid} and latch_b.bid != hdr and
+                            h_term[0] in ('fall','jmp') and h_term[1] == latch_b.bid and not latch_b.consumed and
+                            latch_b.preds == [hdr] and not self._seh_regions and exits == set(latch_b.succs)-{hdr})
             self._edge(hdr, start, out)
             self._seq(blocks, start, {hdr}, body_ids, out, depth + 1)
+            bottom_return = self._latch_return is not None and self._latch_return[2]
+            if bottom_return:
+                success_exit, = exits-{self._latch_return[0][1]}
+            self._latch_return = saved_return
         else:
             # header is its own body (back-edge straight to itself): the
             # body's real work lives in the (hdr,hdr) phi copies, which
@@ -584,7 +625,15 @@ class _EmitMixin:
         if cond_at_bottom:
             c = latch_b.cond or 'true'
             back_taken = latch_b.term[1] == hdr  # taken edge returns to header
-            out.append('while (%s);' % (c if back_taken else '!(%s)' % c))
+            # In a two-block bottom-tested loop _seq emitted the latch test
+            # as `if (exit) break;`, *then* the back-edge copies. Testing the
+            # same text again after a counter copy tests the next iteration's
+            # index and skips the last item. Leave the actual exit guard in
+            # charge when there is no other edge back to this header.
+            repeated = (start is not None and simple_latch and any(
+                            (a := re.match(r'^(v\d+) = ',s)) and re.search(r'\b'+a[1]+r'\b',c)
+                            for s in self.phi_copies.get((latch_b.bid,hdr),())))
+            out.append('while (%s);' % ('true' if repeated or (start is not None and bottom_return) else c if back_taken else '!(%s)' % c))
         elif not cond_at_top:
             out.append('while (true);')
         # the loop's tail must land BEFORE the brace-pop flush: a try that
@@ -597,7 +646,9 @@ class _EmitMixin:
         self._brace_pop(blocks, out, depth)
         # continue after the loop
         e = None
-        if len(exits) == 1:
+        if success_exit is not None:
+            e = success_exit
+        elif len(exits) == 1:
             e = next(iter(exits))
         elif exits:
             # pick the RPO-first exit; others will surface as leftovers/labels

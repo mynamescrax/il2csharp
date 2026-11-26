@@ -1,5 +1,6 @@
 from il2cpp.prelude import *  # noqa: F401,F403
 from il2cpp.cfg import _LIT_RX, _in_string
+from il2cpp.metadata import source_params
 
 
 class _LateDecompiler:
@@ -395,7 +396,7 @@ class _SugarMixin:
             params = {}
             try:
                 if m is not None:
-                    for p in L.meta.method_params(m):
+                    for p in source_params(L.meta, m):
                         pn = getattr(p, 'name', None)
                         if pn and pn not in self._SF_KW:
                             params[pn] = p.type

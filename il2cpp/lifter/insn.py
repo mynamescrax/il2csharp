@@ -1,8 +1,11 @@
 from il2cpp.prelude import *  # noqa: F401,F403
 from il2cpp.common import csharp_type_name
+from il2cpp.boolmask import enum_mask, mask_step
 from il2cpp.expr import Expr, _ARR_BIAS_RX, _BARE_TOKEN_RX, _BOOL_TY, _INT_TY, _R4_TY, _R8_TY, _USE_BIND_MIN, _recv_fold, _recv_shaped
 from il2cpp.names import repr_f32, repr_f64
 from il2cpp.runtime.meta import IMM_OPS, meta_lit_repr
+from il2cpp.shared_coroutine import shared_coroutine
+from il2cpp.shared_action import shared_action_tail
 from il2cpp.text import _ATOM_PREC, _BIN_PREC, _bin_txt, _fold_bin, _int_lit, _term_up, disp_add, imm_of, reg_name, sdisp, strip_outer
 from il2cpp.x64 import ARG_REGS, RMW_OPS, STORE_MNEMONICS, VOLATILE, _CMOV_AS_J, _SFPF, _reg_size, flag_cond
 try:
@@ -194,7 +197,7 @@ class _InsnMixin:
                             info = tail_ret
                     if info is not None and info[0] == 'method':
                         m2 = self.meta.methods[info[1]]
-                        args = self._tail_method_args(info[1], args, arg_exprs)
+                        args = self._tail_method_args(info[1], args, arg_exprs, direct_target=t)
                         init_kind = self._constructor_initializer_kind(
                             m2, arg_exprs[0] if arg_exprs else None)
                         if init_kind is not None:
@@ -300,7 +303,9 @@ class _InsnMixin:
                         args = args[:self.RT_ARITY[_eff_nm]]
                     elif tail_nm is None and re.fullmatch(r'sub_[0-9a-f]+', nm) and len(args) > 4:
                         args = args[:4]
-                    self._emit_tail(ip, '%s(%s)' % (_eff_nm, ', '.join(args)), asm)
+                    alias = ((shared_coroutine(self, t, args, arg_exprs) or shared_action_tail(self, ins, insns, args, arg_exprs)) if
+                             tail_nm is None and '/*shared body,' in _eff_nm else None)
+                    self._emit_tail(ip, alias or '%s(%s)' % (_eff_nm, ', '.join(args)), asm)
                     for r in VOLATILE:
                         self.regs.pop(r, None)
                     return
@@ -339,6 +344,8 @@ class _InsnMixin:
             return
         if mn in (Mnemonic.NOP, Mnemonic.INT3, Mnemonic.ENDBR64):
             return
+        if mn in (Mnemonic.NEG, Mnemonic.SBB, Mnemonic.AND, Mnemonic.CMOVE) and mask_step(self, insns, idx):
+            return
         if mn == Mnemonic.PUSH:
             self.rsp_delta -= 8
             return
@@ -361,6 +368,8 @@ class _InsnMixin:
 
         # --- gpr moves ----------------------------------------------------
         if mn in (Mnemonic.MOV, Mnemonic.MOVZX, Mnemonic.MOVSX, Mnemonic.MOVSXD):
+            if mn == Mnemonic.MOVZX and self._word_bswap_leaf(ins, insns):
+                return
             dst = reg_name(ins.op0_register)
             if A(0) == OpKind.REGISTER and A(1) in (OpKind.REGISTER,):
                 src = reg_name(ins.op1_register)
@@ -544,6 +553,8 @@ class _InsnMixin:
                                  usg.get('type'), 'usage')
                         if usg.get('td') is not None:
                             e._td = usg['td']
+                            if usg.get('kind') == 1:
+                                e._typeinfo_slot = slot
                         self.set_reg(dst, e)
                         return
                     s = self._rip_str(slot)
@@ -865,6 +876,8 @@ class _InsnMixin:
             # disturbing the pair itself (which ordinary je/jne
             # consumers still read).
             return
+        if mn == Mnemonic.BSWAP and self._bswap_leaf(ins, insns):
+            return
         if mn in (Mnemonic.MAXSS, Mnemonic.MINSS, Mnemonic.MAXSD, Mnemonic.MINSD):
             # MAXSS/MINSS were absent from every handler, so the destination
             # kept a stale live value (usually a fabricated `0f`). Hardware
@@ -912,6 +925,8 @@ class _InsnMixin:
             # SSE arithmetic is float by construction; SS operates on R4 and
             # SD on R8
             fty = _R4_TY if sfx == 'f' else _R8_TY
+            if fty == _R4_TY and a is not None and a._prec in (_BIN_PREC['^'], _BIN_PREC['&']):
+                a = self._masked_single_operand(a, insns, idx)
             aparts = getattr(a, '_parts', None)
             a_lane = getattr(a, '_slice', None) is not None
             b_lane = getattr(be, '_slice', None) is not None
@@ -1096,7 +1111,8 @@ class _InsnMixin:
                          or (a.text == '0f' and be.text == '0f')):
                 e = Expr('0f', a.ty if a else None, 'float')
                 self.set_reg(dst, e)
-                self.flags = (e, Expr('0', None, 'int'))
+                # Unlike integer XOR, packed logicals preserve EFLAGS. A
+                # subsequent jcc still tests the preceding cmp/test/ucomis.
                 return
             # xor of two materialized float zeros folds (ctor zeroing
             # sprays `xor xmm0,xmm0` after both sides were already
@@ -1106,15 +1122,46 @@ class _InsnMixin:
                     and a.text == '0f' and be.text == '0f':
                 e = Expr('0f', a.ty, 'float')
                 self.set_reg(dst, e)
-                self.flags = (e, Expr('0', None, 'int'))
                 return
             self._hint_tok(a, _R4_TY)
             self._hint_tok(be, _R4_TY)
             b_txt = self._fp_operand(be).text
-            fe = self._mk(_bin_txt(self._fp_operand(a).text, (a._prec if a else None) or _ATOM_PREC,
-                                   op, b_txt, (be._prec if be else None) or _ATOM_PREC),
-                          a.ty if (a is not None and isinstance(a.ty, tuple)) else _R4_TY, 'float')
+            packed = _bin_txt(self._fp_operand(a).text, (a._prec if a else None) or _ATOM_PREC,
+                              op, b_txt, (be._prec if be else None) or _ATOM_PREC)
+            fe = self._mk(packed, a.ty if (a is not None and isinstance(a.ty, tuple)) else _R4_TY, 'float')
             fe._prec = _BIN_PREC.get(op)
+            if (mn in (Mnemonic.ANDPS, Mnemonic.XORPS) and ins.is_ip_rel_memory_operand and
+                    a is not None and a.kind == 'float' and not a._unk and a.ty and
+                    not (a.ty[1] & (1 << 29)) and self.il._type_enum(a.ty) == 0x0c and
+                    a.text not in ('?', '_', '') and fe.text == packed):
+                bits = getattr(be, '_bytes', b'')
+                mask = b'\x00\x00\x00\x80' if mn == Mnemonic.XORPS else b'\xff\xff\xff\x7f'
+                va = ins.ip_rel_memory_address
+                if len(bits) == 16 and bits[:4] == mask and any(
+                        s.name == '.rdata' and not s.chars & 0x80000000 and
+                        s.addr <= va <= s.addr + s.rawsize - 16 for s in self.bin.sections):
+                    # Retain the packed spelling in the register: other lanes
+                    # need not contain anything related to the scalar value.
+                    low = (_unary_txt('-', a.text, a._prec) if mn == Mnemonic.XORPS else
+                           'System.Math.Abs(%s)' % a.text)
+                    owner = getattr(self, '_current_td', None)
+                    method = getattr(self, '_current_method', None)
+                    if (mn == Mnemonic.ANDPS and getattr(owner, 'namespace', '') == 'System' and
+                            owner.name in ('Math', 'MathF') and getattr(method, 'name', '') == 'Abs'):
+                        # The implementation of the intrinsic must not call itself.
+                        low = ('System.BitConverter.Int32BitsToSingle('
+                               'System.BitConverter.SingleToInt32Bits(%s) & int.MaxValue)' % a.text)
+                    if (dst == 'XMM0' and idx + 1 < len(insns) and
+                            insns[idx + 1].mnemonic == Mnemonic.RET and
+                            insns[idx + 1].ip == ins.next_ip and method is not None and
+                            0 <= method.return_type < len(self.il.types)):
+                        rt = self.il.types[method.return_type]
+                        if rt and not rt[1] & (1 << 29) and self.il._type_enum(rt) == 0x0c:
+                            # RET consumes only the managed float. No high lane
+                            # is observable in this return, including in flat mode.
+                            self.set_reg(dst, Expr(low, rt, 'float'))
+                            return
+                    self._masked_single = ip, fe, packed, low
             self.set_reg(dst, fe)
             return
         # Packed opcodes used as scalar low-lane operations in the
@@ -1249,7 +1296,20 @@ class _InsnMixin:
                     # compare; zero may be a null test, so it types nothing
                     if v != 0:
                         self._hint_tok(a, _INT_TY)
-                    self.flags = (a, Expr(str(v), None, 'int'))
+                    rhs = str(v)
+                    # A qword equality test on a typed List<T> reference
+                    # compares against null. A generic valuetype or a class
+                    # with overloaded equality must not inherit this rule.
+                    if (mn == Mnemonic.CMP and v == 0 and a and a.ty and self.il._type_enum(a.ty) == 0x15 and
+                            not a.ty[1] & (1 << 29) and a.kind == 'obj' and MemorySizeExt.size(ins.memory_size) == 8 and
+                            idx+1 < len(insns) and insns[idx+1].mnemonic in (Mnemonic.JE, Mnemonic.JNE) and
+                            ins.next_ip == insns[idx+1].ip):
+                        td = self._td_of(a.ty)
+                        if td is not None:
+                            row = self.meta.typedefs[td]
+                            if (row.namespace, row.name) == ('System.Collections.Generic', 'List`1') and not row.is_valuetype:
+                                rhs = 'null'
+                    self.flags = (a, Expr(rhs, None, 'int'))
                 else:
                     be = self.reg(reg_name(ins.op1_register))
                     self.flags = (a, be)
@@ -1375,6 +1435,99 @@ class _InsnMixin:
         # ignore the rest silently (leave asm comment if enabled)
         if asm:
             self.emit(ip, '', asm)
+
+    def _masked_single_operand(self, a, insns, idx):
+        """Use only at the first, destructive scalar arithmetic consumer.
+
+        The packed mask stays intact at copies, binds, joins and wider reads.
+        One unrelated self-zero may separate producer and consumer (MSVC's
+        scheduling in CraneController.Update); it can't observe the value.
+        """
+        proof = getattr(self, '_masked_single', None)
+        if not proof or proof[1] is not a or proof[2] != a.text or idx < 1:
+            return a
+        ins = insns[idx]
+        if ins.op1_kind == OpKind.REGISTER and ins.op0_register == ins.op1_register:
+            return a
+        prev = insns[idx - 1]
+        if prev.ip != proof[0]:
+            if (idx < 2 or prev.mnemonic not in (Mnemonic.XOR, Mnemonic.XORPS, Mnemonic.PXOR) or
+                    prev.op0_kind != OpKind.REGISTER or prev.op1_kind != OpKind.REGISTER or
+                    prev.op0_register != prev.op1_register or prev.op0_register == ins.op0_register):
+                return a
+            prev = insns[idx - 2]
+        if prev.ip != proof[0] or prev.op0_register != ins.op0_register:
+            return a
+        return Expr(proof[3], _R4_TY, 'float')
+
+    def _bswap_leaf(self, ins, insns):
+        """One register copy from an argument, one byte swap, one return.
+
+        Prove both widths: `mov eax,ecx; bswap rax` zeroes the high half
+        BEFORE the swap, and `bswap eax` returning a long zeroes it AFTER.
+        A register Expr alone doesn't preserve either distinction.
+        """
+        m = getattr(self, '_current_method', None)
+        if (m is None or len(insns) != 3 or insns[0].ip != m.addr or
+                insns[-1].mnemonic != Mnemonic.RET):
+            return False
+        swap_first = ins.ip == insns[0].ip
+        mov = insns[1] if swap_first else insns[0]
+        if (mov.mnemonic != Mnemonic.MOV or mov.op1_kind != OpKind.REGISTER or
+                mov.op0_register not in (IReg.EAX, IReg.RAX) or
+                reg_name(mov.op1_register) not in ARG_REGS or
+                ins.op0_register != (mov.op1_register if swap_first else mov.op0_register)):
+            return False
+        reg = reg_name(ins.op0_register)
+        width = 4 if mov.op0_register == IReg.EAX else 8
+        return self._set_swapped_arg(reg, reg, width, m)
+
+    def _word_bswap_leaf(self, ins, insns):
+        """A word rotated by eight bits then zero-extended to EAX is a ushort swap."""
+        if (len(insns) != 3 or insns[1].ip != ins.ip or insns[-1].mnemonic != Mnemonic.RET or
+                ins.op0_register != IReg.EAX or ins.op1_kind != OpKind.REGISTER):
+            return False
+        rotate = insns[0]
+        m = getattr(self, '_current_method', None)
+        if (m is None or rotate.ip != m.addr or rotate.mnemonic not in (Mnemonic.ROL, Mnemonic.ROR) or
+                rotate.op0_kind != OpKind.REGISTER or rotate.op0_register != ins.op1_register or
+                _reg_size(ins.op1_register) != 2 or reg_name(ins.op1_register) not in ARG_REGS or
+                rotate.op1_kind != OpKind.IMMEDIATE8 or rotate.immediate8 != 8):
+            return False
+        return self._set_swapped_arg(reg_name(ins.op1_register), 'RAX', 2, m)
+
+    def _set_swapped_arg(self, src, dst, width, m):
+        a = dict.get(self.regs, src)  # no use-binding on a declined probe
+        if (not 0 <= m.return_type < len(self.il.types) or
+                a is None or a.kind != 'int' or a._unk or not a.ty or
+                a.ty[1] & (1 << 29) or a.text in ('', '?', '_')):
+            return False
+        rt = self.il.types[m.return_type]
+        te = self.il._type_enum(a.ty)
+        if (not rt or rt[1] & (1 << 29) or self.il._type_enum(rt) != te or
+                te not in {2: (7,), 4: (8, 9), 8: (10, 11)}[width]):
+            return False
+        value = self.reg(src).text
+        owner = getattr(self, '_current_td', None)
+        if (getattr(owner, 'namespace', None) == 'System.Buffers.Binary' and
+                owner.name == 'BinaryPrimitives' and m.name == 'ReverseEndianness'):
+            # Calling the intrinsic inside its own implementation recurses. The
+            # input is a bare parameter in this exact leaf: copying its bytes
+            # in reverse order repeats no effects. Cast each lane before the
+            # shift so a signed high bit and ulong shifts both stay bit-exact.
+            name = {7: 'ushort', 8: 'int', 9: 'uint', 10: 'long', 11: 'ulong'}[te]
+            lanes = []
+            for i in range(width):
+                lane = '(byte)' + ('(%s >> %d)' % (value, 8 * i) if i else value)
+                if width == 8:
+                    lane = '(ulong)' + lane
+                shift = 8 * (width - i - 1)
+                lanes.append('%s << %d' % (lane, shift) if shift else lane)
+            text = 'unchecked((%s)(%s))' % (name, ' | '.join(lanes))
+        else:
+            text = 'System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(%s)' % value
+        self.set_reg(dst, Expr(text, rt, 'int'))
+        return True
 
     # ------------------------------------------------------------------
     def _indexed_lea(self, ins, base) -> Expr:
@@ -1550,6 +1703,12 @@ class _InsnMixin:
     }
 
     def _read_mem(self, ins, asm) -> Optional[Expr]:
+        if ins.ip in getattr(self, '_this_reloads', ()):
+            return Expr('this', (self._current_td.index, 0x12 << 16), 'obj')
+        if ins.memory_base == IReg.RBP:
+            param = getattr(self, '_entry_reference_loads', {}).get(ins.ip)
+            if param is not None:
+                return Expr(param[0], param[1], self._ty_kind(param[1]))
         return self._read_mem_raw(ins, asm)
 
     def _width_mark(self, ins, e):
@@ -1763,6 +1922,24 @@ class _InsnMixin:
                 fe = self._arr_elem_expr(be0, ie, scale or 1, d0, size)
                 if fe is not None:
                     return fe
+            # Resolved calls can carry an exact reference-array return with
+            # the coarse kind 'obj'. A qword load from its element area at
+            # pointer stride produces a managed element reference, not a byte.
+            if (be.kind == 'obj' and not be._unk and be.ty and not be.ty[1] & (1 << 29)
+                    and self.il._type_enum(be.ty) == 0x1d and disp == 0x20 and scale == size == 8
+                    and ins.mnemonic == Mnemonic.MOV and ins.op0_kind == OpKind.REGISTER
+                    and _reg_size(ins.op0_register) == _reg_size(ins.memory_base) == 8
+                    and not ins.has_segment_prefix and ie and not ie._unk and ie.kind == 'int'
+                    and ie.text not in ('?', '_', '') and _recv_shaped(be.text)):
+                element = self._elem_type(be.ty)
+                if element and not element[1] & (1 << 29):
+                    indexed = '%s[%s]' % (_recv_fold(be.text), ie.text)
+                    if self.il._type_enum(element) == 0x0e:
+                        return Expr(indexed, element, 'str')
+                    if self.il._type_enum(element) == 0x12 and getattr(self, '_ref_array_loads', {}).get(ins.ip) == be.ty:
+                        value = Expr(indexed, element, 'obj')
+                        self._ref_array_elements.add(value)
+                        return value
             # scaled index in the BASE slot, array in the INDEX slot
             # (`imul r,idx,S; ... [r + arr + D]`): roles swap
             if be.kind == 'int' and ie is not None and ie.kind == 'arr':
@@ -1781,6 +1958,13 @@ class _InsnMixin:
                 scale, disp_add(disp)), None, 'ptr')
         if be is None:
             return Expr('mem_%x' % disp, None, 'ptr')
+        if (ins.mnemonic == Mnemonic.MOV and size == 4 and disp == 0x10 and
+                not ins.has_segment_prefix and _reg_size(ins.memory_base) == 8 and
+                _reg_size(ins.op0_register) == 4 and be.kind == 'int' and be.ty and
+                self.il._type_enum(be.ty) == 0x0e and not be.ty[1] & (1 << 29)):
+            # A call returning string can carry the GPR kind 'int'. The
+            # dword at this offset is its length, not a raw byte-pointer read.
+            return Expr('%s.Length' % _recv_fold(be.text), _INT_TY, 'int')
         fe = self._field_expr(be, disp, size, elem_fold=True)
         # fix 134: field-form raw reads spell their native width; arrays
         # and strings keep the raw text later passes fold (`.Length`)
@@ -2100,6 +2284,18 @@ class _InsnMixin:
         if parts is None or '__static_fields' in parts[0]:
             return None
         st = strip_outer(src)
+        ref = getattr(self, '_entry_ref_zeros', {}).get(ins.ip)
+        if ref and ref[0] == parts[0] and st == '0':
+            return ref  # display only; kill-on-write still sees the native lvalue
+        copy = getattr(self, '_ref_field_copies', {}).get(ins.ip)
+        if copy and copy[0] == parts[0]:
+            name, reg, off, owner, field = copy
+            obj = dict.get(self.regs, reg)
+            if obj and not obj._unk and re.fullmatch(r'[A-Za-z_]\w*', obj.text):
+                if st == '(__w_int)*(%s %s)' % (obj.text, disp_add(off)):
+                    return name, '((%s)%s).%s' % (owner, obj.text, field)
+                if obj.ty and self.il.type_name(obj.ty) == owner and st == obj.text + '.' + field:
+                    return name, st
         src_ty = None
         if ins.op_kind(1) == OpKind.REGISTER:
             se = dict.get(self.regs, reg_name(ins.op1_register))
@@ -2200,6 +2396,15 @@ class _InsnMixin:
                 self._type_hints.setdefault(lv, ty)
         src = self._src_text(ins)
         src = self._fimm(src, self._lv_ty)
+        if width == 4 and ins.mnemonic == Mnemonic.MOV and ins.op1_kind == OpKind.REGISTER:
+            src = enum_mask(self, dict.get(self.regs, reg_name(ins.op1_register)), self._lv_ty, src)
+        # Resuming a yield copies <>u__N and clears its entire one-byte
+        # value. An integer zero is not assignable to a managed awaiter.
+        if (src == '0' and width == 1 and ins.mnemonic == Mnemonic.MOV and self._lv_ty and
+                self.il._type_enum(self._lv_ty) == 0x11 and not self._lv_ty[1] & (1 << 29) and
+                re.fullmatch(r'this\.<>u__\d+', lv) and self.il.value_type_size(self._lv_ty[0]) == 1 and
+                self.il.typedef_full(self._lv_ty[0]) == 'System.Runtime.CompilerServices.YieldAwaitable.YieldAwaiter'):
+            src = 'default'
         if self._lv_ty is None and (ins.op_kind(1) in IMM_OPS
                 or (ins.op_kind(1) == OpKind.REGISTER
                     and _int_lit(src) is not None)):

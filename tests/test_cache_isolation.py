@@ -6,12 +6,12 @@ level hands a second Decompiler/Emitter -- a second fixture -- another
 binary's answer. `_static_field_name` then names another type's static field,
 with no marker: a confidently wrong name rather than an honest decline.
 """
-import inspect
-import types
+import struct
 from types import SimpleNamespace as NS
 
+import pytest
+
 from il2cpp import Decompiler, Emitter, Il2Cpp
-from il2cpp.binary import ELF
 import il2cpp.cli as cli_mod
 
 
@@ -26,7 +26,7 @@ def _decompiler_with(typedefs):
 
 
 # --------------------------------------------------------------- A1a
-def test_type_name_cache_is_per_instance():
+def test_decompiler_type_name_cache_is_per_instance():
     a = _decompiler_with([("Alpha", "Widget")])
     assert a._td_idx_by_name("Alpha.Widget") == 0
 
@@ -70,21 +70,20 @@ def test_delegate_caches_keep_separate_key_spaces():
 
 
 # --------------------------------------------------------------- A3
-def test_android_registration_fallback_is_elf_gated():
+@pytest.mark.parametrize('error', [RuntimeError, IndexError, struct.error])
+def test_pe_registration_failure_is_reported_without_android_fallback(monkeypatch, capsys, error):
     """The Android loader assumes a different registration struct shape. On
     the x64 PE it does not fail -- probed: a code_reg_va 0x10 off the classic
     answer, same module count, same resolved coverage -- so a PE must get a
     clean error instead of a silently wrong registration."""
-    src = inspect.getsource(cli_mod.main)
-    assert "isinstance(bin_, ELF)" in src
-    assert "could not read code/metadata registrations" in src
-    assert ELF is not None
+    def fail(self):
+        raise error('test registration failure')
 
-
-def test_registration_phase_reports_errors_without_a_traceback():
-    src = inspect.getsource(cli_mod.main)
-    for exc in ("struct.error", "IndexError", "RuntimeError"):
-        assert exc in src
+    monkeypatch.setattr(Il2Cpp, 'find_registrations', fail)
+    monkeypatch.setattr(Il2Cpp, 'find_registrations_android',
+                        lambda self: pytest.fail('Android fallback attempted on PE'))
+    assert cli_mod.main(['il2csharp', '--demo', '--probe']) == 1
+    assert 'could not read code/metadata registrations: test registration failure' in capsys.readouterr().out
 
 
 # ----------------------------------------- audit batch 3: the five missed

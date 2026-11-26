@@ -1,14 +1,30 @@
 from il2cpp.prelude import *  # noqa: F401,F403
 from il2cpp.cfg import _Sink, _TEMP_RX
 from il2cpp.common import csharp_type_name
-from il2cpp.expr import Expr, _BARE_TOKEN_RX, _R8_TY, _mentions, _merge_arr_proof, _recv_fold, _recv_shaped
+from il2cpp.boolmask import enum_mask
+from il2cpp.expr import Expr, _BARE_TOKEN_RX, _INT_TY, _R8_TY, _mentions, _merge_arr_proof, _recv_fold, _recv_shaped, acc_get
 from il2cpp.expr import _tile_proof_for as _dry_tile_proof
 from il2cpp.text import imm_of, reg_name
 from il2cpp.x64 import ARG_REGS, GPRS, flag_cond
+from il2cpp.shared_field import saved_fp_consumers
+from il2cpp.shared_action import shared_action_tail
+from il2cpp.shared_coroutine import shared_coroutine
+from il2cpp.sret_copy import copied_sret_before_getter
+from il2cpp.simd_getter import keep_scalars, snapshot_plans
+from il2cpp.simd_return import capture_return, emit_return, return_plans
+from il2cpp.ref_vectors import fold_ref_vectors
+from il2cpp.module_getter import signed_module_slots
+from il2cpp.module_curve import emit_update, fixed_frame, fold_update, probed_frame
+from il2cpp.converted_module import conversion_uses
+from il2cpp.copied_getter import array_fill_sites, mixed_copy_stores, write_snapshot
+from il2cpp.curve_join import joined_updates
+from il2cpp.curve_bridge import prefixes_before_join
+from il2cpp.reparent import bind_array_operand, hierarchy_sites
 
 class _AnalyzeMixin:
     def _analyze(self, m, td, blocks, bmap):
         L = self.L
+        L._saved_fp_consumers = saved_fp_consumers(blocks)
         # _rpo appends the unreachable tail (the EH pads, entered only by the
         # exception dispatcher) after the reachable order, so they lift too
         rpo = self._rpo(blocks)
@@ -17,13 +33,32 @@ class _AnalyzeMixin:
         # CFG (reachable-from-the-declaration check); blocks[bid] and
         # Block.bid line up by construction
         L._blocks = blocks
+        L._single_array_allocs, L._single_array_counts = array_fill_sites(L, blocks, self._pad_bids)
+        L._signed_module_slots = signed_module_slots(L, blocks)
+        module_frame = probed_frame(L, m, blocks, self._pad_bids)
+        L._converted_modules = conversion_uses(L,blocks,fixed_frame(L,m,blocks,self._pad_bids,immediate=True))
+        L._module_tail_insns = None
+        curve_arms, curve_joins = joined_updates(L, m, td, blocks, module_frame)
+        curve_prefixes, curve_refs = prefixes_before_join(L, m, td, blocks, module_frame, curve_arms)
+        L._hierarchy_bindings, L._reparent_sites = hierarchy_sites(L, m, blocks, self._pad_bids)
+        L._snapshot_srets, packed_loads, snapshot_getters = snapshot_plans(L, td, blocks, self._pad_bids)
+        packs, extra_srets = return_plans(L, m, blocks, self._pad_bids, snapshot_getters)
+        L._snapshot_srets.update(extra_srets)
+        L._ref_array_pads = self._pad_bids
         m_returns = self._returns_value(m)
         self.phi_pre = {}
         L._phi_bytes = {}
         L._aggregate_phi_sources = {}
         L._aggregate_phi_types = {}
 
+        replaced_selects = set()
+        checked_selects = getattr(self, '_checked_selects', {})
+        capture = getattr(self, '_captured_receiver', None)
+
         def fresh_regs(counting):
+            L._ref_array_loads = {}
+            L._ref_array_elements = set()
+            replaced_selects.clear()
             # pass 1 never counts uses (dry), so it runs on a plain dict:
             # the counting dispatch is a measurable share of total runtime
             L.regs = L._new_regs() if counting else {}
@@ -81,10 +116,14 @@ class _AnalyzeMixin:
             L.out = _Sink(b)
             L.dry = dry
             L._jcc_flags = None
+            copied_until = -1
+            receiver_stores = {}
+            packed_homes = {}
+            packed_return = {}
             carried = jcc_fallthrough_flags.get(b.bid)
             if carried is not None:
                 L.flags, L._flags_mn = carried
-            for ins in b.insns:
+            for idx, ins in enumerate(b.insns):
                 # the branch/return/jmp handlers below render at THIS
                 # instruction's ip but run here, not through L._insn;
                 # without this their note_use counts under the previous
@@ -95,9 +134,96 @@ class _AnalyzeMixin:
                     e = L.regs.get(b.switch_idx_reg)
                     if e is not None and e.text and len(e.text) < 160:
                         b.switch_idx = e.text
-                if ins.ip in self.skip_ips:
+                if idx <= copied_until or ins.ip in self.skip_ips or ins.ip in replaced_selects:
+                    continue
+                if capture and ins.ip in capture[:2]:
+                    # The EH continuation's register file isn't the parent's.
+                    # Both RDI definitions carry the *same local*, initialized
+                    # at the native field read. Never inline a later field read
+                    # across the intervening calls or into the iterator factory.
+                    if ins.ip == capture[0]:
+                        L.emit(ins.ip, 'var %s = %s;' % (snapshot, acc_get('this.<>4__this')), None)
+                    L.regs['RDI'] = Expr(snapshot, capture[2], 'obj')
                     continue
                 mn = ins.mnemonic
+                if mn == Mnemonic.MOVUPS and idx and b.insns[idx-1].mnemonic == Mnemonic.CALL:
+                    receiver_stores = mixed_copy_stores(L,b.insns,idx)
+                if ins.ip in receiver_stores:
+                    write_snapshot(L,ins,receiver_stores[ins.ip])
+                    continue
+                if ins.ip in curve_refs:
+                    (field, ty), dst = curve_refs[ins.ip]
+                    name = L.new_var(); L._var_types[name] = ty
+                    L.emit(ins.ip,'var %s = %s;' % (name,acc_get(field)),None)
+                    L.regs[reg_name(dst)] = Expr(name,ty,'obj')
+                    continue
+                if ins.ip in curve_arms:
+                    arm = curve_arms[ins.ip]
+                    copied_until = arm.last
+                    emit_update(L, ins, arm.plan, arm.member, arm.edit, arm.setter)
+                    continue
+                if ins.ip in curve_joins:
+                    copied_until = curve_joins[ins.ip]
+                    continue
+                if module_frame and mn == Mnemonic.CALL:
+                    end = fold_update(L, b, idx, module_frame, curve_prefixes.get(ins.ip))
+                    if end is not None:
+                        copied_until = end
+                        continue
+                if ins.ip in packs:
+                    store, regs, fields, origin = packs[ins.ip]
+                    witness = L._scratch_getter_lanes
+                    values = capture_return(L, regs) if witness and witness[0] == origin else None
+                    if values is not None:
+                        packed_return[store] = fields, values
+                if ins.ip in packed_return and emit_return(L, ins, *packed_return[ins.ip]):
+                    continue
+                if mn == Mnemonic.XOR and ins.op0_register == IReg.R8D and not self._pad_bids:
+                    end_copy = fold_ref_vectors(L, b.insns, idx)
+                    if end_copy is not None:
+                        copied_until = end_copy
+                        continue
+                if ins.ip in packed_loads:
+                    producer = packed_loads[ins.ip]
+                    echo = dict.get(L.regs, 'RAX')
+                    # Each load must take its own materialized result, even
+                    # when both calls reuse the same physical return buffer.
+                    if (echo and getattr(L, '_last_sret', None) == (producer, echo) and echo.kind == 'ptr' and
+                            re.fullmatch(r'&t\d+', echo.text) and getattr(echo, '_stack_offset', None) is not None and
+                            L.slot_types.get(echo.text[1:]) == echo.ty):
+                        packed_homes[ins.ip] = echo.text[1:]
+                if mn == Mnemonic.MOVSS and ins.next_ip in snapshot_getters:
+                    _, reads, _ = snapshot_getters[ins.next_ip]
+                    if all(ip in packed_homes for ip in reads) and packed_homes[reads[0]] != packed_homes[reads[1]]:
+                        keep_scalars(L, [i for i in b.insns[:idx] if i.ip > reads[-1]])
+                if ins.ip in snapshot_getters:
+                    getter_ip, reads, (field, ty) = snapshot_getters[ins.ip]
+                    base = dict.get(L.regs, reg_name(ins.memory_base))
+                    if (all(ip in packed_homes for ip in reads) and packed_homes[reads[0]] != packed_homes[reads[1]] and
+                            base and not base._unk and base.text == 'this' and
+                            L.il._closed_type_key(base.ty) == (0x12, td.index, 0)):
+                        name = L.new_var()
+                        L._var_types[name] = ty
+                        L.emit(ins.ip, 'var %s = %s;' % (name, acc_get(field)), None)
+                        L.regs['RCX'] = Expr(name, ty, 'obj')
+                        L._scratch_getter_lanes = getter_ip, tuple(dict.get(L.regs, 'XMM%d'%k) for k in range(4))
+                        continue
+                if mn == Mnemonic.MOVSD and ins.op0_kind == OpKind.MEMORY and not self._pad_bids:
+                    copied = copied_sret_before_getter(L, b, idx)
+                    if copied is not None:
+                        dest, home, (field, ty), getter_ip, lane = copied
+                        L._kill_stale(dest)
+                        L.emit(ins.ip, '%s = %s;' % (dest, home), None)
+                        # The two adjacent stores are complete. Capture the
+                        # following field reload here, after the store and
+                        # before either its null check or the getter.
+                        name = L.new_var()
+                        L._var_types[name] = ty
+                        L.emit(b.insns[idx+2].ip, 'var %s = %s;' % (name, acc_get(field)), None)
+                        L.regs['RCX'] = Expr(name, ty, 'obj')
+                        L._stored_getter_lane = getter_ip, lane
+                        copied_until = idx + 2
+                        continue
                 fc = ins.flow_control
                 if fc == FlowControl.RETURN:
                     rax = L.regs.get('RAX')
@@ -122,6 +248,7 @@ class _AnalyzeMixin:
                             b.ret = '__ret'
                         else:
                             b.ret = rv.text if len(rv.text) < 160 else L._materialize(rv, 160)
+                            b.ret = enum_mask(L, rv, rty, b.ret)
                     else:
                         b.ret = ''
                     continue
@@ -338,7 +465,7 @@ class _AnalyzeMixin:
                                     info = tail_ret
                             if info is not None and info[0] == 'method':
                                 m2 = L.meta.methods[info[1]]
-                                args = L._tail_method_args(info[1], args, arg_exprs)
+                                args = L._tail_method_args(info[1], args, arg_exprs, direct_target=t)
                                 init_kind = L._constructor_initializer_kind(
                                     m2, arg_exprs[0] if arg_exprs else None)
                                 if init_kind is not None:
@@ -421,7 +548,7 @@ class _AnalyzeMixin:
                                         elif tail_nm is None and re.fullmatch(r'sub_[0-9a-f]+', nm) and len(args) > 4:
                                             args = args[:4]
                                         L._emit_tail(ins.ip, '%s(%s)' % (_eff_nm, ', '.join(args)), None,
-                                                       marker=False)
+                                                     marker=False)
                                     else:
                                         _tr_rti = _tr_m.return_type
                                         _tr_void = 0 <= _tr_rti < len(L.il.types) and ((L.il.types[_tr_rti][1] >> 16) & 0xFF) == 0x01
@@ -459,10 +586,30 @@ class _AnalyzeMixin:
                                         args = args[:L.RT_ARITY[_eff_nm]]
                                     elif tail_nm is None and re.fullmatch(r'sub_[0-9a-f]+', nm) and len(args) > 4:
                                         args = args[:4]
-                                    L._emit_tail(ins.ip, '%s(%s)' % (_eff_nm, ', '.join(args)), None,
-                                                   marker=False)
+                                    alias = ((shared_coroutine(L, t, args, arg_exprs) or shared_action_tail(L, ins, b.insns, args, arg_exprs)) if
+                                             tail_nm is None and '/*shared body,' in _eff_nm else None)
+                                    L._emit_tail(ins.ip, alias or '%s(%s)' % (_eff_nm, ', '.join(args)), None,
+                                                 marker=False)
                     continue
-                L._insn(ins, b.insns, 0, None, self.last_ip)
+                L._insn(ins, b.insns, idx, None, self.last_ip)
+                binding = L._hierarchy_bindings.get(ins.ip)
+                if binding and binding[0] in ('array','element'):
+                    bind_array_operand(L, ins, binding)
+                select = checked_selects and checked_selects.get(ins.ip)
+                if select:
+                    # The select's RDI starts null; nothing reads or writes
+                    # it until the cmovne. Form the same value at the initial
+                    # RAX -> R8 copy, preserving the other registers' traces.
+                    obj = dict.get(L.regs, 'R8')
+                    if (obj and not obj._unk and obj.ty and not obj.ty[1] & (1 << 29) and
+                            L.il._type_enum(obj.ty) in (0x12, 0x1c) and obj.text not in ('?', '_', '')):
+                        if not re.fullmatch(r'[A-Za-z_]\w*', obj.text):
+                            L._bind(obj)
+                        cmov, ty = select
+                        value = Expr('%s as %s' % (obj.text, L.il.type_name(ty)), ty, 'obj')
+                        L.regs['RDI'] = value
+                        L._bind(value)
+                        replaced_selects.add(cmov)
 
         # ---- pass 1 (dry): discover phi merge locations
         # wipe BEFORE entry setup: _setup_entry (inside fresh_regs)
@@ -476,6 +623,7 @@ class _AnalyzeMixin:
         L.slot_types = {}
         fresh_regs(False)
         L.var_n = 1000
+        snapshot = L.new_var() if capture else None
         entry_state = dict(L.regs)
         merge_locs = {}
         # fix 131: pass-1 twin of the pass-2 flags carry (see there)
@@ -653,6 +801,9 @@ class _AnalyzeMixin:
         L.slot_types = {}
         fresh_regs(True)
         L.var_n = 1000
+        if capture:
+            snapshot = L.new_var()
+            L._var_types[snapshot] = capture[2]
         entry_state = dict(L.regs)
         phi: Dict[Tuple[int, str], str] = {}
         # fix 131: the flags pair each pass-2 block ended with.  `L.flags`
@@ -666,6 +817,7 @@ class _AnalyzeMixin:
         # is marked `_unk` only when every predecessor is in here; a loop
         # header's latch still holds its dry end_state at merge time.
         emitted = set()
+        max_carries = self._loop_max_carries(blocks, rpo)
 
         def _flags_key(fl):
             if not fl:
@@ -705,7 +857,18 @@ class _AnalyzeMixin:
                         and all(v.kind == 'obj' and isinstance(v.ty, tuple) for v in vals)
                         and len({v._defpos for v in vals}) > 1
                         and any(v._uses for v in vals))
-                    if len(set(texts)) == 1 and vals[0] is not None and not separate_defs:
+                    provisional_max = ((bid, k) in max_carries and texts[0] == '0' and
+                                       any(p not in emitted for p in b.preds))
+                    array_input = (next((v for v in vals if v in L._ref_array_elements), None)
+                                   if L._ref_array_elements else None)
+                    # A new array-element proof applies to this phi only when
+                    # *all* paths carry the same class reference. Scope this
+                    # to the recovered source; text-only dry states for
+                    # unrelated phis are not counterexamples to their types.
+                    array_agrees = (array_input is None or (array_input.ty is not None and len(vals) == len(b.preds) and
+                        all(v and not v._unk and v.kind == 'obj' and v.ty and
+                            L.il._closed_type_key(v.ty) == (0x12, array_input.ty[0], 0) for v in vals)))
+                    if len(set(texts)) == 1 and vals[0] is not None and not separate_defs and not provisional_max and array_agrees:
                         merged[k] = vals[0]
                     elif k == FLAGS:
                         defined = [v for v in vals if isinstance(v, Expr) and isinstance(v.ty, tuple)]
@@ -732,11 +895,15 @@ class _AnalyzeMixin:
                         nn = [t for t in tys if t is not None]
                         type_key = getattr(L.il, '_closed_type_key', lambda t: t)
                         pty = nn[0] if nn and len({type_key(t) for t in nn}) == 1 else None
+                        if provisional_max and not nn:
+                            pty = _INT_TY
                         if len(kinds) == 1:
                             pkind = next(iter(kinds))
                         else:
                             nnk = {k for k in kinds if k not in ('?', None)}
                             pkind = next(iter(nnk)) if len(nnk) == 1 else '?'
+                        if not array_agrees:
+                            pty, pkind = None, '?'
                         if pty is not None:
                             self._var_types.setdefault(phi[key], pty)
                         L._aggregate_phi_sources[phi[key]] = vals
@@ -770,6 +937,8 @@ class _AnalyzeMixin:
                                     merged[k]._tile_proof = _tp
                                 except Exception:
                                     pass
+                    if array_input is not None:
+                        L._ref_array_elements.add(merged[k])
                 # Kill-on-write across phi copies: a copy on an in-edge
                 # assigns the phi var, so any register whose text reads that
                 # var would re-render with the post-copy value inside this
@@ -839,6 +1008,40 @@ class _AnalyzeMixin:
 
     # ------------------------------------------------------------------
     _TOKRX = re.compile(r'(?<![\w.])(v\d+)(?![\w])')
+
+    def _loop_max_carries(self, blocks, rpo):
+        """A zero on the dry latch is not loop-invariant when the loop
+        conditionally replaces a signed running maximum. The inner counter
+        may itself still look like zero in that pass. Reserve the outer phi;
+        its actual assignments come from the final edge values as usual."""
+        from il2cpp.x64 import _reg_size
+        updates = []
+        for b in blocks:
+            if len(b.insns) < 2 or len(b.succs) != 2:
+                continue
+            cmp, skip = b.insns[-2:]
+            if (cmp.mnemonic != Mnemonic.CMP or cmp.op0_kind != OpKind.REGISTER or cmp.op1_kind != OpKind.REGISTER or
+                    _reg_size(cmp.op0_register) != 4 or _reg_size(cmp.op1_register) != 4 or cmp.op0_register == cmp.op1_register or
+                    cmp.next_ip != skip.ip or skip.mnemonic != Mnemonic.JLE):
+                continue
+            for s in b.succs:
+                if s < 0 or not blocks[s].insns or blocks[s].preds != [b.bid]:
+                    continue
+                copy = blocks[s].insns[0]
+                if (skip.next_ip == copy.ip and skip.near_branch_target != copy.ip and copy.mnemonic == Mnemonic.MOV and
+                        copy.op0_register == cmp.op1_register and copy.op1_register == cmp.op0_register):
+                    updates.append((s, reg_name(copy.op0_register)))
+        if not updates:
+            return set()
+        reach, todo = set(), [0]
+        while todo:
+            b = todo.pop()
+            if b >= 0 and b not in reach:
+                reach.add(b)
+                todo.extend(blocks[b].succs)
+        dom = self._dominators(blocks, rpo, reach)
+        return {(h, reg) for h,(body, _) in self._loops(blocks, dom, reach).items()
+                for update,reg in updates if update in body}
 
     def _build_phi_copies(self, blocks, phi, FLAGS):
         """A phi at block B for location k means "the value differs per path".

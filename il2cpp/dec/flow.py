@@ -1,6 +1,8 @@
 from il2cpp.prelude import *  # noqa: F401,F403
 from il2cpp.cfg import LBL, _ELSEIF_CMP_RX, _ITF_CALL_RX, _ITF_SLOT_RX, _ITF_TYPEOF_RX, _LOOP_HDR_RX, _can_fall, _construct_arms, _falls_to, _header_idx, _hoist_point, _match_brace, _split_args
 from il2cpp.expr import _recv_fold, _recv_shaped
+from il2cpp.metadata import source_params
+from il2cpp.names import safe_ident
 
 class _FlowMixin:
     def _resolve_labels(self, lines: List[str]) -> List[str]:
@@ -1271,7 +1273,7 @@ class _FlowMixin:
                     _add(cm.group(2), cm.group(1).strip())
             try:
                 il = self.L.il
-                for p in self.L.meta.method_params(m):
+                for p in source_params(self.L.meta, m):
                     ty = il.types[p.type] if 0 <= p.type < len(il.types) else None
                     if ty is not None:
                         try:
@@ -1371,6 +1373,47 @@ class _FlowMixin:
             return out
         except Exception:
             return lines
+
+    def _short_circuit_tail(self, lines, label):
+        """Two boolean tests can enter one tail: A || B, with B evaluated lazily.
+
+        Try the rewrite on a copy with dead edge transfers removed. Any live
+        transfer, extra statement in the gates, or second entry keeps the
+        ordinary tail-duplication path.
+        """
+        clean = self._drop_dead_copies(lines)
+        s = [ln.strip() for ln in clean]
+        marker = label + ':'
+        jump = 'goto ' + label + ';'
+        if s.count(marker) != 1 or sum(jump in ln for ln in s) != 1:
+            return None
+        li = s.index(marker)
+        if li < 3 or s[li-1] != '{':
+            return None
+        first = re.fullmatch(r'if \((t\d+)\)', s[li-2])
+        if not first:
+            return None
+        close = _match_brace(clean, li-1)
+        if close < li or s[close] != '}' or s[close+1:close+3] != ['else', '{'] or close+11 >= len(s):
+            return None
+        decl = re.compile(r'var (t\d+) = (.+);')
+        a, b = decl.fullmatch(s[li-3]), decl.fullmatch(s[close+3])
+        if not a or a[1] != first[1] or not b or a[1] == b[1]:
+            return None
+        if s[close+4:close+12] != [f'if (!{b[1]})', '{', '}', 'else', '{', jump, '}', '}']:
+            return None
+        text = '\n'.join(s)
+        for tok, expr in (a.groups(), b.groups()):
+            masked, in_comment = self._mask_literals(expr, False)
+            if in_comment or ';' in masked or not re.fullmatch(r'[\w.]+\(.*\)', masked):
+                return None
+            ty = getattr(self.L, '_var_types', {}).get(tok)
+            if (not ty or ty[1] & (1 << 29) or self.L.il._type_enum(ty) != 2 or
+                    len(re.findall(r'\b' + tok + r'\b', text)) != 2):
+                return None
+        indent = clean[li-3][:len(clean[li-3]) - len(clean[li-3].lstrip())]
+        return (clean[:li-3] + [indent + f'if (({a[2]}) || ({b[2]}))', clean[li-1]] +
+                clean[li+1:close+1] + clean[close+12:])
 
     def _hoist_shared_tails(self, lines: List[str]) -> List[str]:
         """Kill the `goto` that jumps INTO a sibling/nested block -- illegal
@@ -1515,6 +1558,12 @@ class _FlowMixin:
                                 if t is not None and not (li <= t < ac):
                                     dup_ok = False
                     if dup_ok:
+                        if (len(into) == 1 and not same and re.fullmatch(r'if \(t\d+\)', hdr) and
+                                ac+3 < len(lines) and lines[ac+3].lstrip().startswith('var t')):
+                            joined = self._short_circuit_tail(lines, name)
+                            if joined is not None:
+                                lines, changed = joined, True
+                                break
                         dtail = [lines[k] for k in range(li + 1, ac)
                                  if lines[k].strip()]
                         # hardening (still fix 56): a tail containing
@@ -1575,6 +1624,28 @@ class _FlowMixin:
                                 n = int(tok[len(pre):])
                                 if n > maxnum.get(pre, 0):
                                     maxnum[pre] = n
+                        # The copy changes temp names, not the operations that
+                        # produced them. Keep the recorded types of tail-local
+                        # materializations, including on a subsequent duplication.
+                        # Dead temps can still occupy keys in the type maps.
+                        lifter = self.L
+                        bound = getattr(lifter, '_var_types', {})
+                        hints = getattr(lifter, '_type_hints', {})
+                        blocked = getattr(lifter, '_gp_blocked', set())
+                        reserved = set(self._var_types) | set(bound) | set(hints) | blocked
+                        method = getattr(lifter, '_current_method', None)
+                        if method is not None:
+                            reserved.update(safe_ident(p.name) for p in source_params(lifter.meta, method))
+                        copy_types = {}
+                        for ln in dtail:
+                            decl = self._TDEF_RX.fullmatch(ln.strip())
+                            if not decl or not ln.lstrip().startswith('var '):
+                                continue
+                            t = decl[1]
+                            ty = self._var_types.get(t, bound.get(t))
+                            if (t not in blocked and isinstance(ty, tuple) and len(ty) == 2
+                                    and bound.get(t, ty) == ty and hints.get(t, ty) == ty):
+                                copy_types[t] = ty
                         into_set = set(into)
                         out = []
                         for k, raw in enumerate(lines):
@@ -1589,6 +1660,11 @@ class _FlowMixin:
                                 pre = t.rstrip('0123456789')
                                 maxnum[pre] = maxnum.get(pre, 0) + 1
                                 ren[t] = '%s%d' % (pre, maxnum[pre])
+                                while ren[t] in reserved:
+                                    maxnum[pre] += 1
+                                    ren[t] = '%s%d' % (pre, maxnum[pre])
+                                if t in copy_types:
+                                    self._var_types[ren[t]] = copy_types[t]
                             out.extend(
                                 self._LOC_RX.sub(
                                     lambda mm: ren.get(mm.group(1),

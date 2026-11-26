@@ -190,6 +190,13 @@ class _ValuesMixin:
             # a byref parameter's argument holds the *address*; the pointee
             # type still types the local or stack slot being addressed
             at = args[ai]
+            # A resolved System.Char parameter consumes a UTF-16 code unit.
+            # Keep punctuation escaped so it cannot look like call syntax.
+            if ((bits >> 16) & 0xff) == 0x03 and not bits & (1 << 29) and re.fullmatch(r'[0-9]{1,5}', at):
+                unit = int(at)
+                if unit <= 0xffff:
+                    args[ai] = {10: r"'\n'", 13: r"'\r'", 32: "' '"}.get(unit, "'\\u%04x'" % unit)
+                    continue
             # a bool parameter receives `(cond ? 1 : 0)` (a setcc render of
             # the condition); the ternary is the 0/1 materialization and the
             # param is already bool, so the condition stands alone. Byref
@@ -300,7 +307,7 @@ class _ValuesMixin:
                 continue
             self._type_hints.setdefault(at, pt)
 
-    def _tail_method_args(self, mi, args, arg_exprs):
+    def _tail_method_args(self, mi, args, arg_exprs, direct_target=None):
         """Prepare a resolved Win64 direct tail from its declared signature.
 
         Tails need the same positional rebuild as ordinary calls, but they do
@@ -328,7 +335,52 @@ class _ValuesMixin:
                 prepared.append(e.text)
         self._hint_arg_types(prepared, arg_exprs, mi, rty)
         out = self._positional_args(prepared, m2, rty)
-        return self._materialize_float_lanes(out, arg_exprs, m2, rty)
+        out = self._materialize_float_lanes(out, arg_exprs, m2, rty)
+        if (direct_target is not None and out and out[0] == 'this' and arg_exprs and
+                self._direct_base_tail(direct_target, mi, arg_exprs[0])):
+            out[0] = 'base'
+        return out
+
+    def _direct_base_tail(self, target, mi, receiver):
+        """A direct jump to the overridden slot bypasses virtual dispatch.
+
+        Only use C# base lookup when the immediate parent declares the sole
+        target and the emitted invocation cannot pick another overload.
+        """
+        return (self._base_slot_matches(mi, receiver) and self.meta.methods[mi].addr == target and
+                self.il.addr_candidates.get(target) == [('method', mi)])
+
+    def _base_slot_matches(self, mi, receiver):
+        """Would `base.M` select this exact immediate-parent slot/signature?"""
+        caller = getattr(self, '_current_method', None)
+        owner = getattr(self, '_current_td', None)
+        callee = self.meta.methods[mi]
+        if (caller is None or owner is None or caller.name != callee.name or
+                caller.is_static or callee.is_static or not (caller.flags & 0x40) or
+                caller.flags & (0x100 | 0x400 | 0x800) or not (callee.flags & 0x40) or
+                callee.flags & (0x400 | 0x800) or (callee.flags & 7) not in (4, 5, 6) or
+                caller.generic_container != -1 or callee.generic_container != -1 or
+                caller.slot == 0xffff or caller.slot != callee.slot or '.' in callee.name or
+                caller.return_type != callee.return_type or caller.param_count != callee.param_count):
+            return False
+        if (receiver is None or receiver._unk or receiver.kind != 'obj' or receiver.text != 'this' or
+                not receiver.ty or self.il._type_enum(receiver.ty) != 0x12 or receiver.ty[1] & (1 << 29) or
+                receiver.ty[0] != owner.index or caller.declaring != owner.index or
+                owner.generic_container != -1 or not 0 <= owner.parent < len(self.il.types)):
+            return False
+        parent = self.il.types[owner.parent]
+        if (self.il._type_enum(parent) != 0x12 or parent[0] != callee.declaring or
+                not 0 <= callee.declaring < len(self.meta.typedefs) or callee.declaring == owner.index):
+            return False
+        base = self.meta.typedefs[callee.declaring]
+        if (base.generic_container != -1 or base.flags & 0x20 or
+                self.il.vtable_method(owner.index, caller.slot) != caller.index or
+                self.il.vtable_method(base.index, caller.slot) != mi):
+            return False
+        params = self.meta.method_params(caller)
+        return (len(params) == caller.param_count and
+                [p.type for p in params] == [p.type for p in self.meta.method_params(callee)] and
+                sum(self.meta.methods[i].name == callee.name for i in self.meta.type_methods(base)) == 1)
 
     def _materialize_float_lanes(self, out, arg_exprs, m2, rty):
         """Render GPR `?` args with byte-proven float lanes as composites.

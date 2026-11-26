@@ -60,6 +60,17 @@ def test_interface_flag_with_abstract():
     assert e.type_decl_line(td) == ["internal partial interface IFoo"]
 
 
+def test_nested_base_same_name_survives_using_shortening():
+    from il2cpp.csharp import strip_namespaces
+    parent, inner = td_base(index=0, name='Traits'), td_base(index=1, name='Traits', parent=0)
+    inner.declaring = 2
+    e = make_emitter(typedefs=[parent, inner])
+    e.il.td_of_ty = lambda t: 0
+    e.il.type_name = lambda t: 'Demo.Traits'
+    result = strip_namespaces(e.type_decl_line(inner), {'Demo'}, 'Demo')
+    assert result == ['internal partial class Traits : global::Demo.Traits']
+
+
 def test_static_class():
     e = make_emitter()
     td = td_base(name="Math", flags=0x80 | 0x100)

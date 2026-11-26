@@ -1,4 +1,5 @@
 # Preserve the original CRLF launcher without whole-file normalization.
 il2csharp.py -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+il2cpp/**/*.py text eol=crlf
 *.md text eol=lf
 requirements*.txt text eol=lf

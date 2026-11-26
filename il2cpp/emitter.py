@@ -3,7 +3,7 @@ from il2cpp.arm64 import Arm64Lifter, is_arm64_binary
 from il2cpp.common import compressed_int, csharp_type_name, i32, i64, read_compressed_uint, u16, u32, u64
 from il2cpp.csharp import FA_INITONLY, FA_LITERAL, FA_STATIC, FIELD_VIS, METH_VIS, TYPE_VIS, UsingTracker, field_attrs, nameof_sugar, strip_namespaces, collision_heads, source_field_name
 from il2cpp.lifter import Lifter
-from il2cpp.metadata import ImageDef, MethodDef, TypeDef
+from il2cpp.metadata import ImageDef, MethodDef, TypeDef, source_params
 from il2cpp.names import repr_f32, repr_f64, safe_ident, sanitize, sanitize_qualifier
 from il2cpp.runtime.core import Il2Cpp
 from il2cpp.runtime.meta import meta_lit_repr
@@ -316,6 +316,15 @@ class Emitter:
             pt = self.il.types[td.parent] if td.parent < len(self.il.types) else None
             pn = self.il.type_name(pt) if pt else None
             if pn and pn != 'object':
+                # A nested declaration can hide its own, distinct top-level
+                # base. Dropping the namespace would make `Outer.T : T` a
+                # cycle. Qualify the metadata target before using-shortening.
+                if (getattr(td, 'declaring', -1) >= 0 and
+                        pn.partition('<')[0].rsplit('.', 1)[-1] == safe_ident(sanitize(name))):
+                    bi = self.il.td_of_ty(pt)
+                    if (bi is not None and bi != td.index and
+                            0 <= bi < len(self.meta.typedefs) and self.meta.typedefs[bi].declaring < 0):
+                        pn = 'global::' + pn
                 base.append(pn)
         if td.interfaces_count:
             for k in range(td.interfaces_count):
@@ -621,7 +630,7 @@ class Emitter:
         ps = []
         info = []
         seen_opt = False
-        params = self.meta.method_params(m)
+        params = source_params(self.meta, m)
         for k, p in enumerate(params):
             pt = self.il.types[p.type] if 0 <= p.type < len(self.il.types) else None
             tn = self.il.type_name(pt) if pt else 'object'
@@ -770,7 +779,7 @@ class Emitter:
                 if 0 <= inv.return_type < len(self.il.types) else None
             rtname = self.il.type_name(rt) if rt else 'void'
             ps = []
-            for p in self.meta.method_params(inv):
+            for p in source_params(self.meta, inv):
                 pt = self.il.types[p.type] \
                     if 0 <= p.type < len(self.il.types) else None
                 tn = self.il.type_name(pt) if pt else 'object'
@@ -983,7 +992,7 @@ class Emitter:
         ps = []
         info = []
         seen_opt = False
-        params = self.meta.method_params(m)
+        params = source_params(self.meta, m)
         for k, p in enumerate(params):
             pt = self.il.types[p.type] if 0 <= p.type < len(self.il.types) else None
             tn = self.il.type_name(pt) if pt else 'object'
@@ -1156,10 +1165,11 @@ class Emitter:
             result.append(text)
         return result
 
-    def _emit_accessor(self, out, pre, kind, m, body, visibility=''):
+    def _emit_accessor(self, out, pre, kind, m, body, visibility='', include_slot=False):
         if getattr(m, 'addr', 0):
             base = getattr(self.il.bin, 'image_base', 0)
-            out.append('%s// RVA: 0x%X VA: 0x%X' % (pre, m.addr - base, m.addr))
+            slot = ' Slot: %d' % m.slot if include_slot and m.slot != 0xFFFF else ''
+            out.append('%s// RVA: 0x%X VA: 0x%X%s' % (pre, m.addr - base, m.addr, slot))
         if body is None:
             out.append(pre + visibility + kind + ';')
             return
@@ -1167,6 +1177,24 @@ class Emitter:
         out.append(pre + '{')
         out.extend(pre + '    ' + line.rstrip() if line.strip() else '' for line in body)
         out.append(pre + '}')
+
+    def _indexer_name_attribute(self, td, raw):
+        """Preserve the nondefault metadata name of a C# indexer family."""
+        if raw == 'Item' or not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', raw) or safe_ident(raw) != raw:
+            return None
+        # Explicit implementations cannot carry IndexerName. Other indexers
+        # declared by the same type must agree on one name (CS0668).
+        for k in range(td.property_count):
+            row = self.meta.properties[td.property_start + k]
+            other = self.meta.getstr(row[0])
+            if other == raw or '.' in other:
+                continue
+            getter = self._rel_method(td, row[1])
+            setter = self._rel_method(td, row[2])
+            if (getter and self.meta.method_params(getter) or
+                    setter and len(self.meta.method_params(setter)) > 1):
+                return None
+        return '[global::System.Runtime.CompilerServices.IndexerName("%s")]' % raw
 
     def emit_property(self, td: TypeDef, out: List[str], pre: str, pr,
                       bk_offs=None):
@@ -1176,8 +1204,8 @@ class Emitter:
         raw = self.meta.getstr(pr[0])
         pname = self._member_name(raw, td)
         explicit = '.' in raw
-        gparams = list(self.meta.method_params(getter)) if getter else []
-        sparams = list(self.meta.method_params(setter)) if setter else []
+        gparams = source_params(self.meta, getter) if getter else []
+        sparams = source_params(self.meta, setter) if setter else []
         ptype = self.prop_type(getter)
         if not getter and sparams:
             pt = sparams[-1].type
@@ -1187,6 +1215,10 @@ class Emitter:
             prefix = pname.rpartition('.')[0] + '.' if explicit else ''
             params = ', '.join('%s %s' % (self.il.type_name(self.il.types[p.type]), safe_ident(p.name)) for p in index_params)
             pname = prefix + 'this[' + params + ']'
+            if not explicit:
+                attr = self._indexer_name_attribute(td, raw)
+                if attr:
+                    out.append(pre + '    ' + attr)
         mods = self._accessor_modifiers(td, present, explicit)
         if '*' in ptype or any('*' in self.il.type_name(self.il.types[p.type]) for p in index_params):
             mods += 'unsafe '
@@ -1229,7 +1261,7 @@ class Emitter:
         header = pre + '    ' + mods + 'event ' + ty + ' ' + name
         bodies = []
         for m in (add, remove):
-            params = list(self.meta.method_params(m))
+            params = source_params(self.meta, m)
             aliases = {params[-1].name: 'value'} if params else {}
             bodies.append(self._accessor_lines(m, td, aliases))
         if all(getattr(a, 'flags', 0) & 0x400 for a in (add, remove)):
@@ -1270,7 +1302,52 @@ class Emitter:
         return ['%s%s' % (pre, attr),
                 '%s%s; // RVA: 0x%X VA: 0x%X' % (pre, sig, rva, m.addr)]
 
+    def _orphan_interface_getter(self, m, td):
+        """The interface may retain a PropertyDef even when its implementor did not."""
+        qualifier, sep, accessor = m.name.rpartition('.')
+        if (not sep or not accessor.startswith('get_') or len(accessor) == 4 or
+                m.is_static or m.param_count or m.generic_container != -1 or td.flags & 0x20 or
+                (m.flags & 0x67) != 0x61 or m.flags & (0x400 | 0x2000) or
+                not 0 <= m.return_type < len(self.il.types)):
+            return None
+        rt = self.il.types[m.return_type]
+        if not rt or rt[1] & (1 << 29) or self.il._type_enum(rt) == 1:
+            return None
+        name = accessor[4:]
+        raw = qualifier + '.' + name
+        if any(self.meta.getstr(self.meta.properties[td.property_start + k][0]) == raw
+               for k in range(td.property_count)):
+            return None
+        hits = 0
+        for k in range(td.interfaces_count):
+            ii = self.meta.interfaces[td.interfaces_start + k]
+            it = self.il.types[ii] if 0 <= ii < len(self.il.types) else None
+            if (not it or self.il._type_enum(it) != 0x12 or not 0 <= it[0] < len(self.meta.typedefs)
+                    or self.il.type_name(it) != qualifier):
+                continue
+            iface = self.meta.typedefs[it[0]]
+            if not iface.flags & 0x20 or iface.generic_container != -1:
+                continue
+            for j in range(iface.property_count):
+                pr = self.meta.properties[iface.property_start + j]
+                if self.meta.getstr(pr[0]) != name or pr[2] != -1 or not 0 <= pr[1] < iface.method_count:
+                    continue
+                getter = self._rel_method(iface, pr[1])
+                if (getter is not None and getter.name == accessor and not getter.is_static and
+                        getter.param_count == 0 and getter.generic_container == -1 and
+                        getter.return_type == m.return_type):
+                    hits += 1
+        return self._member_name(raw, td) if hits == 1 else None
+
     def emit_method(self, m: MethodDef, td: TypeDef, out: List[str], pre: str):
+        if '.get_' in m.name:
+            prop = self._orphan_interface_getter(m, td)
+            if prop is not None:
+                rtname = self.prop_type(m)
+                out.extend([pre + ('unsafe ' if '*' in rtname else '') + rtname + ' ' + prop, pre + '{'])
+                self._emit_accessor(out, pre + '    ', 'get', m, self._accessor_lines(m, td), include_slot=True)
+                out.append(pre + '}')
+                return
         is_ctor = m.name in ('.ctor', '.cctor')
         if not is_ctor and m.addr and (m.flags & 0x2000):
             decl = self._pinvoke_decl(m, td, pre)

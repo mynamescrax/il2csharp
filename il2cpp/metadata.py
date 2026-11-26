@@ -1,5 +1,7 @@
 from il2cpp.prelude import *  # noqa: F401,F403
 from il2cpp.common import i32, u16, u32
+from il2cpp.names import safe_ident
+from copy import copy
 
 HEADER_TABLES = [
     # (name, struct_size or None)
@@ -104,6 +106,35 @@ class ParamDef:
     name: str
     token: int
     type: int
+
+
+def source_params(meta, method):
+    """Parameter rows for C# emission. Preserve raw metadata and ABI order.
+
+    Reserve every original C# spelling before minting names, including later
+    parameters. A repeated `_` is a valid lambda discard in source but in
+    the recovered ordinary method each slot needs a usable identifier.
+    """
+    rows = meta.method_params(method)
+    if len(rows) < 2:
+        return rows
+    names = [safe_ident(p.name) for p in rows]
+    reserved = set(names)
+    if len(reserved) == len(names):
+        return rows
+    result = list(rows)
+    seen = set()
+    repeated_discard = names.count('_') > 1
+    for i, name in enumerate(names):
+        if name in seen or (name == '_' and repeated_discard):
+            alias = 'arg%d' % (i + 1)
+            while alias in reserved:
+                alias += '_'
+            reserved.add(alias)
+            result[i] = copy(rows[i])
+            result[i].name = alias
+        seen.add(name)
+    return result
 
 
 @dataclass

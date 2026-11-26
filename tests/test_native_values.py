@@ -44,6 +44,58 @@ def execute(lift, hex_bytes):
     return [text for _, text, _ in lift.out]
 
 
+@pytest.mark.parametrize('code,te', [('8bc10fc8', 8), ('0fc98bc1', 9),
+                                     ('488bc1480fc8', 10), ('480fc9488bc1', 11)])
+def test_bswap_leaf_uses_typed_argument_and_preserves_flags(code, te):
+    ty = (0, te << 16)
+    lift = lifter({'RCX': Expr('bits', ty, 'int')}, field_types=[ty])
+    lift._current_method = NS(addr=0x1000, return_type=0)
+    lift.flags = saved = (Expr('old'), Expr('0'))
+    output = execute(lift, code + 'c3')
+    assert 'ReverseEndianness(bits)' in output[-1]
+    assert lift.regs['RAX'].ty == ty
+    assert lift.flags is saved
+
+
+@pytest.mark.parametrize('code,arg,ret', [
+    ('8bc10fc8c3', 8 << 16, 10 << 16),       # 32-bit write, 64-bit return
+    ('8bc1480fc8c3', 10 << 16, 10 << 16),    # zeroed high bits before the swap
+    ('480fc98bc1c3', 10 << 16, 10 << 16),    # upper half lost after the swap
+    ('8bc10fc8c3', (8 << 16) | (1 << 29), 8 << 16),  # ref input
+    ('8bc10fc8c3', 8 << 16, (8 << 16) | (1 << 29)),  # ref return
+    ('8bc10fc8c3', 0x12 << 16, 0x12 << 16),  # reference type
+    ('8bc10fc890c3', 8 << 16, 8 << 16),      # not the direct leaf pattern
+])
+def test_bswap_does_not_claim_unproven_return(code, arg, ret):
+    lift = lifter({'RCX': Expr('bits', (0, arg), 'int')}, field_types=[(0, ret)])
+    lift._current_method = NS(addr=0x1000, return_type=0)
+    assert not any('ReverseEndianness' in line for line in execute(lift, code))
+
+
+@pytest.mark.parametrize('code,te,match', [
+    ('66c1c9080fb7c1c3', 7, True),      # ror cx,8; movzx eax,cx
+    ('66c1c1080fb7c1c3', 7, True),      # rol has the same result for half a word
+    ('66c1c9040fb7c1c3', 7, False),     # four-bit rotate
+    ('66c1c9080fb7c2c3', 7, False),     # other source register
+    ('c1c9080fb7c1c3', 7, False),       # 32-bit rotate
+    ('66c1c9080fb7c1c3', 8, False),     # truncating a wider argument
+])
+def test_word_rotate_leaf_needs_matching_value_and_width(code, te, match):
+    ty = (0, te << 16)
+    lift = lifter({'RCX': Expr('word', ty, 'int')}, field_types=[ty])
+    lift._current_method = NS(addr=0x1000, return_type=0)
+    assert ('ReverseEndianness(word)' in execute(lift, code)[-1]) == match
+
+
+@pytest.mark.parametrize('simd', ['0f57c0', '660f57c0', '660fefc0', '0f57c1'])
+def test_xmm_zero_between_cmp_and_branch_preserves_live_condition(simd):
+    lift = lifter({'RCX': Expr('points', INT, 'int'),
+                   'XMM0': Expr('0f', FLOAT, 'float'), 'XMM1': Expr('0f', FLOAT, 'float')})
+    out = execute(lift, '83f963' + simd + '7503')  # cmp ecx,99; SIMD; jne ...
+    assert lift.regs['XMM0'].text == '0f'
+    assert out[-1].startswith('if (points != 99)')
+
+
 @pytest.mark.parametrize('value,expected', [
     ('0101', ['this.first = true;', 'this.second = true;']),
     ('0100', ['this.first = true;', 'this.second = false;']),

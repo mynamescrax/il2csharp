@@ -1,7 +1,7 @@
 from il2cpp.prelude import *  # noqa: F401,F403
 from il2cpp.cfg import INT_TY, _match_brace
 from il2cpp.csharp import FA_LITERAL, FA_STATIC, field_attrs
-from il2cpp.metadata import MethodDef
+from il2cpp.metadata import MethodDef, source_params
 from il2cpp.names import safe_ident
 from il2cpp.stmt_text import _split_top
 from il2cpp.text import mask_literals
@@ -568,6 +568,17 @@ class _HighLevelMixin:
             m = self._null_test_var(s[4:-1].strip()) if s.startswith('if (') and s.endswith(')') else None
             if m and i + 3 < n and lines[i + 1].strip() == '{' \
                     and lines[i + 3].strip() == '}':
+                j = i + 4
+                while j < n and not lines[j].strip():
+                    j += 1
+                # An else (including else-if) belongs to this if. Consuming
+                # only its true arm leaves invalid C# and loses its guard.
+                # A comment/directive can hide the next token: decline there.
+                if j < n and (re.match(r'else\b', lines[j].lstrip()) or
+                              lines[j].lstrip().startswith(('//', '/*', '#'))):
+                    out.append(lines[i])
+                    i += 1
+                    continue
                 st = lines[i + 2].strip()
                 if st.startswith(m + '.') and not re.match(
                         r'[\w.\[\]<>]+\s*(?:[+\-*/%&|^]|\?\?)?\s*=', st[len(m) + 1:]):
@@ -577,7 +588,7 @@ class _HighLevelMixin:
                     continue
             # inverted shape: if (x == null) { } else { x.M(); }
             m2 = re.match(r'^([\w.]+) == null$', s[4:-1].strip()) if s.startswith('if (') and s.endswith(')') else None
-            if m2 and i + 7 < n and lines[i + 1].strip() == '{' \
+            if m2 and i + 6 < n and lines[i + 1].strip() == '{' \
                     and lines[i + 2].strip() == '}' and lines[i + 3].strip() == 'else' \
                     and lines[i + 4].strip() == '{' and lines[i + 6].strip() == '}':
                 st = lines[i + 5].strip()
@@ -1224,7 +1235,7 @@ class _HighLevelMixin:
         if method is not None:
             try:
                 param_names = set(safe_ident(p.name)
-                                  for p in self.L.meta.method_params(method))
+                                  for p in source_params(self.L.meta, method))
             except Exception:
                 pass
         # A single prologue copy of a scalar metadata parameter carries its
@@ -1234,7 +1245,7 @@ class _HighLevelMixin:
         if method is not None:
             try:
                 scalar_params = {}
-                for p in self.L.meta.method_params(method):
+                for p in source_params(self.L.meta, method):
                     ty = self.L.il.types[p.type]
                     te = (ty[1] >> 16) & 0xFF if isinstance(ty, tuple) else 0
                     if te in (0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
@@ -1279,7 +1290,7 @@ class _HighLevelMixin:
         if method is not None:
             try:
                 reserved.update(safe_ident(p.name)
-                                for p in self.L.meta.method_params(method))
+                                for p in source_params(self.L.meta, method))
             except Exception:
                 pass
         cnt = {'int': 0, 'bool': 0, 'float': 0, 'other': 0}
@@ -1416,7 +1427,7 @@ class _HighLevelMixin:
             if _t is None and method is not None:
                 _si = safe_ident
                 try:
-                    for _pp in self.L.meta.method_params(method):
+                    for _pp in source_params(self.L.meta, method):
                         if _si(_pp.name) == post:
                             _pt = self.L.il.types[_pp.type]
                             _t = _pt
@@ -2237,7 +2248,7 @@ class _HighLevelMixin:
                 add(cm.group(2), cm.group(1).strip())
         try:
             il = self.L.il
-            for p in self.L.meta.method_params(m):
+            for p in source_params(self.L.meta, m):
                 ty = il.types[p.type] if 0 <= p.type < len(il.types) else None
                 if ty is not None:
                     add(p.name, il.type_name(ty))
@@ -4697,6 +4708,43 @@ class _HighLevelMixin:
     _SEM_OBJECT_DECL_RX = re.compile(
         r'^(\s*)object\s+(obj\d+)\s*=\s*(.*);\s*$')
 
+    _AS_LOCAL = re.compile(r'([\w.]+) (obj\d+) = (obj\d+) as \1;')
+
+    def _drop_checked_select_scratch(self, lines):
+        """Remove dead hierarchy reads left in a proved select's old diamond.
+
+        Only discard a null-guarded region containing tests on that same
+        local/type and unread metadata temps. Labels, writes and calls can
+        never match, so other surviving uses keep their original control flow.
+        """
+        proved = {self.L.il.type_name(ty) for _, ty in self._checked_selects.values()}
+        remove = set()
+        for i, line in enumerate(lines[:-2]):
+            cast = self._AS_LOCAL.fullmatch(line.strip())
+            if not cast or cast[1] not in proved:
+                continue
+            typ, _, src = cast.groups()
+            if (i == 0 or not lines[i - 1].strip().startswith('object ' + src + ' = ') or
+                    lines[i + 1].strip() != f'if (!({src} == null))' or lines[i + 2].strip() != '{'):
+                continue
+            end = _match_brace(lines, i + 2)
+            if end < i + 2 or lines[end].strip() != '}':
+                continue
+            following = next((s.lstrip() for s in lines[end + 1:] if s.strip()), '')
+            if following.startswith(('else', '//', '/*', '#')):
+                continue
+            allowed = {'{', '}', 'else', f'if (!({src} is {typ}))', f'if ({src} is {typ})'}
+            scratch = re.compile(r'object (obj\d+) = ' + re.escape(src) + r'\.getClass\(\)\.typeHierarchy;')
+            for st in lines[i + 3:end]:
+                if st.strip() in allowed:
+                    continue
+                hit = scratch.fullmatch(st.strip())
+                if not hit or len(re.findall(r'\b' + hit[1] + r'\b', '\n'.join(lines))) != 1:
+                    break
+            else:
+                remove.update(range(i + 1, end + 1))
+        return [st for i, st in enumerate(lines) if i not in remove] if remove else lines
+
     @staticmethod
     def _semantic_explicit_rhs_type(rhs: str) -> Optional[str]:
         """Static reference type carried literally by a small RHS family."""
@@ -4778,6 +4826,7 @@ class _HighLevelMixin:
         """
         lines = self._refine_explicit_object_locals(lines)
         prefixes: Dict[str, Set[str]] = {}
+        cast_names = set()
         order = []
         for line in lines:
             match = self._SEM_LOCAL_FOREACH_RX.match(line)
@@ -4787,6 +4836,8 @@ class _HighLevelMixin:
                 continue
             type_text, token = match.groups()
             prefix = self._semantic_type_prefix(type_text) or ''
+            if ' as ' in line and self._AS_LOCAL.fullmatch(line.strip()):
+                cast_names.add(token)
             if token not in prefixes:
                 prefixes[token] = set()
                 order.append(token)
@@ -4808,13 +4859,17 @@ class _HighLevelMixin:
         if method is not None:
             try:
                 reserved.update(safe_ident(p.name)
-                                for p in self.L.meta.method_params(method))
+                                for p in source_params(self.L.meta, method))
             except Exception:
                 pass
 
         counts: Dict[str, int] = {}
         names: Dict[str, str] = {}
         for token, prefix in eligible:
+            if token in cast_names and prefix not in reserved and safe_ident(prefix) == prefix:
+                names[token] = prefix
+                reserved.add(prefix)
+                continue
             number = counts.get(prefix, 0) + 1
             candidate = '%s%d' % (prefix, number)
             while candidate in reserved:

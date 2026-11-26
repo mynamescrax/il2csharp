@@ -5,7 +5,13 @@
 tree out, with every method body reconstructed from the native x64 code and
 cross-referenced against IL2CPP metadata.
 
-**Status: r11 (2026-10-01).** 1435 tests pass (1197 portable + 238 game
+**Current source (2026-11-26):** On the second *Shift At Midnight* v31 build,
+the strict game-script rebuild lifted 6,791 bodies into 503 files with no
+failures or fallbacks. All files passed the syntax gate. The latest census
+still has **470 unresolved shared calls** and **3,274 `object objN`
+declarations**. See [recovery notes and compiled behavior checks](docs/todo.md#shift-at-midnight-second-v31-build-2026-11-25).
+
+**Promoted fixture: r11 (2026-10-01).** 1435 tests passed (1197 portable + 238 game
 fixture-backed); the strict build covers 11,183 files / 114,458 bodies with
 0 failures or structured fallbacks; the brace audit and the tree-sitter
 parse gate are clean. The recovered game **does not yet compile** — clean
@@ -35,9 +41,17 @@ for body lifting (bodies are skipped gracefully without it):
 ```text
 pip install -r requirements.txt
 
-python il2csharp.py <game-dir-or-metadata> -o <outdir>
+python il2csharp.py --demo --strict
 ```
 
+**No game needed:** `--demo` creates a small v31 metadata file and x64 PE in a
+temporary directory and runs them through the normal decompiler. Open
+`il2csharp_out_demo/Assembly-CSharp/Demo/ScoreRules.cs` to see the recovered
+arithmetic, branch and byte-order conversion. A successful strict run reports
+**3 type files, 9 lifted bodies, 0 failures** across two assemblies. Use `-o`
+to pick a different output folder.
+
+For a game, run `python il2csharp.py <target> -o <outdir>`.
 `<target>` is a game folder (containing `<Data>/il2cpp_data` and
 `GameAssembly.dll`) or a direct path to `global-metadata.dat` / the binary.
 Common options: `--only Assembly-CSharp`, `--metadata FILE --binary FILE`,
@@ -127,14 +141,18 @@ and the 2026-09-28 history-scrub record.
 ## Testing
 
 ```text
+python -m pip install -r requirements-dev.txt
+python -m pytest -q tests/test_demo.py  # end-to-end, no game
 python -m pytest -q -m "not game"   # portable
 python -m pytest -q                 # + fixture-backed (needs testgame/)
 ```
 
-Current (fix 140, 2026-10-12): **1,593 tests** -- 1,322 portable passed;
-271 fixture-backed, of which 10 are pending pin moves awaiting re-pin (see
-`docs/todo.md` top). Corpus gates
-on a built tree:
+The demo tests compare serial and parallel output byte-for-byte and check
+the recovered bodies and address map. With a .NET 8+ SDK installed, they
+also build both generated projects offline and run score and timer checks
+against the emitted C#. Only that behavior check needs .NET.
+
+Corpus gates on a built tree:
 
 ```text
 python tools/validate_corpus.py parse  <built-tree> --report parse.json

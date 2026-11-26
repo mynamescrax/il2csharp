@@ -49,7 +49,11 @@ class Expr:
                   '_ifm',
                   # fix 140: the object a `K.typeHierarchy` read came from
                   # (record-only: `recv` would change binding behaviour)
-                  '_hobj')
+                  '_hobj',
+                  # LEA of a decoded TypeInfo usage slot, not its class value.
+                   '_typeinfo_slot',
+                   # Proven NEG carry / self-SBB / Boolean mask, with next IP.
+                   '_mask_step')
 
     def __init__(self, text, ty=None, kind='?', recv=None):
         self.text = text      # rendered C# expression

@@ -90,6 +90,51 @@ def test_two_stage_entry_gate_folds_to_one_short_circuit_exit():
     assert "goto " not in text
 
 
+def test_bottom_guard_is_not_retested_after_counter_copy():
+    blocks=[_block(0,term=('jmp',1),succs=(1,),preds=(1,)),
+            _block(1,stmts=['Visit(v2);'],term=('jcc',0,2),cond='v2 + 1 < limit',succs=(0,2),preds=(0,)),
+            _block(2,term=('ret',),preds=(1,))]
+    dec=_decompiler(blocks,0,{0,1},1); dec.phi_copies[(1,0)]=['v2 = v2 + 1;']
+    out=[]; assert dec._emit_loop(blocks,0,out,set(),0)==2
+    text='\n'.join(out)
+    assert text.count('v2 + 1 < limit')==1 and text.index('break;') < text.index('v2 = v2 + 1;')
+    assert text.endswith('while (true);')
+
+
+def test_empty_search_returns_while_match_reaches_action():
+    blocks = [
+        _block(0, term=('jcc',3,1), cond='i >= count', succs=(3,1), preds=(2,)),
+        _block(1, stmts=['item = Read(i);'], term=('jcc',4,2), cond='Matches(item)', succs=(4,2), preds=(0,)),
+        _block(2, stmts=['i++;'], term=('jmp',0), succs=(0,), preds=(1,)),
+        _block(3, term=('ret',), preds=(0,4)),
+        _block(4, stmts=['Act(item);'], term=('jmp',3), succs=(3,), preds=(1,)),
+    ]
+    blocks[3].ret = ''
+    dec = _decompiler(blocks,0,{0,1,2},2); out=[]
+    dec.phi_copies[(0,3)] = ['left = Capture();']
+    assert dec._emit_loop(blocks,0,out,set(),0) == 4
+    assert out.index('if (i >= count)') < out.index('left = Capture();') < out.index('return;') < out.index('item = Read(i);')
+    assert out.index('if (Matches(item))') < out.index('break;') < out.index('i++;')
+
+
+def test_bottom_tested_search_returns_through_its_exhausted_epilogue():
+    blocks = [
+        _block(0,term=('jmp',1),succs=(1,),preds=(2,)),
+        _block(1,stmts=['item = Read(i);'],term=('jcc',5,2),cond='Matches(item)',succs=(5,2),preds=(0,)),
+        _block(2,term=('jcc',0,3),cond='i + 1 < n',succs=(0,3),preds=(1,)),
+        _block(3,term=('fall',4),succs=(4,),preds=(2,5)),
+        _block(4,term=('ret',),preds=(3,)),
+        _block(5,stmts=['Act(item);'],term=('jmp',3),succs=(3,),preds=(1,)),
+    ]
+    blocks[4].ret = ''
+    dec = _decompiler(blocks,0,{0,1,2},2); out=[]
+    dec.phi_copies[(2,0)] = ['i = i + 1;']
+    dec.phi_copies[(3,4)] = ['left = Capture();']
+    assert dec._emit_loop(blocks,0,out,set(),0) == 5
+    assert out.index('break;') < out.index('left = Capture();') < out.index('return;') < out.index('i = i + 1;')
+    assert out[-1] == 'while (true);' and sum('i + 1 < n' in s for s in out) == 1
+
+
 def test_consumed_linear_tail_replays_only_to_the_current_join():
     blocks = [
         _block(0),

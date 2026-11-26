@@ -435,9 +435,12 @@ def main(argv):
         prog='il2csharp',
         description='IL2CPP -> C# recovery with real (lifted) method bodies.')
     ap.add_argument('target', nargs='?', help='game dir, metadata file, or binary file')
+    ap.add_argument('--demo', action='store_true',
+                    help='decompile a built-in synthetic x64 sample (no game needed)')
     ap.add_argument('--metadata', help='explicit global-metadata.dat path (renamed files supported)')
     ap.add_argument('--binary', help='explicit GameAssembly.dll / libil2cpp.so path')
-    ap.add_argument('-o', '--out', default='il2csharp_out', help='output directory')
+    ap.add_argument('-o', '--out', help='output directory (default: il2csharp_out, '
+                    'or il2csharp_out_demo for --demo)')
     ap.add_argument('--only', default=None, help='comma-separated assembly name filters (substring match)')
     ap.add_argument('--types', default=None, help='case-insensitive full type-name substring; nested matches retain the owner file')
     ap.add_argument('--strict', action='store_true', help='return nonzero on body-lifting fallback or missing backend')
@@ -474,8 +477,25 @@ def main(argv):
         ap.error('--max-methods must be nonnegative')
     if args.workers < 0:
         ap.error('--workers must be >= 0 (0 picks half the cores, max 8)')
+    if args.out is None:
+        args.out = 'il2csharp_out_demo' if args.demo else 'il2csharp_out'
+    if args.demo:
+        if args.target or args.metadata or args.binary:
+            ap.error('--demo cannot be combined with a target, --metadata or --binary')
+        from tempfile import TemporaryDirectory
+        from il2cpp.demo import write_demo
+        with TemporaryDirectory(prefix='il2csharp-demo-') as root:
+            write_demo(root)
+            args.target = root
+            if not args.quiet:
+                print('demo: synthetic Win64 score board and round timer')
+            return _run(args)
     if not args.target and not (args.metadata and args.binary):
-        ap.error('provide a target or both --metadata and --binary')
+        ap.error('provide a target or both --metadata and --binary, or try --demo')
+    return _run(args)
+
+
+def _run(args):
     try:
         gmd, bp = find_game_files(args.target, metadata=args.metadata, binary=args.binary)
     except (OSError, ValueError) as ex:

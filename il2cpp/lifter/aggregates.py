@@ -412,6 +412,17 @@ class _AggregatesMixin:
                 if fsize != width:
                     return frag
             return None
+        # An instance method's `this` is seeded as CLASS even when its
+        # declaring type is a struct. The pointer addresses unboxed data,
+        # but instance_field_chain keys include the 0x10 object header.
+        # Use the same coordinates as _field_expr for both the exact-field
+        # check and the nested-container walk. Applying the raw displacement
+        # here can select an unrelated reference inside the preceding struct.
+        current = getattr(self, '_current_method', None)
+        if (_te0 == 0x12 and base.kind == 'obj' and base.text == 'this' and not base._unk
+                and current is not None and not current.is_static and td == current.declaring
+                and self.meta.typedefs[td].is_valuetype):
+            offset += 0x10
         chain = self.il.instance_field_chain(td) or {}
         if offset in chain:
             return None

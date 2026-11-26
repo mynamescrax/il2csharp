@@ -1,0 +1,512 @@
+"""Folded void instance actions with caller-proven arguments."""
+import re
+
+from il2cpp.awaiter import _unused_return
+from il2cpp.binary import PE
+from il2cpp.metadata import source_params
+from il2cpp.names import safe_ident
+from il2cpp.prelude import HAVE_ICED
+from il2cpp.text import reg_name, sdisp
+
+if HAVE_ICED:
+    from iced_x86 import Mnemonic as M, OpKind as K, Register as R
+    _NONVOL = (R.RBX, R.RBP, R.RSI, R.RDI, R.R12, R.R13, R.R14, R.R15)
+
+
+def _frame_save(i):
+    return (i.memory_base == R.RSP and i.memory_index == R.NONE and not i.has_segment_prefix
+            and i.op0_kind == K.MEMORY and sdisp(i.memory_displacement) >= 0x20
+            and ((i.mnemonic == M.MOV and i.op1_register in _NONVOL) or
+                 (i.mnemonic == M.MOVAPS and R.XMM6 <= i.op1_register <= R.XMM15)))
+
+
+def _setup(lift, ins):
+    block = getattr(getattr(lift, 'out', None), 'block', None)
+    if block is None or len(block.preds) != 1 or not 0 <= block.preds[0] < len(lift._blocks):
+        return None
+    pred = lift._blocks[block.preds[0]]
+    # Only a normal fallthrough of the explicit null test. Use native order:
+    # the field is captured *before* calling the managed argument getter.
+    left = pred.insns
+    right = [i for i in block.insns if i.ip <= ins.ip]
+    seq = left + right
+    if not right or any(a.next_ip != b.ip for a, b in zip(seq, seq[1:])):
+        return None
+    before = [i for i in left if not _frame_save(i)]
+    after = [i for i in right if not _frame_save(i)]
+    if len(before) != 6 or len(after) != 5:
+        return None
+    field, zero, self_arg, getter, test, null = before
+    hidden, flag, arg, receiver, call = after
+    obj, saved = field.memory_base, field.op0_register
+    if (field.mnemonic != M.MOV or field.op1_kind != K.MEMORY or field.has_segment_prefix or
+            field.memory_index != R.NONE or obj not in _NONVOL or saved not in _NONVOL or obj == saved or
+            zero.mnemonic != M.XOR or zero.op0_register != R.EDX or zero.op1_register != R.EDX or
+            self_arg.mnemonic != M.MOV or self_arg.op0_register != R.RCX or self_arg.op1_register != obj or
+            getter.mnemonic != M.CALL or getter.op0_kind != K.NEAR_BRANCH64 or
+            test.mnemonic != M.TEST or test.op0_register != saved or test.op1_register != saved or
+            null.mnemonic != M.JE or null.op0_kind != K.NEAR_BRANCH64 or
+            hidden.mnemonic != M.XOR or hidden.op0_register != R.R9D or hidden.op1_register != R.R9D or
+            flag.mnemonic != M.MOV or flag.op0_register != R.R8L or flag.op1_kind != K.IMMEDIATE8 or flag.immediate8 not in (0, 1) or
+            arg.mnemonic != M.MOV or arg.op0_register != R.RDX or arg.op1_register != R.RAX or
+            receiver.mnemonic != M.MOV or receiver.op0_register != R.RCX or receiver.op1_register != saved or
+            call.ip != ins.ip or call.mnemonic != M.CALL or call.op0_kind != K.NEAR_BRANCH64):
+        return None
+    # Preserve the null path as C#'s receiver null check. A branch that
+    # quietly skips the invocation has different observable behavior.
+    if not _raises_on_null(lift, null):
+        return None
+    return obj, sdisp(field.memory_displacement), getter.near_branch_target, flag.immediate8
+
+
+def _raises_on_null(lift, null):
+    dest = next((b for b in lift._blocks if b.insns and b.insns[0].ip == null.near_branch_target), None)
+    if not dest or dest.insns[0].mnemonic != M.CALL or dest.insns[0].op0_kind != K.NEAR_BRANCH64:
+        return False
+    helper = dest.insns[0].near_branch_target
+    return lift._named_raise_throw(helper, lift._call_name(helper)) == 'System.NullReferenceException'
+
+
+def _plain_return(il, addr):
+    code = il.bin.read(addr, 3) if il.bin.is_exec_va(addr) else None
+    return bool(code and (code.startswith(b'\xc3') or code == b'\xc2\x00\x00'))
+
+
+def _guarded_helper_forward(lift, block, ins):
+    """RCX=this and RDX=helper parked across an entry metadata-init diamond.
+
+    Inspect the native blocks, including the cold arm even when its bookkeeping
+    was skipped in the lift. A parameter name surviving in the join's register
+    map isn't proof that it survived those calls.
+    """
+    blocks = getattr(lift, '_blocks', ())
+    if block is None or len(blocks) < 3:
+        return False
+    head, cold, joined = blocks[:3]
+    # The hot and cold paths may join at `test saved_helper,saved_helper`
+    # instead of at the argument setup. Only its non-null fallthrough can
+    # execute the base call; leave the conditional itself to the structurer.
+    gated = block is not joined
+    if gated and (len(blocks) < 4 or block is not blocks[3] or block.preds != [joined.bid] or
+                  len(joined.insns) != 2 or len(joined.succs) != 2):
+        return False
+    if (not head.is_entry or head.preds or not head.insns or head.insns[0].ip != lift._current_method.addr or
+            cold.preds != [head.bid] or not joined.preds or not set(joined.preds) <= {head.bid, cold.bid}):
+        return False
+    join = [i for i in block.insns if i.ip <= ins.ip]
+    seq = head.insns + cold.insns + (joined.insns if gated else []) + join
+    if (not join or any(a.next_ip != b.ip for a, b in zip(seq, seq[1:])) or any(i.has_segment_prefix for i in seq)):
+        return False
+    ops = [i for i in join if not _frame_save(i)]
+    if len(ops) != 4 or ops[-1].ip != ins.ip:
+        return False
+    zero, arg, recv, _ = ops
+    src, obj = arg.op1_register, recv.op1_register
+    if (zero.mnemonic != M.XOR or not zero.op0_register == zero.op1_register == R.R8D or
+            arg.mnemonic != M.MOV or arg.op0_register != R.RDX or src not in _NONVOL or
+            recv.mnemonic != M.MOV or recv.op0_register != R.RCX or obj not in _NONVOL or obj == src):
+        return False
+    if gated:
+        test, skip = joined.insns
+        if (test.mnemonic != M.TEST or test.op0_register != src or test.op1_register != src or
+                skip.mnemonic != M.JE or skip.op0_kind != K.NEAR_BRANCH64 or skip.near_branch_target != ins.next_ip or
+                block.insns[-1].ip != ins.ip or len(block.succs) != 1 or block.bid in block.succs or
+                set(joined.succs) != {block.bid, block.succs[0]}):
+            return False
+    branch = head.insns[-1]
+    if branch.mnemonic != M.JNE or branch.op0_kind != K.NEAR_BRANCH64 or branch.near_branch_target != joined.insns[0].ip:
+        return False
+    flag = None
+    saved = {}
+    for i in head.insns[:-1]:
+        if (i.mnemonic == M.MOV and i.op0_register in (src, obj) and i.op1_register in (R.RCX, R.RDX)):
+            saved[i.op0_register] = i.op1_register
+        elif (flag is None and i.mnemonic == M.CMP and i.memory_base == R.RIP and i.memory_size == 1 and
+              i.op1_kind == K.IMMEDIATE8 and i.immediate8 == 0):
+            flag = i.ip_rel_memory_address
+        elif flag is None and (
+            i.mnemonic == M.PUSH and i.op0_register in _NONVOL or
+            i.mnemonic == M.SUB and i.op0_register == R.RSP and i.op1_kind in (K.IMMEDIATE8TO64, K.IMMEDIATE32TO64) and sdisp(i.immediate(1)) > 0 or
+            i.mnemonic == M.MOV and i.memory_base == R.RSP and i.memory_index == R.NONE and
+            i.memory_displacement in (8, 16, 24, 32) and i.op1_register in _NONVOL
+        ):
+            continue
+        else:
+            return False
+    if flag is None or saved != {src:R.RDX, obj:R.RCX} or len(cold.insns) < 3 or len(cold.insns) % 2 != 1:
+        return False
+    for lea, call in zip(cold.insns[:-1:2], cold.insns[1:-1:2]):
+        if (lea.mnemonic != M.LEA or lea.op0_register != R.RCX or lea.memory_base != R.RIP or
+                call.mnemonic != M.CALL or call.op0_kind != K.NEAR_BRANCH64 or call.near_branch_target != lift.rt_init_meta):
+            return False
+    eh = lift.il.eh_regions(lift._current_method.addr) or {}
+    if any(seq[0].ip <= pad <= ins.ip for pad in eh.get('pads', ())):
+        return False  # exceptional entry wouldn't inherit the saved arguments
+    store = cold.insns[-1]
+    return (store.mnemonic == M.MOV and store.memory_base == R.RIP and store.memory_size == 1 and
+            store.ip_rel_memory_address == flag and store.op1_kind == K.IMMEDIATE8 and store.immediate8 == 1)
+
+
+def _entry_forward(prefix, ip, ins, inputs, hidden_reg):
+    """Straight-line prologue with untouched argument registers and a fresh hidden zero."""
+    zero = False
+    for i in prefix:
+        if i.ip != ip or i.has_segment_prefix:
+            return False
+        if i.ip == ins.ip:
+            return zero
+        ip = i.next_ip
+        if (i.mnemonic == M.PUSH and i.op0_register in _NONVOL or
+                i.mnemonic == M.SUB and i.op0_register == R.RSP and i.op1_kind in (K.IMMEDIATE8TO64, K.IMMEDIATE32TO64) and sdisp(i.immediate(1)) > 0 or
+                i.mnemonic == M.MOV and i.op0_register in _NONVOL and i.op1_register in inputs):
+            continue
+        if i.mnemonic != M.XOR or not i.op0_register == i.op1_register == hidden_reg or zero:
+            return False
+        zero = True
+    return False
+
+
+def _member(il, addr, owner, param_keys, *, base_mi=None):
+    cache = il.__dict__.setdefault('_shared_void_actions', {})
+    key = addr, owner, param_keys, base_mi
+    if key in cache:
+        return cache[key]
+    cache[key] = None
+    if not _plain_return(il, addr):
+        return None
+    chain = il.base_chain_tds(owner)
+    if not chain or chain[0] != owner or il.meta.typedefs[chain[-1]].parent >= 0:
+        return None
+    matches = []
+    for kind, index in il.addr_candidates.get(addr, ()):
+        if kind == 'generic' and 0 <= index < len(il.method_specs):
+            mi = il.method_specs[index][0]
+        elif kind == 'method':
+            mi = index
+        else:
+            return None
+        if not 0 <= mi < len(il.meta.methods):
+            return None
+        m = il.meta.methods[mi]
+        if m.declaring not in chain or m.param_count != len(param_keys) or m.is_static:
+            continue
+        # Reject competing methods of this arity on the receiver's chain,
+        # even if different spellings could also fit the observed registers.
+        if (kind != 'method' or matches or m.addr != addr or m.generic_container != -1 or
+                (m.declaring != owner if base_mi is None else mi != base_mi)):
+            return None
+        matches.append(m)
+    if len(matches) != 1:
+        return None
+    m, = matches
+    ps = il.meta.method_params(m)
+    # Virtual is legal only through a separately proved `base` lookup.
+    if (m.flags & 7 != 6 or m.flags & 0x800 or (base_mi is None and m.flags & 0x40) or not re.fullmatch(r'[A-Za-z_]\w*', m.name) or
+            il.meta.typedefs[owner].is_valuetype or il.meta.typedefs[owner].generic_container != -1 or
+            not 0 <= m.return_type < len(il.types) or il._closed_type_key(il.types[m.return_type]) != (1, 0) or
+            len(ps) != len(param_keys) or any(not 0 <= p.type < len(il.types) for p in ps) or
+            tuple(il._closed_type_key(il.types[p.type]) for p in ps) != param_keys):
+        return None
+    cache[key] = ('method', m.index)
+    return cache[key]
+
+
+def shared_base_action(lift, ins, regs, xmm, *, tail_body=None):
+    """An override passes its untouched entry arguments to a folded void
+    implementation of the immediate base slot. Keep the call at its native
+    site; `this.M` would re-dispatch to the override."""
+    il = lift.il
+    m = getattr(lift, '_current_method', None)
+    td = getattr(lift, '_current_td', None)
+    b = getattr(getattr(lift, 'out', None), 'block', None)
+    if (not isinstance(getattr(il, 'bin', None), PE) or not il.bin.is64 or not m or not td or
+            m.is_static or td.is_valuetype or m.slot == 0xffff or not 0 <= m.param_count <= 2 or
+            not 0 <= m.return_type < len(il.types) or il._closed_type_key(il.types[m.return_type]) != (1, 0) or
+            ins.op0_kind != K.NEAR_BRANCH64 or not 0 <= td.parent < len(il.types) or
+            len(regs) != 4 or any(e and not e._unk for e in xmm)):
+        return None
+    guarded = False
+    prefix = None
+    if tail_body is None:
+        if ins.mnemonic != M.CALL or b is None or not b.insns:
+            return None
+        if getattr(b, 'is_entry', False) and not b.preds:
+            prefix = b.insns
+        elif m.param_count == 1 and _guarded_helper_forward(lift, b, ins):
+            guarded = True
+        else:
+            return None
+    else:
+        # A frameless, nullary override can transfer straight to the base
+        # implementation. Prove the COMPLETE prefix: even a push before
+        # the jump would change which return address the leaf consumes.
+        if (m.param_count or ins.mnemonic != M.JMP or len(tail_body) != 2 or
+                (b is not None and (not getattr(b, 'is_entry', False) or b.preds)) or
+                tail_body[0].mnemonic != M.XOR or tail_body[-1].ip != ins.ip or
+                tail_body[0].next_ip != ins.ip or m.addr == ins.near_branch_target or
+                ('method', m.index) not in il.addr_candidates.get(m.addr, ())):
+            return None
+        prefix = tail_body
+    parent = il.types[td.parent]
+    if not parent or il._type_enum(parent) != 0x12 or not 0 <= parent[0] < len(il.meta.typedefs):
+        return None
+    base = il.vtable_method(parent[0], m.slot)
+    if base is None or not 0 <= base < len(il.meta.methods) or not lift._base_slot_matches(base, regs[0]):
+        return None
+
+    # Inspect a contiguous entry prefix. Stack setup and parking argument
+    # registers in callee-saves do not redefine the incoming managed values.
+    # Require the hidden zero in the actual Win64 position, not a stale temp.
+    inputs = (R.RCX, R.RDX, R.R8)[:1 + m.param_count]
+    hidden_reg = (R.EDX, R.R8D, R.R9D)[m.param_count]
+    if prefix is not None and not _entry_forward(prefix, m.addr, ins, inputs, hidden_reg):
+        return None
+    hidden = regs[len(inputs)]
+    if (not hidden or hidden._unk or hidden.text != '0' or
+            any(e and not e._unk for e in regs[len(inputs)+1:])):
+        return None
+    params = source_params(il.meta, m)
+    if len(params) != m.param_count:
+        return None
+    names, keys = [], []
+    for p, e in zip(params, regs[1:]):
+        ty = il.types[p.type] if 0 <= p.type < len(il.types) else None
+        if (not ty or ty[1] & (1 << 29) or il._type_enum(ty) not in (0x02, 0x12) or
+                not e or e._unk or e.kind != ('int' if il._type_enum(ty) == 2 else 'obj') or
+                e.text != safe_ident(p.name) or il._closed_type_key(e.ty) != il._closed_type_key(ty)):
+            return None
+        names.append(e.text)
+        keys.append(il._closed_type_key(ty))
+    target = ins.near_branch_target
+    if not keys or (guarded and keys[0][0] == 0x12):
+        # Multiple callbacks with the same signature can be indistinguishable. The
+        # slot check above proves what `base.M()` calls; prove those exact
+        # bytes and the unused result, rather than choosing an original name
+        # by counting candidates. In particular, C# cannot call Finalize().
+        bm = il.meta.methods[base]
+        cands = il.addr_candidates.get(target, ())
+        if (len(cands) < 2 or ('method', base) not in cands or bm.addr != target or
+                bm.name == 'Finalize' or not re.fullmatch(r'[A-Za-z_]\w*', bm.name) or
+                safe_ident(bm.name) != bm.name or not _plain_return(il, target)):
+            return None
+    elif not _member(il, target, td.index, tuple(keys), base_mi=base):
+        return None
+    # A terminal jump in a void override has no continuation reading a
+    # result. For an ordinary call the original liveness proof still applies.
+    if tail_body is None and not _unused_return(lift, ins.next_ip):
+        return None
+    return 'base.%s(%s) /* shared implementation */' % (il.meta.methods[base].name, ', '.join(names))
+
+
+def shared_action_tail(lift, ins, body, args, regs):
+    if args == ['this', '0'] and len(body) == 2:
+        # Use the actual register file, not only the trimmed tail arguments.
+        # In particular, don't hide a surplus expression with side effects.
+        full = [dict.get(lift.regs, r) for r in ('RCX', 'RDX', 'R8', 'R9')]
+        xmm = [dict.get(lift.regs, r) for r in ('XMM0', 'XMM1', 'XMM2', 'XMM3')]
+        base = shared_base_action(lift, ins, full, xmm, tail_body=body)
+        if base is not None:
+            return base
+    return shared_bool_tail(lift, ins, args, regs)
+
+
+def shared_void_action(lift, ins, regs, xmm):
+    il = lift.il
+    caller = getattr(lift, '_current_method', None)
+    if (not isinstance(getattr(il, 'bin', None), PE) or not il.bin.is64 or not caller or caller.is_static or
+            not 0 <= caller.return_type < len(il.types) or il._closed_type_key(il.types[caller.return_type]) != (1, 0) or
+            not 0 <= caller.declaring < len(il.meta.typedefs) or il.meta.typedefs[caller.declaring].is_valuetype or
+            len(regs) != 4 or any(not e or e._unk for e in regs) or
+            any(e and not e._unk for e in xmm)):
+        return None
+    recv, arg, flag, hidden = regs
+    if (recv.kind != 'obj' or arg.kind != 'obj' or not recv.ty or not arg.ty or
+            not all(0 <= e.ty[0] < len(il.meta.typedefs) for e in (recv, arg)) or
+            il._closed_type_key(recv.ty) != (0x12, recv.ty[0], 0) or il._closed_type_key(arg.ty) != (0x12, arg.ty[0], 0) or
+            flag.text not in ('0','1') or hidden.text != '0'):
+        return None
+    setup = _setup(lift, ins)
+    if setup is None:
+        return None
+    obj, disp, producer, imm = setup
+    base = dict.get(lift.regs, reg_name(obj))
+    field = (il.instance_field_chain(caller.declaring) or {}).get(disp)
+    producers = il.addr_candidates.get(producer, ())
+    if (not base or base._unk or base.text != 'this' or not base.ty or base.ty[0] != caller.declaring or
+            not field or not 0 <= field[1] < len(il.types) or recv.text != 'this.' + field[0] or
+            il._closed_type_key(il.types[field[1]]) != il._closed_type_key(recv.ty) or str(imm) != flag.text or
+            len(producers) != 1 or producers[0][0] != 'method' or not 0 <= producers[0][1] < len(il.meta.methods)):
+        return None
+    getter = il.meta.methods[producers[0][1]]
+    if (getter.addr != producer or getter.is_static or getter.flags & 0x40 or getter.param_count or getter.generic_container != -1 or
+            getter.declaring not in il.base_chain_tds(caller.declaring) or not getter.name.startswith('get_') or
+            arg.text != 'this.' + getter.name[4:] or not 0 <= getter.return_type < len(il.types) or
+            il._closed_type_key(il.types[getter.return_type]) != il._closed_type_key(arg.ty)):
+        return None
+    action = _member(il, ins.near_branch_target, recv.ty[0], ((0x12, arg.ty[0], 0), (2, 0)))
+    return action if action and _unused_return(lift, ins.next_ip) else None
+
+
+def _frame_exit(code):
+    """Only stack restores of nonvolatile registers, deallocation and pops.
+    In particular no instruction here may change RCX, DL or R8."""
+    teardown = False
+    for i in code:
+        if i.has_segment_prefix:
+            return False
+        if (not teardown and i.op1_kind == K.MEMORY and i.memory_base == R.RSP and
+                i.memory_index == R.NONE and sdisp(i.memory_displacement) >= 0 and
+                ((i.mnemonic == M.MOV and i.op0_register in _NONVOL) or
+                 (i.mnemonic == M.MOVAPS and R.XMM6 <= i.op0_register <= R.XMM15))):
+            continue
+        if (not teardown and i.mnemonic == M.ADD and i.op0_register == R.RSP and
+                i.op1_kind in (K.IMMEDIATE8TO64, K.IMMEDIATE32TO64) and sdisp(i.immediate(1)) > 0):
+            teardown = True
+        elif not (teardown and i.mnemonic == M.POP and i.op0_register in _NONVOL):
+            return False
+    return teardown
+
+
+def _bool_transfer(lift, tail, ins):
+    """Field snapshot -> getter -> implicit bool -> null check -> void tail.
+    Only callee-save restores and stack teardown may follow the RCX move."""
+    if not 3 <= tail.bid < len(lift._blocks) or len(tail.insns) < 5 or tail.insns[-1].ip != ins.ip:
+        return None
+    left, cold, conv = lift._blocks[tail.bid-3:tail.bid]
+    if (len(left.insns) < 8 or len(cold.insns) != 1 or len(conv.insns) != 5 or cold.preds != [left.bid] or
+            not conv.preds or not set(conv.preds) <= {left.bid, cold.bid} or tail.preds != [conv.bid]):
+        return None
+    seq = left.insns[-8:] + cold.insns + conv.insns + tail.insns
+    if any(a.next_ip != b.ip for a,b in zip(seq,seq[1:])) or any(i.has_segment_prefix for i in seq):
+        return None
+    field, zero, objarg, getter, klass, keep, cmp, jne = left.insns[-8:]
+    init, = cold.insns
+    clear, first, op, test, null = conv.insns
+    hidden, flag, recv = tail.insns[:3]
+    origin, saved, value = field.memory_base, field.op0_register, keep.op0_register
+    def mov(i, dst, src):
+        return i.mnemonic == M.MOV and i.op0_register == dst and i.op1_register == src
+    def zeroes(i, reg):
+        return i.mnemonic == M.XOR and i.op0_register == i.op1_register == reg
+    def call(i):
+        return i.mnemonic == M.CALL and i.op0_kind == K.NEAR_BRANCH64
+    if (origin not in _NONVOL or saved not in _NONVOL or value not in _NONVOL or saved in (origin,value) or
+            field.mnemonic != M.MOV or field.op1_kind != K.MEMORY or field.memory_index != R.NONE or
+            not zeroes(zero,R.EDX) or not mov(objarg,R.RCX,origin) or not call(getter) or
+            klass.mnemonic != M.MOV or klass.op0_register != R.RCX or klass.memory_base != R.RIP or
+            not mov(keep,value,R.RAX) or cmp.mnemonic != M.CMP or cmp.memory_base != R.RCX or
+            cmp.memory_index != R.NONE or cmp.memory_displacement != 0xe4 or cmp.op1_kind not in (K.IMMEDIATE8TO32,K.IMMEDIATE32) or
+            cmp.immediate(1) != 0 or jne.mnemonic != M.JNE or jne.near_branch_target != clear.ip or
+            not call(init) or lift._call_name(init.near_branch_target) != 'il2cpp_runtime_class_init' or
+            not zeroes(clear,R.EDX) or not mov(first,R.RCX,value) or not call(op) or
+            test.mnemonic != M.TEST or test.op0_register != saved or test.op1_register != saved or
+            null.mnemonic != M.JE or null.op0_kind != K.NEAR_BRANCH64 or not _raises_on_null(lift,null) or
+            not zeroes(hidden,R.R8D) or flag.mnemonic != M.MOVZX or flag.op0_register != R.EDX or flag.op1_register != R.AL or
+            not mov(recv,R.RCX,saved) or ins.mnemonic != M.JMP or ins.op0_kind != K.NEAR_BRANCH64):
+        return None
+    if _frame_exit(tail.insns[3:-1]):
+        return field, getter, klass, op, dict.get(conv.end_state or {}, reg_name(value))
+    return None
+
+
+def _literal_bool_tail(lift, tail, ins, recv, flag):
+    if (len(tail.preds) != 1 or not 0 <= tail.preds[0] < len(lift._blocks) or len(tail.insns) < 4 or
+            ins.ip != tail.insns[-1].ip or ins.mnemonic != M.JMP or ins.op0_kind != K.NEAR_BRANCH64):
+        return None
+    pred = lift._blocks[tail.preds[0]]
+    if len(pred.insns) < 3:
+        return None
+    field, test, null = pred.insns[-3:]
+    seq = pred.insns[-3:] + tail.insns
+    hidden, literal = tail.insns[:2]
+    if (any(a.next_ip != b.ip for a,b in zip(seq, seq[1:])) or any(i.has_segment_prefix for i in seq) or
+            field.mnemonic != M.MOV or field.op0_register != R.RCX or field.op1_kind != K.MEMORY or
+            field.memory_base not in _NONVOL or field.memory_index != R.NONE or
+            test.mnemonic != M.TEST or test.op0_register != R.RCX or test.op1_register != R.RCX or
+            null.mnemonic != M.JE or null.op0_kind != K.NEAR_BRANCH64 or not _raises_on_null(lift, null) or
+            hidden.mnemonic != M.XOR or hidden.op0_register != R.R8D or hidden.op1_register != R.R8D or
+            literal.mnemonic != M.MOV or literal.op0_register != R.DL or literal.op1_kind != K.IMMEDIATE8 or
+            literal.immediate8 not in (0, 1) or flag.text != str(literal.immediate8) or
+            not _frame_exit(tail.insns[2:-1])):
+        return None
+    # Consult the field base before the epilogue restores it. A type hint on
+    # the tail's RCX alone cannot establish which instance supplied the field.
+    il = lift.il
+    caller_td = lift._current_method.declaring
+    base = (pred.end_state or {}).get(reg_name(field.memory_base))
+    entry = (il.instance_field_chain(caller_td) or {}).get(sdisp(field.memory_displacement))
+    if (not base or base._unk or base.kind != 'obj' or base.text != 'this' or
+            il._closed_type_key(base.ty) != (0x12, caller_td, 0) or not entry or
+            not 0 <= entry[1] < len(il.types) or il._closed_type_key(il.types[entry[1]]) != il._closed_type_key(recv.ty) or
+            recv.text != 'this.' + entry[0]):
+        return None
+    member = _member(il, ins.near_branch_target, recv.ty[0], ((2,0),))
+    if member:
+        boolean = 'true' if literal.immediate8 else 'false'
+        return '%s.%s(%s) /* shared implementation */' % (recv.text, il.meta.methods[member[1]].name, boolean)
+    return None
+
+
+def shared_bool_tail(lift, ins, args, regs):
+    il, caller = lift.il, getattr(lift, '_current_method', None)
+    tail = getattr(getattr(lift, 'out', None), 'block', None)
+    if (not isinstance(getattr(il,'bin',None), PE) or not il.bin.is64 or not caller or not tail or caller.is_static or
+            not 0 <= caller.return_type < len(il.types) or il._closed_type_key(il.types[caller.return_type]) != (1,0) or
+            not 0 <= caller.declaring < len(il.meta.typedefs) or il.meta.typedefs[caller.declaring].is_valuetype or
+            len(args) != len(regs) or len(args) != 3 or args[2] != '0' or any(not e or e._unk for e in regs)):
+        return None
+    recv, flag, _ = regs
+    if (recv.kind != 'obj' or not recv.ty or not 0 <= recv.ty[0] < len(il.meta.typedefs) or
+            il._closed_type_key(recv.ty) != (0x12,recv.ty[0],0) or args != [e.text for e in regs]):
+        return None
+    if flag.kind == 'int' and flag.text in ('0', '1'):
+        return _literal_bool_tail(lift, tail, ins, recv, flag)
+    if il._closed_type_key(flag.ty) != (2,0):
+        return None
+    site = _bool_transfer(lift, tail, ins)
+    if not site:
+        return None
+    field, get, klass, op, value = site
+    entry = (il.instance_field_chain(caller.declaring) or {}).get(sdisp(field.memory_displacement))
+    if (not entry or not 0 <= entry[1] < len(il.types) or recv.text != args[0] or recv.text != 'this.' + entry[0] or
+            il._closed_type_key(il.types[entry[1]]) != il._closed_type_key(recv.ty) or
+            not value or value._unk or value.kind != 'obj' or not value.ty or not 0 <= value.ty[0] < len(il.meta.typedefs) or
+            il._closed_type_key(value.ty) != (0x12,value.ty[0],0)):
+        return None
+    def unique(target):
+        c = il.addr_candidates.get(target, ())
+        return il.meta.methods[c[0][1]] if len(c) == 1 and c[0][0] == 'method' and 0 <= c[0][1] < len(il.meta.methods) else None
+    getter, conversion = unique(get.near_branch_target), unique(op.near_branch_target)
+    if (not getter or getter.addr != get.near_branch_target or getter.is_static or getter.flags & 0x40 or
+            getter.param_count or getter.generic_container != -1 or getter.declaring not in il.base_chain_tds(caller.declaring) or
+            not getter.name.startswith('get_') or value.text != 'this.' + getter.name[4:] or
+            not 0 <= getter.return_type < len(il.types) or il._closed_type_key(il.types[getter.return_type]) != il._closed_type_key(value.ty)):
+        return None
+    if (not conversion or conversion.addr != op.near_branch_target or conversion.name != 'op_Implicit' or not conversion.is_static or
+            conversion.generic_container != -1 or conversion.flags & 7 != 6 or not conversion.flags & 0x800 or conversion.param_count != 1 or
+            not 0 <= conversion.return_type < len(il.types) or il._closed_type_key(il.types[conversion.return_type]) != (2,0)):
+        return None
+    owner = conversion.declaring
+    ps = il.meta.method_params(conversion)
+    usage = il.decode_slot(klass.ip_rel_memory_address) or {}
+    if (owner not in il.base_chain_tds(value.ty[0]) or len(ps) != 1 or not 0 <= ps[0].type < len(il.types) or
+            il._closed_type_key(il.types[ps[0].type]) != (0x12,owner,0) or usage.get('kind') != 1 or
+            il._closed_type_key(usage.get('type')) != (0x12,owner,0)):
+        return None
+    member = _member(il, ins.near_branch_target, recv.ty[0], ((2,0),))
+    result = dict.get(lift.regs, 'RAX')
+    tn = il.type_name(il.types[ps[0].type])
+    if (not member or not result or result._unk or il._closed_type_key(result.ty) != (2,0) or
+            result.text != '%s.op_Implicit(%s)' % (tn, value.text) or args[1] != flag.text or
+            flag.text != '(%s & 0xFF/*z*/)' % result.text):
+        return None
+    if not lift.dry:
+        # MOVZX derives a masked Expr and doesn't count a use on the call
+        # that produced AL. Consume *only that producer's* pending emission;
+        # flushing it as well would evaluate the getter and conversion twice.
+        pending = getattr(lift, '_pending_calls', [])
+        own = [p for p in pending if p[0] is result and p[1] == op.ip]
+        if len(own) != 1 or result._uses:
+            return None
+        pending.remove(own[0])
+    return '%s.%s((bool)(%s)%s) /* shared implementation */' % (recv.text, il.meta.methods[member[1]].name, tn, value.text)
