@@ -181,6 +181,10 @@ class _EmitMixin:
                         cur = nxt
                         continue
                 J = self._ipdom(cur, self.pdom)
+                if J<0 and not stop and not in_loop and not self._sw_depth and not self._seh_regions and not self._pad_bids:
+                    shared=self._guarded_continuation(blocks,cur,out)
+                    if shared is not None:
+                        cur=shared;continue
                 if J >= 0 and (J in stop or blocks[J].consumed or J == cur):
                     J = -1
                 sub_stop = stop | ({J} if J >= 0 else set())
@@ -290,6 +294,53 @@ class _EmitMixin:
                     continue
                 return
             return
+
+    def _guarded_continuation(self,blocks,cur,out):
+        """One arm can return before two private linear prefixes meet. The
+        shared continuation is not a postdominator. Walk it once at parent
+        scope; replay only the constant return, never consume its epilogue.
+        """
+        b=blocks[cur];reach=getattr(self,'reach',None)
+        if (not reach or not b.cond or not b.term or b.term[0]!='jcc' or self.loop_of_hdr or
+                len(blocks)>256 or set(b.succs)!=set(b.term[1:])):return None
+        t,f=b.term[1:];roots=(t,f)
+        if t==f or any(k not in reach or blocks[k].consumed for k in roots):return None
+        def incoming(k):return {i for i in blocks[k].preds if i in reach}
+        for guarded in roots:
+            g=blocks[guarded]
+            if (not g.term or g.term[0]!='jcc' or not g.cond or incoming(guarded)!={cur} or
+                    len(g.succs)!=2 or set(g.succs)!=set(g.term[1:])):continue
+            ends=[i for i in g.succs if i in reach and blocks[i].term==('ret',) and not blocks[i].stmts and
+                  not blocks[i].succs and blocks[i].ret in ('','0','1','true','false')]
+            if len(ends)!=1 or ends[0] in roots:continue
+            ret=ends[0];cont=next(i for i in g.succs if i!=ret)
+            def linear(prev,k):
+                path=[]
+                while k in reach and k!=cur and k!=ret and not blocks[k].consumed and not blocks[k].is_entry:
+                    if len(incoming(k))>1:return path,k,prev
+                    z=blocks[k];term=z.term or ()
+                    if (k==guarded or k in path or len(path)>=24 or incoming(k)!={prev} or not term or
+                            term[0] not in ('fall','jmp') or z.succs!=[term[1]]):break
+                    path.append(k);prev,k=k,term[1]
+                return None
+            paths={k:linear(guarded,cont) if k==guarded else linear(cur,k) for k in roots}
+            if not all(paths.values()):continue
+            a,j,p=paths[t];c,k,q=paths[f]
+            if j!=k or p==q or j in (cur,guarded,ret) or incoming(j)!={p,q} or set(a)&set(c):continue
+            # No graph or output mutation before the complete proof. Edge
+            # copies, including the direct-to-join case, stay in their arm.
+            for first,header in ((t,'if (%s)'%b.cond),(f,'else')):
+                out.extend([header,'{']);self._edge(cur,first,out)
+                if first==guarded:
+                    g.consumed=True;out.extend(g.stmts)
+                    out.extend(['if (%s)'%(g.cond if ret==g.term[1] else '!(%s)'%g.cond),'{'])
+                    self._edge(guarded,ret,out);rv=blocks[ret].ret
+                    out.extend(['return %s;'%rv if rv else 'return;','}']);self._edge(guarded,cont,out)
+                for n in paths[first][0]:
+                    z=blocks[n];z.consumed=True;out.extend(z.stmts);self._edge(n,z.term[1],out)
+                out.append('}')
+            return j
+        return None
 
     # fix 62: the old spelling was r'^\(?(.+?) - (\d+)\)?$', whose
     # two optional parens are INDEPENDENT -- `(num1 & 0xFF) - 97`

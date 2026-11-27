@@ -1684,6 +1684,21 @@ callback replacement, null and throwing reads/actions, and rejected getter,
 receiver and hiding evidence. 4 exact authority tests, 13 collision/dispatch
 regressions and 2,340 portable tests passed. Prior batch: `4e21e18`.
 
+**Guarded entry and resume paths.** `KwaleeEULA.<KeepButtonFocus>d__13.MoveNext`
+(25898, `0x556330`) jumped from initialization into a label inside the resume
+arm. The structurer now checks whether both continuing paths join after
+private linear prefixes, with a separate constant-return exit. It emits
+edge copies on their original paths and emits the shared body once. The
+iterator also saves the state and enclosing owner when native code loads
+them. The complete emitted method passed initialization, resume, cancellation,
+selection, receiver replacement, `Current` and exception tests. The
+`RevealText` remainder slice also reaches a legal join; its Boolean/audio
+sequence needs a separate gate. An initial regression in async kickoff
+capture was corrected and the complete discarded-task iterator passed.
+Validation: 5 exact focus tests, 6 remainder tests, 4 discarded-task tests,
+18 collision/contact/dispatch checks and 2,343 single-worker portable tests.
+Prior authority batch: `c9ab01c`.
+
 **Packed resets still open.** `FPSDisplay` resets `median`/`average` at
 `0x180518b62` and `accum`/`frames` at `0x180518d49` with one eight-byte
 write. The emitted assignment changes only the first field. The same

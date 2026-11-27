@@ -14,7 +14,8 @@ pytestmark=pytest.mark.game
 def test_remainder_setter_and_post_callback_threshold(shift_runtime,tmp_path):
     meta,il=shift_runtime;m=meta.methods[27147];out=tmp_path/'out';em=Emitter(il,str(out));td=next(t for t in meta.typedefs if t.name=='RevealText')
     em._emit_one_top(td,meta.images[m.image],td.name);s=next(out.rglob('RevealText.cs')).read_text(encoding='utf8')
-    code=re.search(r'(int \w+ = this\._totalVisibleCharacters_5__2;\s+int \w+ = this\._counter_5__3;.*?if \(\w+ < this\._totalVisibleCharacters_5__2\))',s,re.S)[1]
+    capture=re.search(r'RevealText \w+ = this\.__4__this;',s)[0]
+    code=re.search(r'(int \w+ = this\._totalVisibleCharacters_5__2;\s+int \w+ = this\._counter_5__3;.*?if \(\w+ >= this\._totalVisibleCharacters_5__2\)\s*\{\s*return false;\s*})',s,re.S)[1]
     src='''using System;
     foreach(var (n,total,after) in new[]{(-17,4,-1),(-17,4,-3),(17,4,2),(17,4,3),(0,0,1),(3,int.MaxValue,2),(13,-1,1),(int.MinValue,-2,0)}){
         var c=new Case{_counter_5__3=n,_totalVisibleCharacters_5__2=total};int writes=0;long divisor=unchecked(total+1);
@@ -24,8 +25,8 @@ def test_remainder_setter_and_post_callback_threshold(shift_runtime,tmp_path):
               fault!=null||writes!=1||result!=((long)n%divisor<after))throw new Exception("bad divide/check",fault);
     }
     Console.WriteLine("signed field remainder, divide faults before setter, and post-set threshold passed");
-    public class TMP_Text{public Action<int> Set;public int maxVisibleCharacters{set=>Set(value);}} public class Owner{public TMP_Text text=new();}
-    public class Case{public Owner __4__this=new();public int _counter_5__3,_totalVisibleCharacters_5__2;public bool Step(){\n'''+code+' return true;return false;}}'
+    public class TMP_Text{public Action<int> Set;public int maxVisibleCharacters{set=>Set(value);}} public class RevealText{public TMP_Text text=new();}
+    public class Case{public RevealText __4__this=new();public int _counter_5__3,_totalVisibleCharacters_5__2;public bool Step(){\n'''+capture+'\n'+code+' return true;}}'
     runner=tmp_path/'runner';runner.mkdir();(runner/'Program.cs').write_text(src,encoding='utf8');print(run_case(tmp_path,runner).strip())
 
 

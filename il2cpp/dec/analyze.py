@@ -46,6 +46,8 @@ class _AnalyzeMixin:
         scalar_fields,scalar_getters=scalar_sites(L,m,td,blocks,self._pad_bids)
         from il2cpp.field_remainder import field_divisions,division_step
         divisions=field_divisions(L,m,blocks,self._pad_bids)
+        from il2cpp.dispatch_fields import dispatch_fields,bind_dispatch_field
+        dispatch_reads=dispatch_fields(L,m,blocks,self._pad_bids)
         vector_getter = vector_field_getter(L,m) if len(blocks)==1 and len(blocks[0].insns)==6 and not self._pad_bids else None
         dec_getter = decrement_body(L,m) if len(blocks)==1 and len(blocks[0].insns)==3 and not self._pad_bids else None
         # _rpo appends the unreachable tail (the EH pads, entered only by the
@@ -223,6 +225,11 @@ class _AnalyzeMixin:
                     L.regs['RDI'] = Expr(snapshot, capture[2], 'obj')
                     continue
                 mn = ins.mnemonic
+                # A specialized async kickoff needs the same owner local in
+                # its per-pass identity map. Let that producer bind the load.
+                if ins.ip in dispatch_reads and ins.ip not in owner_loads and ins.ip not in scalar_fields:
+                    bind_dispatch_field(L,ins,dispatch_reads[ins.ip])
+                    L._lookup_field_values[ins.ip]=dict.get(L.regs,reg_name(ins.op0_register));continue
                 if ins.ip in nested_fields:
                     source,name,ty=nested_fields[ins.ip];base=dict.get(L.regs,reg_name(ins.memory_base))
                     if base and base is L._lookup_field_values.get(source):
@@ -234,7 +241,7 @@ class _AnalyzeMixin:
                         L.flags=(Expr(array.text+'.LongLength',(0,0x0a<<16),'int'),Expr('0',None,'int'))
                         L._flags_mn=Mnemonic.CMP
                         continue
-                if ins.ip in scalar_fields:
+                if ins.ip in scalar_fields and ins.ip not in owner_loads:
                     capture_field(L,ins,scalar_fields[ins.ip])
                     L._lookup_field_values[ins.ip]=dict.get(L.regs,reg_name(ins.op0_register));continue
                 if element_plan and element_step(L,element_plan,element_values,ins):continue
@@ -279,6 +286,8 @@ class _AnalyzeMixin:
                         name=L.new_var();L._var_types[name]=ty
                         L.emit(ins.ip,'var %s = %s;'%(name,acc_get(field)),None)
                         value=Expr(name,ty,'obj');L.regs[dst]=value;kickoff_values[ins.ip]=value
+                        if scalar_fields.get(ins.ip)==(field,ty) or dispatch_reads.get(ins.ip)==(field,ty,'obj'):
+                            L._lookup_field_values[ins.ip]=value
                         continue
                 if ins.ip in kickoffs:
                     end=emit_kickoff(L,ins.ip,kickoffs[ins.ip],kickoff_values)
