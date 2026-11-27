@@ -2886,6 +2886,8 @@ class _CallsMixin:
         indexed_setter = None
         lookup = getattr(self,'_component_lookups',{}).get(ins.ip)
         ordinary = ins.ip in getattr(self,'_ordinary_lookups',())
+        load = getattr(self,'_lookup_field_origins',{}).get(ins.ip)
+        if load is not None and getattr(self,'_lookup_field_values',{}).get(load) is not recv:lookup=None
         if ordinary and (not recv or recv.kind!='obj'):lookup=None
         if lookup and (info != ('generic',lookup[0]) or not recv or not recv.ty or recv._unk or
                        self.il._closed_type_key(recv.ty) != (0x12,recv.ty[0],0) or lookup[1] not in self.il.base_chain_tds(recv.ty[0]) or

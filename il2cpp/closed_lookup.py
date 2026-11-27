@@ -4,6 +4,9 @@ from il2cpp.binary import PE
 from il2cpp.array_origin import _graph,_definitions
 from il2cpp.generic_array import object_shared_entry
 from il2cpp.names import safe_ident
+from il2cpp.csharp import source_field_name
+from il2cpp.shared_field import reference_field_at
+from il2cpp.text import sdisp
 from il2cpp.prelude import HAVE_ICED
 
 if HAVE_ICED:
@@ -22,7 +25,9 @@ def _receiver(il,method,byip,pred,site,owner,*,initial=None,this_only=False,prod
         if len(seen)>=256:return False
         seen.add((ip,reg))
         if ip==method.addr:
-            if (method.is_static or reg!=R.RCX or il.meta.typedefs[method.declaring].is_valuetype or
+            # An internal backedge can reach the prologue with a different
+            # RCX; only the external entry supplies the Win64 this argument.
+            if (pred[ip] or method.is_static or reg!=R.RCX or il.meta.typedefs[method.declaring].is_valuetype or
                     not 0<=method.return_type<len(il.types) or il.returns_sret(il.types[method.return_type]) or
                     owner not in il.base_chain_tds(method.declaring)):return False
             proved=True;continue
@@ -44,7 +49,23 @@ def _receiver(il,method,byip,pred,site,owner,*,initial=None,this_only=False,prod
     return proved
 
 
-def closed_lookup_sites(lift,method,blocks,pads,*,producers=None,conversions=None,element_loads=None):
+def _field_input(il,method,byip,pred,call,owner):
+    """Trace the *value* passed in RCX to a field load of entry this."""
+    defs=_definitions(byip,pred,method.addr,call.ip,R.RCX)
+    if len(defs)!=1:return None
+    ip,r=defs.pop();i=byip[ip]
+    if (i.mnemonic!=M.MOV or i.op0_register!=r or not RegisterExt.is_gpr64(r) or i.op1_kind!=K.MEMORY or
+            i.memory_index!=R.NONE or i.has_segment_prefix or i.has_lock_prefix or not RegisterExt.is_gpr64(i.memory_base) or
+            not _receiver(il,method,byip,pred,ip,method.declaring,initial=i.memory_base,this_only=True)):return None
+    row=reference_field_at(il,method.declaring,sdisp(i.memory_displacement))
+    if not row:return None
+    decl,fi,ty=row
+    if (decl!=method.declaring or not 0<=ty[0]<len(il.meta.typedefs) or il._closed_type_key(ty)!=(0x12,ty[0],0) or
+            il.meta.typedefs[ty[0]].generic_container!=-1 or owner not in il.base_chain_tds(ty[0])):return None
+    return ip,('this.'+safe_ident(source_field_name(il,fi)),ty)
+
+
+def closed_lookup_sites(lift,method,blocks,pads,*,producers=None,conversions=None,element_loads=None,field_inputs=None):
     il=lift.il
     result={}
     if not HAVE_ICED or pads or not isinstance(getattr(il,'bin',None),PE) or not il.bin.is64:return result
@@ -68,7 +89,7 @@ def closed_lookup_sites(lift,method,blocks,pads,*,producers=None,conversions=Non
                     not slot.has_segment_prefix):possible.append(b.insns[k:j+1])
     if not possible:return result
     seq=[i for b in blocks for i in b.insns];graph=_graph(il,seq,allow_tail=True,runtime_tails=lift.rt_wbarrier,chained=True)
-    if not graph:return result
+    if not graph or seq[0].ip!=method.addr:return result
     pred,_=graph;byip={i.ip:i for i in seq}
     for setup in possible:
         if any(x.next_ip!=z.ip or pred[z.ip]!=[x.ip] for x,z in zip(setup,setup[1:])):continue
@@ -98,9 +119,12 @@ def closed_lookup_sites(lift,method,blocks,pads,*,producers=None,conversions=Non
                 if arr is not None and byip[ip].op0_register==r:
                     elem=il.type_from_ptr(arr[0])
                     from_element=bool(elem and il._closed_type_key(elem)==(0x12,elem[0],0) and md.declaring in il.base_chain_tds(elem[0]))
-        if from_element or _receiver(il,method,byip,pred,call.ip,md.declaring,producers=sources):
+        ordinary=from_element or _receiver(il,method,byip,pred,call.ip,md.declaring,producers=sources)
+        field=None if ordinary or field_inputs is None else _field_input(il,method,byip,pred,call,md.declaring)
+        if ordinary or field:
             result[call.ip]=(si,md.declaring,args[0],md.name,False)
-            if producers is not None:producers.update(sources)
+            if field:field_inputs[call.ip]=field
+            elif producers is not None:producers.update(sources)
     if result and conversions is not None:
         from il2cpp.truth_operator import truth_owner
         for i in seq:

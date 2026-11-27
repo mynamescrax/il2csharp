@@ -1559,6 +1559,47 @@ are not covered. Validation in separate foreground processes: 7 header tests,
 tests passed. An earlier combined command exited 255 without a final pytest
 summary; the separate runs completed. Prior whole-loop batch: `5f31d5c`.
 
+**Reloaded field receivers.** `StoreBrowseBehaviour.Attack` (27705, RVA
+`0x5CC1A0`) called `GetComponent<PlayerManager>()` twice before testing the
+first result, then stored the first result. Native code reloads `target` at
+`0x1805cc26d` and `0x1805cc2af`; the second lookup executes only if the
+first result passes Unity's truth test. The two calls use the same MethodRef
+but can return different objects. Capture each receiver at its field load,
+and use its live identity and the registered MethodSpec to bind the call.
+Entry `this` is insufficient evidence when a branch can re-enter the prologue.
+The unchanged emitted method passed a 12-case test including target and
+pathfinder replacements, Unity-null, null receivers, throwing callbacks,
+and scheduling after the second store. `ChaseNearestPlayer.DealDamageToPlayer`
+also has a proved field receiver; the singleton access and timing remain open.
+Validation: 19 exact-build tests including both whole spawners; 2,334 portable
+tests passed in the single-worker selection. Previous batch: `6781fb6`.
+
+**Checkpoint only: split struct results (not on main).** `CleanSpill`
+sends forward X/Y and position Z as the origin. `CleanSpillHose` prints the
+same untyped argument for both vectors. Each registered getter writes a
+12-byte value into the reused home. In `CleanSpill` the read pairs follow
+`0x18070d015` and `0x18070d04e`; in the hose variant they follow
+`0x18070cb03` and `0x18070cb3e`. Snapshot the value when adjacent loads
+read all 8+4 bytes from the echoed pointer. This leaves the address of
+the native home live. A wider register use, uncertain frame base, wrong
+last lane, or stale echo cannot establish that copy.
+
+With a supplied Transform, both compiled geometry slices in the prototype pass the
+original XYZ to `OverlapSphere` and `RaycastAll`, and the separate forward
+XYZ to the ray. Tests check getter counts, bitwise components and faults.
+Receiver acquisition and nearest-hit retention are still open; neither
+`CleanSpill` method is a whole-method milestone. Prototype validation: 2 new
+exact-build tests, 20 existing exact-build regressions (including the gas
+and particle callbacks), and 2,340 single-worker portable tests passed.
+Review found a counterexample before landing: `_fragment(value, 0, 8)`
+can display the entire 12-byte value in a visible spill. If the destination
+has a different live Z, that assignment changes four bytes not written by
+the native store. The next proof must identify the live destination storage
+and write only its X/Y, or prove the entire destination copy before any
+observation. Keep the six-lane query test and add the different-Z test at
+the store, not just at the later query. Source and tests are in the named
+local stash `ab068fea89c0268cc2256dc4bc2eab996d66fc82`, based on `6781fb6`.
+
 **Whole-method behavior gate: `GasCollisionSpawner.OnParticleCollision`.**
 At `0x1806efcda` the RPC takes two different by-value arguments: the saved
 intersection (XMM6 + EBX, 8+4 bytes copied through RDX) and the full 16-byte

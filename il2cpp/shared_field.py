@@ -39,15 +39,8 @@ def saved_fp_consumers(blocks):
     return sites
 
 
-def _read(il, addr, receiver):
-    # Exact qword load from RCX into the return register, followed by RET.
-    # A narrower load, a different ABI or any intervening effect declines.
-    if not il.bin.is_exec_va(addr):
-        return None
-    code = il.bin.read(addr, 5)
-    if not code or len(code) != 5 or code[:3] != b'\x48\x8b\x41' or code[4] != 0xc3:
-        return None
-    off = int.from_bytes(code[3:4], 'little', signed=True)
+def reference_field_at(il, receiver, off):
+    """Unique class reference occupying these eight bytes across all bases."""
     if off < 0x10:
         return None
     meta = il.meta
@@ -62,6 +55,8 @@ def _read(il, addr, receiver):
         offsets = il.field_offsets[ti] if ti < len(il.field_offsets) else None
         for k, fi in enumerate(meta.type_fields(td)):
             f = meta.fields[fi]
+            if not 0 <= f.type < len(il.types) or not il.types[f.type]:
+                return None
             if field_attrs(il, f) & (FA_LITERAL | FA_STATIC):
                 continue
             if not offsets or k >= len(offsets) or offsets[k] < 0x10 or not 0 <= f.type < len(il.types):
@@ -77,8 +72,21 @@ def _read(il, addr, receiver):
                         il._type_enum(ty) != 0x12):
                     return None
                 match = (ti, fi, ty)
+    return match
+
+
+def _read(il, addr, receiver):
+    # The load leaf proves the displacement; field layout proves the storage.
+    if not il.bin.is_exec_va(addr):
+        return None
+    code = il.bin.read(addr, 5)
+    if not code or len(code) != 5 or code[:3] != b'\x48\x8b\x41' or code[4] != 0xc3:
+        return None
+    match = reference_field_at(il,receiver,int.from_bytes(code[3:4], 'little', signed=True))
     if not match:
         return None
+    meta = il.meta
+    chain = il.base_chain_tds(receiver)
     owner, fi, ty = match
     # `base` resolves on the immediate parent. Avoid hidden members on
     # intervening classes, and don't assume that a private field is visible.

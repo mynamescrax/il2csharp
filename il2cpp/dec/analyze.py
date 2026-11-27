@@ -73,9 +73,13 @@ class _AnalyzeMixin:
         (L._component_lookups,L._material_sites,L._material_captures,L._material_reads) = material_sites(L,m,blocks,self._pad_bids)
         L._component_lookups.update(L._parent_lookup_sites)
         L._ordinary_lookups=set()
-        lookup_producers={};L._lookup_conversions={}
-        for ip,lookup in closed_lookup_sites(L,m,blocks,self._pad_bids,producers=lookup_producers,conversions=L._lookup_conversions,element_loads=checked_ref_loads).items():
+        lookup_producers={};L._lookup_conversions={};field_inputs={};L._lookup_field_origins={}
+        for ip,lookup in closed_lookup_sites(L,m,blocks,self._pad_bids,producers=lookup_producers,conversions=L._lookup_conversions,element_loads=checked_ref_loads,field_inputs=field_inputs).items():
             if ip not in L._component_lookups:
+                if ip in field_inputs:
+                    load,row=field_inputs[ip]
+                    if load in self.skip_ips or scalar_fields.get(load,row)!=row:continue
+                    scalar_fields[load]=row;L._lookup_field_origins[ip]=load
                 L._component_lookups[ip]=lookup;L._ordinary_lookups.add(ip)
         L._snapshot_srets, packed_loads, snapshot_getters = snapshot_plans(L, td, blocks, self._pad_bids)
         for site,_ in element_plans.values():L._snapshot_srets.update((*site.getters,site.rotate))
@@ -97,6 +101,7 @@ class _AnalyzeMixin:
         capture = getattr(self, '_captured_receiver', None)
 
         def fresh_regs(counting):
+            L._lookup_field_values={}
             L._checked_element_getters={}
             binary_values.clear()
             kickoff_values.clear()
@@ -207,7 +212,8 @@ class _AnalyzeMixin:
                         L._flags_mn=Mnemonic.CMP
                         continue
                 if ins.ip in scalar_fields:
-                    capture_field(L,ins,scalar_fields[ins.ip]);continue
+                    capture_field(L,ins,scalar_fields[ins.ip])
+                    L._lookup_field_values[ins.ip]=dict.get(L.regs,reg_name(ins.op0_register));continue
                 if element_plan and element_step(L,element_plan,element_values,ins):continue
                 if mn==Mnemonic.XOR and idx and b.insns[idx-1].mnemonic==Mnemonic.CALL:
                     unary_store=unary_argument(L,b.insns,idx)
