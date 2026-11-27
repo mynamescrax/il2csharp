@@ -54,7 +54,8 @@ def inherited_guards(lift,method,blocks,pads,virtuals=()):
         windows.append((seq[j-3:j+3],m))
     if not windows:return sites
     by={i.ip:i for i in seq};approve=(lambda i,*_:i.ip in virtuals) if virtuals else None
-    graph=_graph(il,seq,allow_tail=True,chained=True,runtime_tails=lift.rt_wbarrier,virtual_edges=approve)
+    slots={b.insns[-1].ip:tuple(b.switch_targets) for b in blocks if b.switch_targets}
+    graph=_graph(il,seq,allow_tail=True,chained=True,runtime_tails=lift.rt_wbarrier,virtual_edges=approve,switch_slots=slots)
     if not graph or seq[0].ip!=method.addr:return sites
     pred,_=graph
     for w,m in windows:

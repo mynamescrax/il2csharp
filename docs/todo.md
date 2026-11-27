@@ -1762,6 +1762,18 @@ NaN, null and throwing paths passed. The reward switch is outside this
 gate. Validation: 7 exact wheel tests, 15 exact binary/query/spawner
 regressions, and 2,346 portable checks. Previous rotation batch: `6b909e2`.
 
+**Inline singleton reads.** Four complete event callbacks now access the
+public getter at the native static-field read: `DelayedEventTrigger.PauseAmbience`,
+`NPCsRunAway`, `NPCsWalkAway`, and `ForestLimbsEvent.OnEnable`. The old C#
+referenced a private backing field on another type. Caller and getter each
+guard the same TypeInfo slot, read the same static-field offset, and need
+no class constructor. A throwing objective prevents forest activation;
+if the objective replaces the forest object, the replacement is activated.
+The wheel revenue arm also reacquires `StoreManager.Instance` after its
+authority check. The token loop's effects after exit still need proof.
+Validation: 5 exact static-read tests, 35 authority/lookup/append/spawner
+regressions, 2,346 portable passes. Prior wheel-loop batch: `45056b2`.
+
 **Packed resets still open.** `FPSDisplay` resets `median`/`average` at
 `0x180518b62` and `accum`/`frames` at `0x180518d49` with one eight-byte
 write. The emitted assignment changes only the first field. The same

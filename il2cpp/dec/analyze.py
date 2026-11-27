@@ -72,6 +72,8 @@ class _AnalyzeMixin:
         L._array_module_frames = {}
         L._single_array_allocs, L._single_array_counts = array_fill_sites(L, blocks, self._pad_bids,m)
         applications,fresh_app,parked_counts=application_sites(L,m,blocks,self._pad_bids)
+        from il2cpp.inline_static_guard import checked_statics
+        for ip,action in checked_statics(L,m,blocks,self._pad_bids).items():applications.setdefault(ip,action)
         L._single_array_counts.update(parked_counts);app_values={}
         L._signed_module_slots = signed_module_slots(L, blocks)
         module_frame = probed_frame(L, m, blocks, self._pad_bids)
