@@ -1864,11 +1864,14 @@ class _AnalyzeMixin:
             for s in b.succs:
                 if s >= 0 and s in bids and s in dom and b.bid in dom                         and (dom[b.bid] >> s) & 1:
                     body = {s, b.bid}
-                    stack = [b.bid]
+                    # A self edge is already closed at the header. Walking
+                    # its predecessors pulls in the preheader (and even
+                    # sibling switch arms), manufacturing loop exits.
+                    stack = [b.bid] if b.bid!=s else []
                     while stack:
                         x = stack.pop()
                         for p in blocks[x].preds:
-                            if p not in body:
+                            if p in bids and p in dom and (dom[p] >> s)&1 and p not in body:
                                 body.add(p)
                                 stack.append(p)
                     loops.append((s, body, b.bid))

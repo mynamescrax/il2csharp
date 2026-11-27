@@ -105,7 +105,9 @@ class _EmitMixin:
                 return
             # nested loop header?
             if (cur != _active_loop_header and cur in self.loop_of_hdr
-                    and self.loop_of_hdr[cur][0] - {cur}):
+                    and (self.loop_of_hdr[cur][0] - {cur} or
+                         (b.stmts and b.term and b.term[0]=='jcc' and len(set(b.succs))==2 and cur in b.succs
+                          and not self._seh_regions and not self._pad_bids))):
                 # a try whose exact ehdata open/close block IS the loop
                 # header must still open/close here: the loop branch below
                 # hands the header to `_emit_loop` and never reaches the
@@ -159,6 +161,14 @@ class _EmitMixin:
                 cond = b.cond or 'true'
                 # loop-exit branch: exactly one edge leaves the current loop
                 if in_loop and t >= 0 and f >= 0:
+                    # In a multi-latch loop the header can retry itself or
+                    # proceed into another in-loop arm. Falling through the
+                    # header stop on a retry would also execute that arm.
+                    if cur==_active_loop_header and t!=f and cur in (t,f) and t in in_loop and f in in_loop:
+                        nxt=f if t==cur else t
+                        out.extend(['if (%s)'%(cond if t==cur else '!(%s)'%cond),'{'])
+                        self._edge(cur,cur,out);out.extend(['continue;','}'])
+                        self._edge(cur,nxt,out);cur=nxt;continue
                     t_in = t in in_loop
                     f_in = f in in_loop
                     if t_in != f_in:

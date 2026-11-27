@@ -1774,6 +1774,20 @@ authority check. The token loop's effects after exit still need proof.
 Validation: 5 exact static-read tests, 35 authority/lookup/append/spawner
 regressions, 2,346 portable passes. Prior wheel-loop batch: `45056b2`.
 
+**Self-loop exits.** A one-block backedge used to pull its preheader and
+sibling switch arms into the loop. In `SpinWheelManager.CompleteSpin`, case
+0 therefore scheduled its ten tokens but omitted the winning particle and
+sound. Both callbacks now run after the loop. The complete method compiled
+and passed every reward arm, the valid indicator with no reward case,
+two distinct improving winners, both authority outcomes, scheduling times
+and exceptions at every logged reward effect. In `Telephone.Interact`, the
+three-pair dialogue scheduling loop reaches its two RPCs rather than an
+unrelated hash-test arm (compiled **slice**). Self-edge and longer latch
+arms keep their separate edge copies. Validation: 2 exact callback/slice
+tests, 7 wheel selection/proof checks, 77 broader exact checks, 14 exact
+cleanup/iterator/spawner regressions, and 2,349 portable passes. Prior
+static-read batch: `d15c7f9`.
+
 **Packed resets still open.** `FPSDisplay` resets `median`/`average` at
 `0x180518b62` and `accum`/`frames` at `0x180518d49` with one eight-byte
 write. The emitted assignment changes only the first field. The same
