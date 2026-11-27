@@ -1670,6 +1670,20 @@ null receivers and throwing getters. Validation: 19 exact terminal, chain,
 forward and whole-spawner checks and 2,340 portable tests. Previous lookup
 chain batch: `108dfb3`.
 
+**Authority on the loaded object.** `this._object.HasStateAuthority` read a
+private field inherited from `SimulationBehaviour`. Its registered public
+`Object` getter at `0x180641990` reads exactly the same eight bytes at
+`+0x40`. Capture this property at the load and preserve the guard on the
+returned `NetworkObject`. `EndOfDayReport.FixedUpdate` must acquire it
+again for the second check, even if the first check denied authority.
+The complete methods tested are `PlayerManager.PlayerLeft`,
+`StoreManager.ToggleMultiplayerObjects`, `CurrentDayManager.SecondCheckForAfterCarObjs`,
+`WanderAroundAimlessly.Start`, `Pet.FinishEatingFlesh`, `EndingScene.GoBackToMenu`,
+and `EndOfDayReport.FixedUpdate`. Tests exercise both authority polarities,
+callback replacement, null and throwing reads/actions, and rejected getter,
+receiver and hiding evidence. 4 exact authority tests, 13 collision/dispatch
+regressions and 2,340 portable tests passed. Prior batch: `4e21e18`.
+
 **Packed resets still open.** `FPSDisplay` resets `median`/`average` at
 `0x180518b62` and `accum`/`frames` at `0x180518d49` with one eight-byte
 write. The emitted assignment changes only the first field. The same

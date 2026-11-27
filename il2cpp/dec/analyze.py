@@ -86,6 +86,9 @@ class _AnalyzeMixin:
                 L._component_lookups[ip]=lookup;L._ordinary_lookups.add(ip)
                 if ip in previous_inputs:L._previous_lookup[ip]=previous_inputs[ip]
         from il2cpp.virtual_edges import terminal_homes
+        from il2cpp.inherited_guard import inherited_guards
+        for ip,row in inherited_guards(L,m,blocks,self._pad_bids,virtuals).items():
+            if ip not in applications:scalar_fields.setdefault(ip,row)
         L._terminal_virtuals=terminal_homes(L,m,blocks,self._pad_bids,virtuals)
         nested_fields={}
         for _,_,_,fields in L._terminal_virtuals.values():
