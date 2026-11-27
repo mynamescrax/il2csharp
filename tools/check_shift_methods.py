@@ -45,9 +45,9 @@ def main():
     root=Path(__file__).resolve().parents[1]
     def git(*words):return subprocess.check_output(['git',*words],cwd=root,text=True).strip()
     sha=git('rev-parse','HEAD');env=os.environ.copy()
-    for name,check in [('BINARY','163982a57e2e6e4c8f4558f6e968e9ba73e422d9b736cb4efef1e0674d5ab806'),('METADATA','bd92f36e124ec3b236ef6bc3ead42eed3c322b15f403ecdc078f7c8dee5c75e1')]:
+    for name,expected_hash in [('BINARY','163982a57e2e6e4c8f4558f6e968e9ba73e422d9b736cb4efef1e0674d5ab806'),('METADATA','bd92f36e124ec3b236ef6bc3ead42eed3c322b15f403ecdc078f7c8dee5c75e1')]:
         f=Path(env.get('IL2CSHARP_'+name,''));
-        if not f.is_file() or digest(f)!=check:p.error(f'IL2CSHARP_{name} does not identify the matching second v31 build')
+        if not f.is_file() or digest(f)!=expected_hash:p.error(f'IL2CSHARP_{name} does not identify the matching second v31 build')
         env['IL2CSHARP_'+name]=str(f.resolve())
     # Never launch the SDK ourselves. The compiled gates set a per-test CLI
     # home, including for --version. No changes to PATH or machine settings.
@@ -86,7 +86,8 @@ def check(root,git,sha,dirty,files,folder,report,env,args):
         checkpoint()
         print(f'{f.name}: {summary}',flush=True)
     print(f'{sum(r["ok"] for r in rows.values())}/{len(files)} modules passed; {sum(r["passed"] for r in rows.values())} passing test cases. {report}')
-    return int(any(not rows.get(f.name,{}).get('ok') for f in files))
+    if any(not r['ok'] for r in rows.values()):return 1
+    return 3 if len(rows)<len(files) else 0
 
 
 if __name__=='__main__':raise SystemExit(main())
