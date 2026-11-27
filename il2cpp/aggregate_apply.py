@@ -276,22 +276,32 @@ def application_step(lift,ins,action,values):
         source,si,member,rt=args;recv=dict.get(lift.regs,'RCX');slot=dict.get(lift.regs,'RDX')
         if recv and values.get(source) is recv and getattr(slot,'_usg_idx',None)==si:
             clear();bind(acc_get(f'{recv.text}.{member}()'),rt,'RAX');lift._type_hints.setdefault(values[ins.ip].text,rt);return True
-    if op=='index_result':
+    if op in ('index_result','fork_index'):
         source,si,rt=args;recv=dict.get(lift.regs,'RCX');index=dict.get(lift.regs,'RDX');slot=dict.get(lift.regs,'R8')
         if (recv and values.get(source) is recv and getattr(slot,'_usg_idx',None)==si and index and not index._unk and
-                (lift.dry or lift.il._closed_type_key(index.ty)==(8,0))):
+                ((lift.dry and op=='index_result') or (lift.il._closed_type_key(index.ty)==(8,0) and (op!='fork_index' or index.kind=='int')))):
             term=acc_get(f'{recv.text}[{index.text}]');clear();bind(term,rt,'RAX');lift._type_hints.setdefault(values[ins.ip].text,rt);return True
     if op=='count_value':
         source,prop,reg,dst=args;recv=dict.get(lift.regs,reg)
         if recv and values.get(source) is recv:
             bind(acc_get(f'{recv.text}.{prop}'),(0,8<<16),dst,'int');return True
+    if op in ('fork_inc','fork_dec'):
+        source,dst=args;v=dict.get(lift.regs,dst)
+        if v and values.get(source) is v:
+            bind(f'unchecked({v.text} {"+" if op=="fork_inc" else "-"} 1)',v.ty,dst,'int');lift.flags=None;return True
+    if op=='fork_count_cmp':
+        source,prop,reg=args;recv=dict.get(lift.regs,'RCX');lhs=dict.get(lift.regs,reg)
+        if recv and lhs and values.get(source) is recv:
+            lift.flags=(lhs,Expr(acc_get(f'{recv.text}.{prop}'),(0,8<<16),'int'));lift._flags_mn=M.CMP;return True
     if op=='count_cmp':
         from il2cpp.text import reg_name
         source,prop,n=args;e=dict.get(lift.regs,reg_name(ins.memory_base))
         if e and values.get(source) is e:
             lift.flags=(Expr(acc_get(f'{e.text}.{prop}'),(0,8<<16),'int'),Expr(str(n),None,'int'));lift._flags_mn=M.CMP;return True
     if op=='field_value':
-        (name,ty),reg,kind=args;bind(acc_get(name),ty,reg,kind);return True
+        (name,ty),reg,kind=args;bind(acc_get(name),ty,reg,kind)
+        if reg=='RBP':lift._rbp_frame=False
+        return True
     if op=='make_float':
         fn,ty,lo,hi=args
         if lo in values and hi in values:

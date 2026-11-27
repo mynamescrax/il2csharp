@@ -1800,6 +1800,18 @@ copy of the `RaycastAll` array used in the loop. Validation: 5 acquisition,
 2,349 portable passes. Geometry and subsequent collision selection are
 separate from these receiver checks. Previous whole-wheel batch: `862826c`.
 
+**Indexer arguments prepared before diverging calls.** `ParticleShowcase.ActivateNext`
+and `ChangeFX.DoChangeFX` each lost one `List<GameObject>.get_Item` call
+to a 16-candidate shared body. In both, R8 carries MethodSpec 170528
+through the fork; the checked index is in EDX and the receiver is in RCX.
+Both arms now use their actual returned object. The whole `ActivateNext`
+callback passed wrap, advance, field replacements, checked-build overflow
+and faults. The FX selection slice makes one `FindIndex` call on the
+original list, then counts/indexes the reloaded field. Its predicate-cache
+construction remains outside the gate. Scoped unresolved calls across these
+two methods: 2 → 0. Validation: 5 fork checks, 15 exact indexer/spawner
+regressions and 2,349 portable passes. Previous batch: `baf830a`.
+
 **Packed resets still open.** `FPSDisplay` resets `median`/`average` at
 `0x180518b62` and `accum`/`frames` at `0x180518d49` with one eight-byte
 write. The emitted assignment changes only the first field. The same
