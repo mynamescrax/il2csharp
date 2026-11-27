@@ -39,9 +39,9 @@ def saved_fp_consumers(blocks):
     return sites
 
 
-def reference_field_at(il, receiver, off, *, constructed=False):
-    """Unique class reference occupying these eight bytes across all bases."""
-    if off < 0x10:
+def whole_field_at(il, receiver, off, width):
+    """One non-overlapping storage row for the entire native byte range."""
+    if off < 0x10 or width<=0:
         return None
     meta = il.meta
     chain = il.base_chain_tds(receiver)
@@ -62,18 +62,25 @@ def reference_field_at(il, receiver, off, *, constructed=False):
             if not offsets or k >= len(offsets) or offsets[k] < 0x10 or not 0 <= f.type < len(il.types):
                 return None
             pos, ty = offsets[k], il.types[f.type]
-            if pos >= off + 8:
+            if pos >= off + width:
                 continue
             size = il._sf_field_size(ty, 0)
             if not size or size < 0:
                 return None
             if pos + size > off:
-                if match or pos != off or size != 8 or ty[1] & (1 << 29):
+                if match or pos != off or size != width or ty[1] & (1 << 29):
                     return None
-                if il._type_enum(ty) != 0x12:
-                    k=il._closed_type_key(ty) if constructed and il._type_enum(ty)==0x15 else None
-                    if not k or k[1][0]!=0x12 or k[1][-1] or k[-1]:return None
                 match = (ti, fi, ty)
+    return match
+
+
+def reference_field_at(il, receiver, off, *, constructed=False):
+    match=whole_field_at(il,receiver,off,8)
+    if not match:return None
+    ty=match[2]
+    if il._type_enum(ty)!=0x12:
+        k=il._closed_type_key(ty) if constructed and il._type_enum(ty)==0x15 else None
+        if not k or k[1][0]!=0x12 or k[1][-1] or k[-1]:return None
     return match
 
 

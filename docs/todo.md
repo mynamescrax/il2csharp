@@ -1699,6 +1699,18 @@ Validation: 5 exact focus tests, 6 remainder tests, 4 discarded-task tests,
 18 collision/contact/dispatch checks and 2,343 single-worker portable tests.
 Prior authority batch: `c9ab01c`.
 
+**Branch on the Boolean before the toggle.** `RevealText.<RevealText_>d__9.MoveNext`
+read `justPlayed` twice and emitted `bool == 0`. At `0x1805a7a0d` one byte
+load supplies the inversion and the branch: store `!old`, then play audio
+only on old true. `RealFireSceneSelect.Update` has the same split between
+the value stored and the value tested. Both complete emitted methods passed,
+including entry/resume owner replacement, the post-setter threshold, divide
+faults, input gating, and a canvas lookup that changes the field again.
+The rule requires writable Boolean storage, full native predecessor evidence,
+and no later observation of discarded register bits or outstanding flags.
+Validation: 6 exact toggle tests, 15 iterator/remainder/spawner regressions,
+and 2,345 portable tests. Prior join batch: `bd4d26a`.
+
 **Packed resets still open.** `FPSDisplay` resets `median`/`average` at
 `0x180518b62` and `accum`/`frames` at `0x180518d49` with one eight-byte
 write. The emitted assignment changes only the first field. The same

@@ -48,6 +48,8 @@ class _AnalyzeMixin:
         divisions=field_divisions(L,m,blocks,self._pad_bids)
         from il2cpp.dispatch_fields import dispatch_fields,bind_dispatch_field
         dispatch_reads=dispatch_fields(L,m,blocks,self._pad_bids)
+        from il2cpp.toggle import toggle_sites,bind_toggle
+        toggles=toggle_sites(L,m,blocks,self._pad_bids,dispatch_reads)
         vector_getter = vector_field_getter(L,m) if len(blocks)==1 and len(blocks[0].insns)==6 and not self._pad_bids else None
         dec_getter = decrement_body(L,m) if len(blocks)==1 and len(blocks[0].insns)==3 and not self._pad_bids else None
         # _rpo appends the unreachable tail (the EH pads, entered only by the
@@ -225,6 +227,8 @@ class _AnalyzeMixin:
                     L.regs['RDI'] = Expr(snapshot, capture[2], 'obj')
                     continue
                 mn = ins.mnemonic
+                if ins.ip in toggles and bind_toggle(L,ins,b.insns[idx+3],toggles[ins.ip]):
+                    copied_until=idx+3;continue
                 # A specialized async kickoff needs the same owner local in
                 # its per-pass identity map. Let that producer bind the load.
                 if ins.ip in dispatch_reads and ins.ip not in owner_loads and ins.ip not in scalar_fields:
