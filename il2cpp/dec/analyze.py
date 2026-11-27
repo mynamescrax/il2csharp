@@ -44,6 +44,9 @@ class _AnalyzeMixin:
         from il2cpp.array_member import checked_ref_elements
         checked_ref_loads=checked_ref_elements(L,m,blocks,self._pad_bids)
         scalar_fields,scalar_getters=scalar_sites(L,m,td,blocks,self._pad_bids)
+        from il2cpp.sret_value import copied_values,bind_value
+        paired_fields,value_loads=copied_values(L,m,td,blocks,self._pad_bids)
+        for ip,row in paired_fields.items():scalar_fields.setdefault(ip,row)
         from il2cpp.field_remainder import field_divisions,division_step
         divisions=field_divisions(L,m,blocks,self._pad_bids)
         from il2cpp.dispatch_fields import dispatch_fields,bind_dispatch_field
@@ -229,6 +232,7 @@ class _AnalyzeMixin:
                     L.regs['RDI'] = Expr(snapshot, capture[2], 'obj')
                     continue
                 mn = ins.mnemonic
+                if ins.ip in value_loads and ins.ip not in packed_loads and bind_value(L,ins,value_loads[ins.ip]):continue
                 if ins.ip in packed_sites and apply_packed_call(L,ins.ip,packed_sites[ins.ip]):
                     copied_until=idx+packed_sites[ins.ip][0]-1;continue
                 if ins.ip in toggles and bind_toggle(L,ins,b.insns[idx+3],toggles[ins.ip]):

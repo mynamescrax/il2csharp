@@ -1737,6 +1737,19 @@ projection/forward/spawner regressions, 2,345 portable passes. This checks
 the callback, not the intersection algorithm in `ScreenSpaceCut`. Prior
 shelf batch: `5015261`.
 
+**Copied rotation results.** `FinaleStartCutscene.Update` (25327, RVA
+`0x6E45D0`) used the second getter for both quaternion interpolation
+endpoints and reread `cam` for the setters. Both getters use the same
+physical return buffer, but the first full-width `MOVUPS` has already
+saved its value in XMM8; the second saves a different value in XMM6.
+Keep four separate dword origins for each saved value. The getter and
+setter receivers likewise share a saved reference within each pair, with
+a fresh `cam` read after the position write. The complete callback passed
+distinct endpoints, bit patterns, time samples, receiver changes, setter
+arguments, nulls and faults. 6 sret-value checks, 77 broader exact checks,
+6 virtual/spawner regressions and 2,345 portable checks. A partial XY spill
+does not qualify. Prior packed-argument batch: `067ddba`.
+
 **Packed resets still open.** `FPSDisplay` resets `median`/`average` at
 `0x180518b62` and `accum`/`frames` at `0x180518d49` with one eight-byte
 write. The emitted assignment changes only the first field. The same

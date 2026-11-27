@@ -23,7 +23,7 @@ def _reachable(edges, roots):
     return seen
 
 
-def _graph(il, seq, *, allow_tail=False, runtime_tails=(), chained=False, switch_slots=None, virtual_edges=None):
+def _graph(il, seq, *, allow_tail=False, runtime_tails=(), chained=False, switch_slots=None, virtual_edges=None, nested_chains=False):
     """Instruction edges, including both arms of every skipped init guard."""
     lo, hi = seq[0].ip, seq[-1].next_ip
     if il.eh_regions(lo):
@@ -39,11 +39,15 @@ def _graph(il, seq, *, allow_tail=False, runtime_tails=(), chained=False, switch
     if (lo != image + start or len(header) != 4 or header[0] != 1 or
             any(a.next_ip > b.ip for a, b in zip(seq, seq[1:]))):
         return None
-    parent=pack('<III',start,end,unwind)
+    parents={pack('<III',start,end,unwind)}
     while chained and image+end<hi and n+1<len(il._eh4_entries):
         n+=1;entry,stop,ui=il._eh4_entries[n];h=il.bin.read(image+ui,4) or b''
         if (entry!=end or stop<=entry or len(h)!=4 or h[0]!=0x21 or
-                il.bin.read(image+ui+4+2*((h[2]+1)&~1),12)!=parent):return None
+                il.bin.read(image+ui+4+2*((h[2]+1)&~1),12) not in parents):return None
+        # A shrink-wrapped save may use another chained RUNTIME_FUNCTION as
+        # its primary record. Every admitted record still descends from the
+        # same root; an adjacent function alone does not authorize an edge.
+        if nested_chains:parents.add(pack('<III',entry,stop,ui))
         end=stop
     tables = {}
     if switch_slots:
