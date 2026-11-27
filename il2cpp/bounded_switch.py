@@ -35,6 +35,12 @@ def _unrelocated(binary, address, stop):
     count, = unpack_from('<I', d, opt+108)
     if 112 + count*8 > size:
         return False
+    # An IAT slot is changed by the loader even without a base relocation.
+    # Delay imports have their own IATs; do not certify them from this table.
+    directory=lambda i:unpack_from('<II',d,opt+112+i*8) if i<count else (0,0)
+    imports=directory(1);iat,length=directory(12)
+    if directory(13)!=(0,0) or (imports!=(0,0) and (not iat or not length)):return False
+    if iat and binary.image_base+iat<stop and address<binary.image_base+iat+length:return False
     if count <= 5:
         return True
     rva, length = unpack_from('<II', d, opt+112+5*8)
@@ -67,14 +73,16 @@ def bounded_switch(binary, seq, j, ips):
         return None
     window = seq[j-6:j+1]
     source, cmp, guard, table_base, lookup, add, jump = window
+    extended=source.mnemonic==M.CMP
+    if extended:cmp,guard,table_base,source=window[:4]
     if (any(x.next_ip != y.ip for x,y in zip(window,window[1:])) or
             any(i.has_segment_prefix or i.has_lock_prefix for i in window)):
         return None
     idx = source.op0_register
     base = table_base.op0_register
     target = jump.op0_register
-    if (source.mnemonic != M.MOVSXD or not RegisterExt.is_gpr64(idx) or source.op1_kind != K.MEMORY or
-            cmp.mnemonic != M.CMP or not RegisterExt.is_gpr32(cmp.op0_register) or RegisterExt.full_register(cmp.op0_register) != idx or
+    if (source.mnemonic != M.MOVSXD or not RegisterExt.is_gpr64(idx) or
+            cmp.mnemonic != M.CMP or not RegisterExt.is_gpr32(cmp.op0_register) or
             cmp.op1_kind not in (K.IMMEDIATE8TO32,K.IMMEDIATE32) or guard.mnemonic != M.JA or guard.op0_kind != K.NEAR_BRANCH64 or
             table_base.mnemonic != M.LEA or table_base.memory_base != R.RIP or not RegisterExt.is_gpr64(base) or
             lookup.mnemonic != M.MOV or not RegisterExt.is_gpr32(lookup.op0_register) or lookup.op1_kind != K.MEMORY or
@@ -83,6 +91,12 @@ def bounded_switch(binary, seq, j, ips):
             add.mnemonic != M.ADD or add.op0_register != target or add.op1_register != base or
             len({base,idx,target}) != 3 or R.RSP in (base,idx,target)):
         return None
+    if extended:
+        # The value compared before the branch must reach MOVSXD after
+        # the base load. The default edge is the unsigned out-of-range arm.
+        if (source.op1_kind!=K.REGISTER or source.op1_register!=cmp.op0_register or
+                RegisterExt.full_register(source.op1_register) in (base,R.RSP)):return None
+    elif source.op1_kind!=K.MEMORY or RegisterExt.full_register(cmp.op0_register)!=idx:return None
     count = cmp.immediate(1) + 1
     origin = table_base.ip_rel_memory_address
     address = origin + sdisp(lookup.memory_displacement)

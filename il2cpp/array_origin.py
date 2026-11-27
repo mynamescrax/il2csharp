@@ -61,7 +61,8 @@ def _graph(il, seq, *, allow_tail=False, runtime_tails=(), chained=False, switch
     if tables:
         # The table exactly fills the trailer of this runtime function. No
         # adjacent method, undecoded instruction gap, or truncated table.
-        if (len(tables)!=1 or next(iter(tables.values()))[1]!=(hi,image+end) or
+        a,z=next(iter(tables.values()))[1]
+        if (len(tables)!=1 or z!=image+end or (a!=hi and not (a==hi+3 and not a%4 and il.bin.read(hi,3)==b'\x0f\x1f\x00')) or
                 any(a.next_ip!=b.ip for a,b in zip(seq,seq[1:]))):return None
     elif hi!=image+end:return None
 

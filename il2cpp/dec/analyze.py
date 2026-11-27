@@ -115,6 +115,9 @@ class _AnalyzeMixin:
         packs, extra_srets = return_plans(L, m, blocks, self._pad_bids, snapshot_getters)
         L._snapshot_srets.update(extra_srets)
         L._snapshot_srets.update(fresh_app)
+        from il2cpp.saved_binary import binary_arguments,save_echo,call_binary
+        saved_reads,saved_calls=binary_arguments(L,m,blocks,self._pad_bids);saved_values={}
+        L._snapshot_srets.update(ip for ip,ty,home in saved_reads.values())
         L._ref_array_pads = self._pad_bids
         m_returns = self._returns_value(m)
         self.phi_pre = {}
@@ -232,6 +235,8 @@ class _AnalyzeMixin:
                     L.regs['RDI'] = Expr(snapshot, capture[2], 'obj')
                     continue
                 mn = ins.mnemonic
+                if ins.ip in saved_reads:save_echo(L,saved_reads[ins.ip],saved_values)
+                if ins.ip in saved_calls and call_binary(L,ins,saved_calls[ins.ip],saved_values):continue
                 if ins.ip in value_loads and ins.ip not in packed_loads and bind_value(L,ins,value_loads[ins.ip]):continue
                 if ins.ip in packed_sites and apply_packed_call(L,ins.ip,packed_sites[ins.ip]):
                     copied_until=idx+packed_sites[ins.ip][0]-1;continue
@@ -981,6 +986,7 @@ class _AnalyzeMixin:
             b.stmts = []
 
         # ---- pass 2 (real): emit with stable phi vars
+        saved_values.clear()
         jcc_fallthrough_flags.clear()
         L.rsp_delta = 0
         L.stack_map = {}
@@ -1188,12 +1194,29 @@ class _AnalyzeMixin:
 
         # ---- SSA destruction: materialize each phi as a copy on its in-edges
         self.phi_names = set(phi.values())
+        self._finish_int_copies(blocks,phi)
         self._build_phi_copies(blocks, phi, FLAGS)
         L._phi_bytes = self.phi_bytes
         L._flush_pending_calls(getattr(self, 'phi_copies', None))
 
     # ------------------------------------------------------------------
     _TOKRX = re.compile(r'(?<![\w.])(v\d+)(?![\w])')
+
+    def _finish_int_copies(self,blocks,phi):
+        """An initially untyped merge may copy two later-typed Int32s.
+        Use final edge states (never the dry latch), without casting values
+        or inferring their types from the destination's printed name."""
+        il=self.L.il;hints=self.L._type_hints
+        for (bid,reg),dest in phi.items():
+            if dest in self._var_types or dest in hints or not re.fullmatch(r'R(?:[A-D]X|SI|DI|BP|[89]|1[0-5])',reg):continue
+            preds=blocks[bid].preds
+            if len(preds)<2:continue
+            for p in preds:
+                v=(blocks[p].end_state or {}).get(reg)
+                if not v or v._unk or v.kind!='int' or not re.fullmatch(r'v\d+',v.text) or v.text==dest:break
+                types=[t for t in (v.ty,self._var_types.get(v.text),hints.get(v.text)) if t is not None]
+                if not types or any(il._closed_type_key(t)!=(8,0) for t in types):break
+            else:self._var_types[dest]=_INT_TY
 
     def _loop_max_carries(self, blocks, rpo):
         """A zero on the dry latch is not loop-invariant when the loop

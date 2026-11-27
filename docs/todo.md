@@ -1750,6 +1750,18 @@ arguments, nulls and faults. 6 sret-value checks, 77 broader exact checks,
 6 virtual/spawner regressions and 2,345 portable checks. A partial XY spill
 does not qualify. Prior packed-argument batch: `067ddba`.
 
+**Winning candidates are sampled again.** `SpinWheelManager.CompleteSpin`
+(27625, RVA `0x5C8CE0`) compared every slot against `10000` and lost the
+second pair of position getters. The improving arm calls a byte-equivalent
+`Vector3.Distance` at `0x1804FE6E0`. Both argument homes must contain all
+three dwords of the checked getter results. The index merge also needs the
+final Int32 types of its two incoming locals. The complete selection loop
+through the animator trigger passed a changing-array test: compare `5`,
+save a fresh `13`; compare `9`, save `7`; skip the final tie. Empty/no-win,
+NaN, null and throwing paths passed. The reward switch is outside this
+gate. Validation: 7 exact wheel tests, 15 exact binary/query/spawner
+regressions, and 2,346 portable checks. Previous rotation batch: `6b909e2`.
+
 **Packed resets still open.** `FPSDisplay` resets `median`/`average` at
 `0x180518b62` and `accum`/`frames` at `0x180518d49` with one eight-byte
 write. The emitted assignment changes only the first field. The same
