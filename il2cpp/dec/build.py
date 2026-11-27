@@ -373,6 +373,8 @@ class _BuildMixin:
         fold_boxed_cleanup(L,m,blocks,self._pad_bids)
         fold_lookup_list_tail(L,blocks)
         fold_terminal_appends(L,m,td,blocks,self._pad_bids)
+        from il2cpp.reference_append import fold_reference_append
+        fold_reference_append(self,m,td,blocks,self._pad_bids)
         fold_iterator_creation(L,td,blocks,self._pad_bids)
         # type inference: hints gathered during pass 2 feed the renaming pass
         for k, v in getattr(self.L, '_type_hints', {}).items():

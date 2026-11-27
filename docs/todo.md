@@ -1711,6 +1711,19 @@ and no later observation of discarded register bits or outstanding flags.
 Validation: 6 exact toggle tests, 15 iterator/remainder/spawner regressions,
 and 2,345 portable tests. Prior join batch: `bd4d26a`.
 
+**Reference-list append followed by an optional action.** On a shelf with
+one item and capacity two, `ShelfItemManager.LocalAddItem` (27395, RVA
+`0x5B4700`) used to write slot 2 instead of slot 1. Its resize arm printed
+`CopyTo`. The fast store uses the old size in RDX; EAX updates the count.
+MethodSpec 171556 and the registered public `List<Transform>.Add` body
+agree on the resize, bounds and write-barrier targets. MethodSpec 175361
+supplies the spawned object. The method now reads its `transform` once,
+then reloads `products`, appends, and sorts only when requested. A callback
+can replace the list during that getter. The complete method passed spare
+capacity, resize, identity, replacement and fault tests. Validation: 10 shelf
+checks, 19 list-append checks, 4 whole-spawner regressions, 8 purchase-lookup
+checks earlier in the batch, and 2,345 portable tests. Prior batch: `76d3674`.
+
 **Packed resets still open.** `FPSDisplay` resets `median`/`average` at
 `0x180518b62` and `accum`/`frames` at `0x180518d49` with one eight-byte
 write. The emitted assignment changes only the first field. The same
