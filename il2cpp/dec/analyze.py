@@ -75,14 +75,16 @@ class _AnalyzeMixin:
         (L._component_lookups,L._material_sites,L._material_captures,L._material_reads) = material_sites(L,m,blocks,self._pad_bids)
         L._component_lookups.update(L._parent_lookup_sites)
         L._ordinary_lookups=set()
-        lookup_producers={};L._lookup_conversions={};field_inputs={};L._lookup_field_origins={}
-        for ip,lookup in closed_lookup_sites(L,m,blocks,self._pad_bids,producers=lookup_producers,conversions=L._lookup_conversions,element_loads=checked_ref_loads,field_inputs=field_inputs).items():
+        lookup_producers={};L._lookup_conversions={};field_inputs={};L._lookup_field_origins={};previous_inputs={};virtuals={}
+        L._previous_lookup={}
+        for ip,lookup in closed_lookup_sites(L,m,blocks,self._pad_bids,producers=lookup_producers,conversions=L._lookup_conversions,element_loads=checked_ref_loads,field_inputs=field_inputs,previous_inputs=previous_inputs,virtuals=virtuals).items():
             if ip not in L._component_lookups:
                 if ip in field_inputs:
                     load,row=field_inputs[ip]
                     if load in self.skip_ips or scalar_fields.get(load,row)!=row:continue
                     scalar_fields[load]=row;L._lookup_field_origins[ip]=load
                 L._component_lookups[ip]=lookup;L._ordinary_lookups.add(ip)
+                if ip in previous_inputs:L._previous_lookup[ip]=previous_inputs[ip]
         L._snapshot_srets, packed_loads, snapshot_getters = snapshot_plans(L, td, blocks, self._pad_bids)
         for site,_ in element_plans.values():L._snapshot_srets.update((*site.getters,site.rotate))
         binary_reads,binary_stores,binary_uses=binary_sites(L,m,blocks,self._pad_bids)

@@ -23,7 +23,7 @@ def _reachable(edges, roots):
     return seen
 
 
-def _graph(il, seq, *, allow_tail=False, runtime_tails=(), chained=False, switch_slots=None):
+def _graph(il, seq, *, allow_tail=False, runtime_tails=(), chained=False, switch_slots=None, virtual_edges=None):
     """Instruction edges, including both arms of every skipped init guard."""
     lo, hi = seq[0].ip, seq[-1].next_ip
     if il.eh_regions(lo):
@@ -78,6 +78,8 @@ def _graph(il, seq, *, allow_tail=False, runtime_tails=(), chained=False, switch
             if (allow_tail and fc==F.UNCONDITIONAL_BRANCH and not lo<=i.near_branch_target<image+end and
                     (i.near_branch_target in il.addr_candidates or i.near_branch_target in runtime_tails) and il.bin.is_exec_va(i.near_branch_target)):
                 edges=()  # known tail exit: it cannot feed a later lookup
+        elif virtual_edges is not None and fc==F.INDIRECT_CALL and i.mnemonic==M.CALL and i.op0_kind==K.MEMORY:
+            edges=(i.next_ip,)  # provisional until every indirect transfer has been justified
         elif i.ip in tables:
             edges = set(tables[i.ip][0])
         elif i.mnemonic in (M.RET, M.INT3, M.UD2):
@@ -94,6 +96,9 @@ def _graph(il, seq, *, allow_tail=False, runtime_tails=(), chained=False, switch
     for targets,span,window in tables.values():
         if any(pred[b.ip]!=[a.ip] for a,b in zip(window,window[1:])):return None
         if span[0]<hi and lo<span[1]:return None
+    if virtual_edges is not None:
+        by={i.ip:i for i in seq}
+        if any(not virtual_edges(i,by,pred,(lo,image+end)) for i in seq if i.flow_control==F.INDIRECT_CALL):return None
     return pred, succ
 
 

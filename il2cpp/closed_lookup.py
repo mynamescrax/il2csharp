@@ -65,7 +65,29 @@ def _field_input(il,method,byip,pred,call,owner):
     return ip,('this.'+safe_ident(source_field_name(il,fi)),ty)
 
 
-def closed_lookup_sites(lift,method,blocks,pads,*,producers=None,conversions=None,element_loads=None,field_inputs=None):
+def spec_lookup(il,slot,call):
+    """Prove the closed signature and entry; receiver proof is separate."""
+    if (not call.is_call_near or slot.mnemonic!=M.MOV or slot.op0_register!=R.RDX or slot.op1_kind!=K.MEMORY or
+            slot.memory_base!=R.RIP or slot.has_segment_prefix or slot.has_lock_prefix):return None
+    u=il.decode_slot(slot.ip_rel_memory_address) or {};si=u.get('idx',-1)
+    if u.get('kind')!=6 or not 0<=si<len(il.method_specs):return None
+    mi,ci,gi=il.method_specs[si]
+    if ci!=-1 or gi<0 or not 0<=mi<len(il.meta.methods):return None
+    md=il.meta.methods[mi];args=il._method_spec_type_args(gi)
+    if (md.is_static or md.flags&7!=6 or md.flags&(0x40|0x800) or md.param_count or not 0<=md.declaring<len(il.meta.typedefs) or
+            not 0<=md.generic_container<len(il.meta.generic_containers) or not 0<=md.return_type<len(il.types) or
+            safe_ident(md.name)!=md.name or md.name.startswith(('get_','set_','add_','remove_')) or not args or len(args)!=1 or not args[0]):return None
+    td=il.meta.typedefs[md.declaring];rt=il.types[md.return_type];own,n,meth,first=il.meta.generic_containers[md.generic_container]
+    if (td.generic_container!=-1 or td.is_valuetype or td.flags&0x20 or (own,n,meth)!=(mi,1,1) or il._type_enum(rt)!=0x1e or
+            rt[0]!=first or rt[1]&(1<<29) or il._closed_type_key(args[0])!=(0x12,args[0][0],0) or
+            not 0<=args[0][0]<len(il.meta.typedefs) or il.meta.typedefs[args[0][0]].generic_container!=-1 or
+            il._closed_type_key(il.candidate_return_type(('generic',si)))!=il._closed_type_key(args[0])):return None
+    target=call.near_branch_target;entry=_spec_entry(il,si,mi)
+    if entry!=target and (si in il._awaiter_spec_indices[mi] or object_shared_entry(il,mi)!=target):return None
+    return si,md,args[0]
+
+
+def closed_lookup_sites(lift,method,blocks,pads,*,producers=None,conversions=None,element_loads=None,field_inputs=None,previous_inputs=None,virtuals=None):
     il=lift.il
     result={}
     if not HAVE_ICED or pads or not isinstance(getattr(il,'bin',None),PE) or not il.bin.is64:return result
@@ -88,29 +110,22 @@ def closed_lookup_sites(lift,method,blocks,pads,*,producers=None,conversions=Non
             if (slot.mnemonic==M.MOV and slot.op0_register==R.RDX and slot.op1_kind==K.MEMORY and slot.memory_base==R.RIP and
                     not slot.has_segment_prefix):possible.append(b.insns[k:j+1])
     if not possible:return result
-    seq=[i for b in blocks for i in b.insns];graph=_graph(il,seq,allow_tail=True,runtime_tails=lift.rt_wbarrier,chained=True)
+    seq=[i for b in blocks for i in b.insns];approve=None;certified={}
+    if virtuals is not None and any(i.is_call_near_indirect for i in seq):
+        from il2cpp.virtual_edges import certified_edge
+        def approve(i,by,pred,extent):
+            fact=certified_edge(lift,method,i,by,pred,extent)
+            if fact is not None:certified[i.ip]=fact
+            return fact is not None
+    graph=_graph(il,seq,allow_tail=True,runtime_tails=lift.rt_wbarrier,chained=True,virtual_edges=approve)
     if not graph or seq[0].ip!=method.addr:return result
+    if certified:virtuals.update(certified)
     pred,_=graph;byip={i.ip:i for i in seq}
     for setup in possible:
         if any(x.next_ip!=z.ip or pred[z.ip]!=[x.ip] for x,z in zip(setup,setup[1:])):continue
-        slot,call=setup[0],setup[-1];u=il.decode_slot(slot.ip_rel_memory_address) or {};si=u.get('idx',-1)
-        if u.get('kind')!=6 or not 0<=si<len(il.method_specs):continue
-        mi,ci,gi=il.method_specs[si]
-        if ci!=-1 or gi<0 or not 0<=mi<len(il.meta.methods):continue
-        md=il.meta.methods[mi];args=il._method_spec_type_args(gi)
-        if (md.is_static or md.flags&7!=6 or md.flags&(0x40|0x800) or md.param_count or not 0<=md.declaring<len(il.meta.typedefs) or
-                not 0<=md.generic_container<len(il.meta.generic_containers) or not 0<=md.return_type<len(il.types) or
-                safe_ident(md.name)!=md.name or md.name.startswith(('get_','set_','add_','remove_')) or not args or len(args)!=1 or not args[0]):continue
-        td=il.meta.typedefs[md.declaring];rt=il.types[md.return_type];own,n,meth,first=il.meta.generic_containers[md.generic_container]
-        if (td.generic_container!=-1 or td.is_valuetype or td.flags&0x20 or (own,n,meth)!=(mi,1,1) or il._type_enum(rt)!=0x1e or
-                rt[0]!=first or rt[1]&(1<<29) or il._closed_type_key(args[0])!=(0x12,args[0][0],0) or
-                not 0<=args[0][0]<len(il.meta.typedefs) or il.meta.typedefs[args[0][0]].generic_container!=-1 or
-                il._closed_type_key(il.candidate_return_type(('generic',si)))!=il._closed_type_key(args[0])):continue
-        target=call.near_branch_target;entry=_spec_entry(il,si,mi)
-        if entry!=target:
-            # No concrete registration is usual for a reference specialization;
-            # a conflicting/invalid row is not the same as an absent row.
-            if si in il._awaiter_spec_indices[mi] or object_shared_entry(il,mi)!=target:continue
+        slot,call=setup[0],setup[-1];spec=spec_lookup(il,slot,call)
+        if not spec:continue
+        si,md,actual=spec
         sources={}; from_element=False
         if element_loads:
             defs=_definitions(byip,pred,method.addr,call.ip,R.RCX)
@@ -121,9 +136,16 @@ def closed_lookup_sites(lift,method,blocks,pads,*,producers=None,conversions=Non
                     from_element=bool(elem and il._closed_type_key(elem)==(0x12,elem[0],0) and md.declaring in il.base_chain_tds(elem[0]))
         ordinary=from_element or _receiver(il,method,byip,pred,call.ip,md.declaring,producers=sources)
         field=None if ordinary or field_inputs is None else _field_input(il,method,byip,pred,call,md.declaring)
-        if ordinary or field:
-            result[call.ip]=(si,md.declaring,args[0],md.name,False)
+        previous=None
+        if not ordinary and not field and previous_inputs is not None and result:
+            defs=_definitions(byip,pred,method.addr,call.ip,R.RCX)
+            if len(defs)==1:
+                ip,r=defs.pop()
+                if r==R.RAX and ip in result and md.declaring in il.base_chain_tds(result[ip][2][0]):previous=ip
+        if ordinary or field or previous is not None:
+            result[call.ip]=(si,md.declaring,actual,md.name,False)
             if field:field_inputs[call.ip]=field
+            elif previous is not None:previous_inputs[call.ip]=previous
             elif producers is not None:producers.update(sources)
     if result and conversions is not None:
         from il2cpp.truth_operator import truth_owner

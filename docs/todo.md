@@ -1641,6 +1641,29 @@ an adjacent matching scalar compare and a compatible low-lane value.
 Validation: 6 clamp tests, 77 broader exact checks, 7 light/whole-spawner
 regressions and 2,340 portable checks. Previous cache-output batch: `99b740c`.
 
+**Chained player lookups across a virtual-call graph.** Both rendered
+player branches in `ThrownObject.OnCollisionEnter` used to invoke each
+lookup twice and treat the player as `UnityEngine.Object`. The native
+`0x18060b000` result is the receiver of `0x18060b077`; its MethodRef names
+`GetComponent<NetworkObject>`. A closed lookup can now consume a previously
+proved lookup's saved reference. The graph accepts the separate indirect
+call at `0x18060afa3` only after tracing both words of slot 28, its hidden
+stack argument, the receiver and all registered concrete implementations.
+Both printed player-arm slices passed lookup/reload order, all three Unity
+comparisons, missing/destroyed/thrower cases, exact stuck/damage arguments
+and fault cutoffs. Seven chain checks, 19 exact lookup/contact/stack/spawner
+regressions and 2,340 portable tests passed. These checks do not cover
+the authority guard, the shared repeat-hit continuation, or the full method.
+Previous clamp batch: `65100b9`.
+
+**Packed resets still open.** `FPSDisplay` resets `median`/`average` at
+`0x180518b62` and `accum`/`frames` at `0x180518d49` with one eight-byte
+write. The emitted assignment changes only the first field. The same
+shape clears width/height in `AdaptiveFovByAspect.OnEnable`. Two separate
+assignments could expose an intermediate pair; a raw qword store on the
+emitted reference type would need proof of its managed layout. Neither
+representation has been promoted on the basis of adjacent offsets alone.
+
 **Checkpoint only: split struct results (not on main).** `CleanSpill`
 sends forward X/Y and position Z as the origin. `CleanSpillHose` prints the
 same untyped argument for both vectors. Each registered getter writes a
