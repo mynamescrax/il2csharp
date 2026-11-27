@@ -15,6 +15,14 @@ unproven.
 
 ## Shift At Midnight: second v31 build (2026-11-25)
 
+For a resumable, serial check of the scoped exact-build methods, set
+`IL2CSHARP_BINARY` and `IL2CSHARP_METADATA` to the matching Downloads pair
+and run `python tools/check_shift_methods.py`. It verifies both SHA-256s,
+runs the second-build fixture module and its direct importers in separate
+foreground pytest processes, and writes per-module logs and checkpoints to
+`work/shift_method_checks/`. A clean checkout can resume at the same SHA;
+`--fresh` discards cached successes. `--minutes N` stops between modules.
+
 This build has 16,945 types and 129,160 methods; its hashes differ from the
 frozen fixture. A strict `Assembly-CSharp` run lifted 6,791 bodies into 503
 C# files, with no failures, fallbacks or syntax errors. Two signed/unsigned
