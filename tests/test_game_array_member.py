@@ -16,14 +16,16 @@ def test_returned_struct_array_reads_are_live(shift_runtime,tmp_path):
     for j in (25688,25689):
         md=m.methods[j];d=Decompiler(Lifter(il));s='\n'.join(d.lift_method(md,m.typedefs[md.declaring]))
         source=re.search(r'UnityEngine.RaycastHit\[\] (\w+) = UnityEngine.Physics.RaycastAll\(',s)[1]
-        check=re.search(r'for \(int (\w+) = 0; \1 < '+source+r'\.Length; \1\+\+\)\s*\{\s*(UnityEngine.Collider (\w+) = '+source+r'\[\1\]\.collider;)',s)
+        alias=re.search(r'UnityEngine.RaycastHit\[\] (\w+) = '+source+r';',s);arr=alias[1] if alias else source
+        if alias:assert len(re.findall(r'\b'+arr+r'\s*=(?!=)',s))==1
+        check=re.search(r'for \(int (\w+) = 0; \1 < '+arr+r'\.Length; \1\+\+\)\s*\{\s*(UnityEngine.Collider (\w+) = '+arr+r'\[\1\]\.collider;)',s)
         assert check;idx,read,collider=check.groups()
-        result=re.search(r'float (\w+) = '+source+r'\['+idx+r'\]\.distance;',s)
+        result=re.search(r'float (\w+) = '+arr+r'\['+idx+r'\]\.distance;',s)
         if j==25688:
             guard=re.search(r'bool (\w+) = \('+collider+r' == null\);',s[check.end():]);assert result and guard and 'if (!('+guard[1]+'))' in s[check.end():result.start()]
             code=read+'\n'+guard[0]+'\nif (!('+guard[1]+')){'+result[0]+'return '+result[1]+';}return -1f;'
         else:code=read+'\nreturn '+collider+';'
-        cases.append(f'public static {"float A" if result else "UnityEngine.Collider B"}(UnityEngine.RaycastHit[] {source},int {idx}) {{'+code+'}')
+        cases.append(f'public static {"float A" if result else "UnityEngine.Collider B"}(UnityEngine.RaycastHit[] {source},int {idx}) {{'+(alias[0] if alias else '')+code+'}')
     runner=tmp_path/'runner';runner.mkdir();(runner/'Program.cs').write_text('''using System;
 using UnityEngine;
 var c=new Collider();var a=new RaycastHit[2];int reads=0;

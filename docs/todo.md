@@ -1788,6 +1788,18 @@ tests, 7 wheel selection/proof checks, 77 broader exact checks, 14 exact
 cleanup/iterator/spawner regressions, and 2,349 portable passes. Prior
 static-read batch: `d15c7f9`.
 
+**Reacquired transform receivers.** `InventoryManager.CleanSpill` used one
+transform for `position` and `forward`; the hose variant dropped these reads.
+Both call the registered `Component.transform` twice on fresh `playerCam`
+field loads and pass each returned object to a separate sret getter. Both
+acquisition slices passed changes to the field during `position`, two
+different transform results on an unchanged field, nulls, and throwing
+callbacks. The array-element regression gate now admits the proven local
+copy of the `RaycastAll` array used in the loop. Validation: 5 acquisition,
+5 array-element, 6 rotation, 3 restoration, and 4 whole-spawner checks;
+2,349 portable passes. Geometry and subsequent collision selection are
+separate from these receiver checks. Previous whole-wheel batch: `862826c`.
+
 **Packed resets still open.** `FPSDisplay` resets `median`/`average` at
 `0x180518b62` and `accum`/`frames` at `0x180518d49` with one eight-byte
 write. The emitted assignment changes only the first field. The same
