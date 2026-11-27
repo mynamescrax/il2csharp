@@ -109,7 +109,8 @@ def closed_lookup_sites(lift,method,blocks,pads,*,producers=None,conversions=Non
             slot=b.insns[k]
             if (slot.mnemonic==M.MOV and slot.op0_register==R.RDX and slot.op1_kind==K.MEMORY and slot.memory_base==R.RIP and
                     not slot.has_segment_prefix):possible.append(b.insns[k:j+1])
-    if not possible:return result
+    if not possible and (virtuals is None or len(blocks)>32 or not any(i.is_call_near_indirect and i.op0_kind==K.MEMORY for b in blocks for i in b.insns)):
+        return result
     seq=[i for b in blocks for i in b.insns];approve=None;certified={}
     if virtuals is not None and any(i.is_call_near_indirect for i in seq):
         from il2cpp.virtual_edges import certified_edge

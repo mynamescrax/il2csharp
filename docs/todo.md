@@ -1656,6 +1656,20 @@ regressions and 2,340 portable tests passed. These checks do not cover
 the authority guard, the shared repeat-hit continuation, or the full method.
 Previous clamp batch: `65100b9`.
 
+**Terminal virtual callbacks.** `StoreManager.DestroyFrontBarricade` and
+`EventManager.VanessaDeadEvent1` save their hit receiver before obtaining
+the manager's transform and position. Reloading the field afterwards can
+dispatch to a different object; the barricade method also replayed a
+`getClass()+0x300` read after `Hit`. Capture the proved field chain at its
+loads. Once the call has consumed its certified MethodInfo and the only
+remaining path is a validated void epilogue, discard that outgoing qword's
+cached expression so it is not replayed on a merge edge. Both complete
+methods passed overridden dispatch, field/holder replacement, the five
+managed arguments and faults. Tests include inactive and
+null receivers and throwing getters. Validation: 19 exact terminal, chain,
+forward and whole-spawner checks and 2,340 portable tests. Previous lookup
+chain batch: `108dfb3`.
+
 **Packed resets still open.** `FPSDisplay` resets `median`/`average` at
 `0x180518b62` and `accum`/`frames` at `0x180518d49` with one eight-byte
 write. The emitted assignment changes only the first field. The same

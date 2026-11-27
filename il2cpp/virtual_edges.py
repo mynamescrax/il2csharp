@@ -10,6 +10,7 @@ from il2cpp.equivalent_binary import _amd64
 from il2cpp.names import safe_ident
 from il2cpp.prelude import HAVE_ICED
 from il2cpp.shared_field import reference_field_at
+from il2cpp.stack_local_frame import stack_local_frame
 from il2cpp.text import sdisp
 from il2cpp.x64 import KLASS_VTABLE
 
@@ -90,16 +91,15 @@ def certified_edge(lift,method,call,by,pred,extent):
     if not obj:return None
     owner,fields=obj;slot=(disp-KLASS_VTABLE)//16;mi=il.vtable_method(owner,slot)
     if mi is None or not 0<=mi<len(il.meta.methods):return None
-    m=il.meta.methods[mi];ids=_entries(il,owner,slot)
-    if not ids or not 3<=m.param_count<=12 or m.slot!=slot or m.is_static or not m.flags&0x40 or m.generic_container!=-1:return None
+    m=il.meta.methods[mi]
+    if not 3<=m.param_count<=12 or m.slot!=slot or m.is_static or not m.flags&0x40 or m.generic_container!=-1:return None
     def signature(md):
         if not 0<=md.return_type<len(il.types):return None
         ps=il.meta.method_params(md)
         if len(ps)!=md.param_count or any(not 0<=p.type<len(il.types) for p in ps):return None
         return tuple(il._closed_type_key(t) for t in [il.types[md.return_type],*(il.types[p.type] for p in ps)])
     sig=signature(m)
-    if (not sig or sig[0]!=(1,0) or None in sig or any(signature(il.meta.methods[j])!=sig or
-            extent[0]<=il.meta.methods[j].addr<extent[1] for j in ids)):return None
+    if not sig or sig[0]!=(1,0) or None in sig:return None
     off=8*(m.param_count+1);ip=call.ip
     for _ in range(24):
         if len(pred[ip])!=1:return None
@@ -117,6 +117,34 @@ def certified_edge(lift,method,call,by,pred,extent):
             src=by[orig[0]]
             if (src.mnemonic==M.MOV and src.op0_register==orig[1] and src.op1_kind==K.MEMORY and src.memory_index==R.NONE and
                     not src.has_segment_prefix and src.memory_displacement==disp+8 and src.memory_base==base and
-                    _one(by,pred,method.addr,src.ip,base)==klass):return mi,off,fields
+                    _one(by,pred,method.addr,src.ip,base)==klass):
+                # Enumerate overrides only after both words and the exact
+                # hidden argument home have qualified.
+                ids=_entries(il,owner,slot)
+                if ids and all(signature(il.meta.methods[j])==sig and not extent[0]<=il.meta.methods[j].addr<extent[1] for j in ids):return mi,off,fields
             return None
         if RegisterExt.full_register(i.op0_register)==R.RSP:return None
+
+
+def terminal_homes(lift,method,blocks,pads,virtuals):
+    """A proved hidden argument followed solely by the caller's restore.
+    Keep the native store. Do not export its RHS as a value to replay in a
+    phi at a shared exit. Only a dead outgoing tile can be forgotten here."""
+    if not virtuals or method.is_static or not 0<=method.return_type<len(lift.il.types) or lift.il._closed_type_key(lift.il.types[method.return_type])!=(1,0):return {}
+    frame=stack_local_frame(lift,method,blocks,pads)
+    if not frame:return {}
+    size,depth,saves=frame;by={i.ip:i for b in blocks for i in b.insns};out={}
+    for ip,(mi,off,fields) in virtuals.items():
+        if not 32<=off<=size-8 or any(a<off+8 and off<a+n for a,n in saves):continue
+        p=by[ip].next_ip
+        for _ in range(24):
+            i=by.get(p)
+            if not i or i.has_segment_prefix or i.has_lock_prefix or i.memory_index!=R.NONE:break
+            p=i.next_ip
+            if i.mnemonic==M.RET and not i.op_count:
+                out[ip]=(mi,off,depth,fields);break
+            if i.mnemonic==M.ADD and i.op0_register==R.RSP and i.op1_kind in (K.IMMEDIATE8TO64,K.IMMEDIATE32TO64) and i.immediate(1)==size:continue
+            if i.mnemonic==M.POP and i.op0_register in (R.RBX,R.RDI,R.RSI,R.RBP,R.R12,R.R13,R.R14,R.R15):continue
+            if (i.mnemonic not in (M.MOV,M.MOVAPS,M.MOVUPS) or i.op0_kind!=K.REGISTER or i.op1_kind!=K.MEMORY or
+                    i.memory_base!=R.RSP or (sdisp(i.memory_displacement),MemorySizeExt.size(i.memory_size)) not in saves):break
+    return out

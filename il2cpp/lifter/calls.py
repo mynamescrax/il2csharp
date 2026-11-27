@@ -3922,6 +3922,13 @@ class _CallsMixin:
             te = self.il._type_enum(rty)
             if te == 0x01:
                 self.emit(ins.ip, call + ';', asm)
+                terminal=getattr(self,'_terminal_virtuals',{}).get(ins.ip)
+                if (terminal and mi==terminal[0] and saved_dispatch is gpr_exprs[0] and saved_dispatch is not None and
+                        self.rsp_delta==-terminal[2] and (not terminal[3] or
+                        self._lookup_field_values.get(terminal[3][-1][0]) is saved_dispatch)):
+                    # Edge-local byte fact, not the native store or its
+                    # addressable home. Do not change shared named-slot maps.
+                    self.regs.pop('!mem:%d:8'%(self.rsp_delta+terminal[1]),None)
                 if mi is not None and m2.name == '.ctor' and not m2.is_static \
                         and hasattr(self.il, '_sf_field_size'):
                     re0 = arg_exprs[0] if arg_exprs else None

@@ -85,6 +85,16 @@ class _AnalyzeMixin:
                     scalar_fields[load]=row;L._lookup_field_origins[ip]=load
                 L._component_lookups[ip]=lookup;L._ordinary_lookups.add(ip)
                 if ip in previous_inputs:L._previous_lookup[ip]=previous_inputs[ip]
+        from il2cpp.virtual_edges import terminal_homes
+        L._terminal_virtuals=terminal_homes(L,m,blocks,self._pad_bids,virtuals)
+        nested_fields={}
+        for _,_,_,fields in L._terminal_virtuals.values():
+            prev=None
+            if any(ip in self.skip_ips for ip,_,_ in fields):continue
+            for ip,name,ty in fields:
+                if prev is None:scalar_fields[ip]=('this.'+name,ty)
+                else:nested_fields[ip]=(prev,name,ty)
+                prev=ip
         L._snapshot_srets, packed_loads, snapshot_getters = snapshot_plans(L, td, blocks, self._pad_bids)
         for site,_ in element_plans.values():L._snapshot_srets.update((*site.getters,site.rotate))
         binary_reads,binary_stores,binary_uses=binary_sites(L,m,blocks,self._pad_bids)
@@ -210,6 +220,10 @@ class _AnalyzeMixin:
                     L.regs['RDI'] = Expr(snapshot, capture[2], 'obj')
                     continue
                 mn = ins.mnemonic
+                if ins.ip in nested_fields:
+                    source,name,ty=nested_fields[ins.ip];base=dict.get(L.regs,reg_name(ins.memory_base))
+                    if base and base is L._lookup_field_values.get(source):
+                        capture_field(L,ins,(base.text+'.'+name,ty));L._lookup_field_values[ins.ip]=dict.get(L.regs,reg_name(ins.op0_register));continue
                 if ins.ip in divisions and division_step(L,ins,divisions[ins.ip],division_values):continue
                 if ins.ip in headers:
                     array=dict.get(L.regs,'RAX')
