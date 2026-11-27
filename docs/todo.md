@@ -15,6 +15,11 @@ unproven.
 
 ## Shift At Midnight: second v31 build (2026-11-25)
 
+**Overnight campaign:** [2026-11-27 morning handoff](handoff-2026-11-27.md).
+Final lifter commit `aa978aa`. The fixed 19-method sample went from
+21 shared-body markers at 6 addresses to 14 at 2, and 261 to 249
+`object objN` declarations. The 503-file census below is historical.
+
 For a resumable, serial check of the scoped exact-build methods, set
 `IL2CSHARP_BINARY` and `IL2CSHARP_METADATA` to the matching Downloads pair
 and run `python tools/check_shift_methods.py`. It verifies both SHA-256s,
@@ -1788,7 +1793,7 @@ referenced a private backing field on another type. Caller and getter each
 guard the same TypeInfo slot, read the same static-field offset, and need
 no class constructor. A throwing objective prevents forest activation;
 if the objective replaces the forest object, the replacement is activated.
-The wheel revenue arm also reacquires `StoreManager.Instance` after its
+The wheel revenue arm also reads `StoreManager.Instance` after its
 authority check. The token loop's effects after exit still need proof.
 Validation: 5 exact static-read tests, 35 authority/lookup/append/spawner
 regressions, 2,346 portable passes. Prior wheel-loop batch: `45056b2`.
@@ -1876,7 +1881,8 @@ last lane, or stale echo cannot establish that copy.
 With a supplied Transform, both compiled geometry slices in the prototype pass the
 original XYZ to `OverlapSphere` and `RaycastAll`, and the separate forward
 XYZ to the ray. Tests check getter counts, bitwise components and faults.
-Receiver acquisition and nearest-hit retention are still open; neither
+Receiver acquisition was subsequently verified separately in `baf830a`;
+the query argument homes and nearest-hit retention are still open. Neither
 `CleanSpill` method is a whole-method milestone. Prototype validation: 2 new
 exact-build tests, 20 existing exact-build regressions (including the gas
 and particle callbacks), and 2,340 single-worker portable tests passed.
