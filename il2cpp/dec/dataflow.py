@@ -679,6 +679,8 @@ class _DataflowMixin:
         r'(?<![\w.])(obj\d+|num\d+|flag\d+|real\d+|v\d+|t\d+)'
         r'\s*(?:(?:\+\+|--)|(?:\+=|-=|\*=|/=|%=|&=|\|=|\^=|<<=|>>=)|=(?![=]))')
     _CP_BARE_RX = re.compile(r'^(?:obj\d+|num\d+|flag\d+|real\d+|v\d+|t\d+|this)$')
+    _CP_PREFIX_RX = re.compile(r'(?:\+\+|--)\s*(obj\d+|num\d+|flag\d+|real\d+|v\d+|t\d+)\b')
+    _CP_MEMBER_RX = re.compile(r'(?<![\w.])(obj\d+|num\d+|flag\d+|real\d+|v\d+|t\d+)\s*\.')
     _CP_CTRL_RX = re.compile(r'^(while|for|foreach|do|if|else|switch|using|lock|try)\b')
     _CP_BREAK_RX = re.compile(r'^(?:return\b|throw\b|goto\b|break;|continue;)')
 
@@ -731,16 +733,29 @@ class _DataflowMixin:
         out = []
         active = {}
         decl_ty = {}
-        for _st in lines:
+        # The first textual read in a loop can be a *later* read at runtime.
+        # A preheader copy of the induction variable is not an invariant if
+        # either endpoint can be rebound by the latch (or a ref/out call).
+        # A write after the loop also blocks propagation; conservative and
+        # independent of matching nested braces in the rendered C#.
+        last_write = {}
+        for pos,_st in enumerate(lines):
             _m = self._CP_DECL_RX.match(_st.strip())
             if _m and _m.group(2) not in decl_ty:
                 decl_ty[_m.group(2)] = _m.group(1).strip()
+            # Without a value-vs-reference proof even an instance call can
+            # mutate a struct receiver in place. A member access blocks the
+            # preheader alias conservatively, just like an explicit write.
+            for rx in (self._CP_KILLDEF_RX,self._CP_REFOUT_RX,self._CP_PREFIX_RX,self._CP_MEMBER_RX):
+                for hit in rx.finditer(_st):last_write[hit[1]]=pos
         frames = []          # per brace level: [keys added there, is_loop]
         in_loop = []         # per emitted line: inside any loop frame
         last_ctrl = ''
-        for st in lines:
+        for pos,st in enumerate(lines):
             ind = st[:len(st) - len(st.lstrip())]
             s = st.strip()
+            if active and self._LD_LOOP_RX.match(s):
+                active = {a:b for a,b in active.items() if max(last_write.get(a,-1),last_write.get(b,-1)) < pos}
             if not s:
                 out.append(st)
                 in_loop.append(any(f[1] for f in frames))
@@ -782,6 +797,9 @@ class _DataflowMixin:
                     continue
                 kills.append(m.group(1))
                 kill_spans.append(m.span(1))
+            for m in self._CP_PREFIX_RX.finditer(s):
+                if not _in_string(s,m.start()):
+                    kills.append(m[1]);kill_spans.append(m.span(1))
             s2 = self._cp_subst(s, active, kill_spans)
             for tok in kills:
                 active.pop(tok, None)

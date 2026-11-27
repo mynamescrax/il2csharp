@@ -39,7 +39,7 @@ def saved_fp_consumers(blocks):
     return sites
 
 
-def reference_field_at(il, receiver, off):
+def reference_field_at(il, receiver, off, *, constructed=False):
     """Unique class reference occupying these eight bytes across all bases."""
     if off < 0x10:
         return None
@@ -65,12 +65,14 @@ def reference_field_at(il, receiver, off):
             if pos >= off + 8:
                 continue
             size = il._sf_field_size(ty, 0)
-            if not size:
+            if not size or size < 0:
                 return None
             if pos + size > off:
-                if (match or pos != off or size != 8 or not ty or ty[1] & (1 << 29) or
-                        il._type_enum(ty) != 0x12):
+                if match or pos != off or size != 8 or ty[1] & (1 << 29):
                     return None
+                if il._type_enum(ty) != 0x12:
+                    k=il._closed_type_key(ty) if constructed and il._type_enum(ty)==0x15 else None
+                    if not k or k[1][0]!=0x12 or k[1][-1] or k[-1]:return None
                 match = (ti, fi, ty)
     return match
 

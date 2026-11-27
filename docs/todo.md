@@ -1598,6 +1598,21 @@ setter, and divide faults before the setter. Six exact slice/proof tests,
 portable tests passed. An illegal jump into the resume arm and captured-owner
 reads still block a complete iterator claim. Previous batch: `6817c8e`.
 
+**Descending list cleanup.** `WFX_Demo_New.destroyParticles` (MethodDef
+23808, `0x52A7C0`) kept using its initial index after the first removal.
+The native backedge and lifted phi already decremented EBX; copy propagation
+then substituted a pre-loop value into the body. It now invalidates aliases
+that can change on the backedge. The method also tests a different indexed
+read from the one it destroys: the conditional second getter and the final
+`RemoveAt` each reload the list field. Their class MethodRefs, including
+the distinct removal member, are registered for the field's closed type.
+A separate dword-load leaf proves `Count`. The complete method ran against
+instrumented stubs for empty/singleton/multiple lists, Unity-null entries,
+independent rebindings at comparison and destruction, and six throwing
+operations. The batch passed 5 exact cleanup checks, 15 exact collection,
+loop and spawner regressions, 77 broader exact checks and 2,337 portable
+tests. No full-tree measurement. Previous remainder batch: `7845395`.
+
 **Checkpoint only: split struct results (not on main).** `CleanSpill`
 sends forward X/Y and position Z as the origin. `CleanSpillHose` prints the
 same untyped argument for both vectors. Each registered getter writes a

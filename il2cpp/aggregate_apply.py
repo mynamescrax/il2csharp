@@ -11,6 +11,7 @@ from il2cpp.array_member import element_reads
 from il2cpp.float_setter import float_setters
 from il2cpp.closed_class_read import closed_class_reads
 from il2cpp.bool_restore import bool_state_sites
+from il2cpp.indexed_class import indexed_class_sites
 from il2cpp.static_getter import guarded_alias,alias_for_slot
 from il2cpp.sret_copy import _own_field
 from il2cpp.shared_action import _raises_on_null
@@ -241,6 +242,7 @@ def application_sites(lift,method,blocks,pads):
     actions.update(float_setters(lift,method,blocks,pads))
     actions.update(closed_class_reads(lift,method,blocks,pads))
     actions.update(bool_state_sites(lift,method,blocks,pads))
+    actions.update(indexed_class_sites(lift,method,blocks,pads))
     return actions,fresh,counts
 
 
@@ -274,6 +276,15 @@ def application_step(lift,ins,action,values):
         source,si,member,rt=args;recv=dict.get(lift.regs,'RCX');slot=dict.get(lift.regs,'RDX')
         if recv and values.get(source) is recv and getattr(slot,'_usg_idx',None)==si:
             clear();bind(acc_get(f'{recv.text}.{member}()'),rt,'RAX');lift._type_hints.setdefault(values[ins.ip].text,rt);return True
+    if op=='index_result':
+        source,si,rt=args;recv=dict.get(lift.regs,'RCX');index=dict.get(lift.regs,'RDX');slot=dict.get(lift.regs,'R8')
+        if (recv and values.get(source) is recv and getattr(slot,'_usg_idx',None)==si and index and not index._unk and
+                (lift.dry or lift.il._closed_type_key(index.ty)==(8,0))):
+            term=acc_get(f'{recv.text}[{index.text}]');clear();bind(term,rt,'RAX');lift._type_hints.setdefault(values[ins.ip].text,rt);return True
+    if op=='count_value':
+        source,prop,reg,dst=args;recv=dict.get(lift.regs,reg)
+        if recv and values.get(source) is recv:
+            bind(acc_get(f'{recv.text}.{prop}'),(0,8<<16),dst,'int');return True
     if op=='count_cmp':
         from il2cpp.text import reg_name
         source,prop,n=args;e=dict.get(lift.regs,reg_name(ins.memory_base))
