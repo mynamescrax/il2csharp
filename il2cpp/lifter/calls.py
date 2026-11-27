@@ -3717,6 +3717,9 @@ class _CallsMixin:
                         short, bind_long_virtual = cand, True
         if short is None and mi is not None and 0 <= mi < len(self.meta.methods):
             m2 = self.meta.methods[mi]
+            if (m2.name in ('op_Equality','op_Inequality') and getattr(self,'_parked_getter_values',None) and ins.is_call_near):
+                from il2cpp.saved_ref import tested_string_operator
+                short=tested_string_operator(self,ins,mi,args,gpr_exprs)
             if m2.is_static and m2.name.startswith('get_') and m2.param_count == 0:
                 short = '%s.%s' % (name.rsplit('.', 1)[0], m2.name[4:])
             # fix 137: a static property setter is an assignment
@@ -3975,6 +3978,9 @@ class _CallsMixin:
                 if lookup[4]:
                     self.emit(ins.ip,'if (%s is null) { throw new System.NullReferenceException(); }' % result.text,None)
                 return
+            if mi is not None and getattr(self,'_saved_references',{}).get(ins.ip)==('getter',mi):
+                from il2cpp.saved_ref import capture_saved_reference
+                if capture_saved_reference(self,ins,mi,gpr_exprs[0],result,saved_dispatch):return
             if mi is not None and getattr(self,'_single_array_counts',{}).get(ins.ip)==mi:
                 self._bind(result)
                 return

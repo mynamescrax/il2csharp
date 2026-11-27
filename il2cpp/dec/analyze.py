@@ -1,4 +1,6 @@
 from il2cpp.prelude import *  # noqa: F401,F403
+if HAVE_ICED:
+    from iced_x86 import RegisterExt
 from il2cpp.cfg import _Sink, _TEMP_RX
 from il2cpp.common import csharp_type_name
 from il2cpp.boolmask import enum_mask
@@ -36,8 +38,9 @@ class _AnalyzeMixin:
     def _analyze(self, m, td, blocks, bmap):
         L = self.L
         L._saved_fp_consumers = saved_fp_consumers(blocks)
-        from il2cpp.saved_ref import saved_references
+        from il2cpp.saved_ref import saved_references,parked_properties
         L._saved_references=saved_references(L,blocks)
+        L._saved_references.update(parked_properties(L,m,blocks,self._pad_bids))
         from il2cpp.array_header import header_sites
         headers,header_calls=header_sites(L,m,blocks,self._pad_bids)
         L._saved_references.update(header_calls)
@@ -165,6 +168,7 @@ class _AnalyzeMixin:
                 e._unk = True         # fix 58: never written yet
                 L.regs[r] = e
             L._setup_entry(m, td)
+            L._parked_getter_values=set()
             L._module_reads.update(scalar_getters)
             L._module_reads.update(lookup_producers)
 
@@ -459,6 +463,10 @@ class _AnalyzeMixin:
                                 ((lhs, rhs), getattr(L, '_flags_mn', None))
                     lt = lhs.text if lhs else '?'
                     rt = rhs.text if rhs else '?'
+                    if (idx and mn in (Mnemonic.JE,Mnemonic.JNE) and lhs in L._parked_getter_values and rt=='null' and
+                            b.insns[idx-1].mnemonic==Mnemonic.TEST and b.insns[idx-1].op0_register==b.insns[idx-1].op1_register and
+                            RegisterExt.is_gpr64(b.insns[idx-1].op0_register)):
+                        b.cond=lt+(' is null' if mn==Mnemonic.JE else ' is not null');L.flags=None;continue
                     if idx and mn in (Mnemonic.JB,Mnemonic.JBE):
                         from il2cpp.float_branch import unordered_bound
                         bound=unordered_bound(b.insns[idx-1],ins,getattr(L,'_flags_mn',None),lhs,rhs)

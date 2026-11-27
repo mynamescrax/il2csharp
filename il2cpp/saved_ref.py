@@ -78,14 +78,46 @@ def saved_references(lift,blocks):
     return sites
 
 
+def parked_properties(lift,method,blocks,pads):
+    """A public static reference getter saved before another receiver use.
+    Validate each call independently; a second use of the same getter may
+    run only on the success edge and may return a different object."""
+    from il2cpp.array_origin import _graph
+    from il2cpp.names import safe_ident
+    il=lift.il;result={};windows=[]
+    if not HAVE_ICED or pads or not _amd64(getattr(il,'bin',None)) or il.meta.version!=31:return result
+    for b in blocks:
+        for k in range(1,len(b.insns)-2):
+            zero,call,load,save=b.insns[k-1:k+3]
+            if (not call.is_call_near or zero.mnemonic!=M.XOR or zero.op0_register!=zero.op1_register or zero.op0_register!=R.ECX or
+                    load.mnemonic!=M.MOV or load.op0_register!=R.RCX or load.op1_kind!=K.MEMORY or
+                    load.memory_index!=R.NONE or load.has_segment_prefix or save.mnemonic!=M.MOV or save.op1_register!=R.RAX or save.op0_register not in _SAVED):continue
+            ids=il.addr_candidates.get(call.near_branch_target,())
+            if len(ids)!=1 or ids[0][0]!='method' or not 0<=ids[0][1]<len(il.meta.methods):continue
+            md=il.meta.methods[ids[0][1]];prop=lift._accessor_prop(md.index)
+            if (not md.is_static or md.param_count or md.generic_container!=-1 or md.flags&7!=6 or md.flags&0x40 or
+                    md.addr!=call.near_branch_target or not prop or prop[0]!='get' or prop[2] or safe_ident(prop[1])!=prop[1] or
+                    not prop[1].isidentifier() or md.name!='get_'+prop[1] or not 0<=md.return_type<len(il.types) or
+                    not 0<=md.declaring<len(il.meta.typedefs) or il.meta.typedefs[md.declaring].declaring!=-1):continue
+            ty=il.types[md.return_type]
+            if not ty or il._closed_type_key(ty)!=(0x12,ty[0],0) or not 0<=ty[0]<len(il.meta.typedefs) or il.meta.typedefs[ty[0]].generic_container!=-1:continue
+            windows.append((b.insns[k-1:k+3],md))
+    if not windows:return result
+    seq=[i for b in blocks for i in b.insns];g=_graph(il,seq,allow_tail=True,chained=True,runtime_tails=lift.rt_wbarrier)
+    if not g or seq[0].ip!=method.addr:return result
+    for w,md in windows:
+        if all(a.next_ip==b.ip and g[0][b.ip]==[a.ip] for a,b in zip(w,w[1:])):result[w[1].ip]=('getter',md.index)
+    return result
+
+
 def capture_saved_reference(lift,ins,mi,recv,result,dispatch):
     fact=getattr(lift,'_saved_references',{}).get(ins.ip)
     if not fact or mi is None or not 0<=mi<len(lift.meta.methods):return False
     il=lift.il;m=il.meta.methods[mi];key=il._closed_type_key;rt=result.ty
     if (not rt or m.generic_container!=-1 or not 0<=m.return_type<len(il.types) or key(il.types[m.return_type])!=key(rt) or
-            m.flags&0x800 or not 0<=m.declaring<len(il.meta.typedefs) or il.meta.typedefs[m.declaring].generic_container!=-1):return False
+            m.flags&0x800 and fact[0]!='getter' or not 0<=m.declaring<len(il.meta.typedefs) or il.meta.typedefs[m.declaring].generic_container!=-1):return False
     if not reference_vector(il,rt) and (key(rt)!=(0x12,rt[0],0) or not 0<=rt[0]<len(il.meta.typedefs) or il.meta.typedefs[rt[0]].generic_container!=-1):return False
-    if fact[0]=='method':
+    if fact[0] in ('method','getter'):
         if (fact[1]!=mi or m.addr!=ins.near_branch_target or
                 m.flags&0x40 and not (m.flags&0x20 or il.meta.typedefs[m.declaring].flags&0x100)):return False
     else:
@@ -104,7 +136,26 @@ def capture_saved_reference(lift,ins,mi,recv,result,dispatch):
     # particular an identical earlier call is a separate evaluation.
     from il2cpp.expr import Expr,acc_get
     local=lift.new_var();lift._var_types[local]=rt;lift._type_hints[local]=rt
-    lift.emit(ins.ip,'var %s = %s;'%(local,acc_get(result.text)),None)
+    lift.emit(ins.ip,'var %s = %s;'%(local,result.text if result.text.startswith('__accget(') else acc_get(result.text)),None)
     value=Expr(local,rt,'obj');lift.regs['RAX']=value
+    if fact[0]=='getter':lift._parked_getter_values.add(value)
     if reference_vector(il,rt):lift._captured_arrays[ins.ip]=value
     return True
+
+
+def tested_string_operator(lift,ins,mi,args,regs):
+    """An immediately tested comparison of a returned string with a literal.
+    Both operands are typed, and no pending discarded comparison is emitted."""
+    il=lift.il;m=il.meta.methods[mi]
+    if (not m.is_static or m.param_count!=2 or len(args)!=2 or m.addr!=ins.near_branch_target or
+            not m.flags&0x800 or m.flags&7!=6 or il.addr_candidates.get(m.addr)!=[('method',mi)] or
+            il.meta.typedefs[m.declaring].namespace!='System' or il.meta.typedefs[m.declaring].name!='String' or
+            getattr(getattr(lift,'_current_method',None),'index',mi)==mi or not 0<=m.return_type<len(il.types) or
+            il._closed_type_key(il.types[m.return_type])!=(2,0)):return None
+    ps=il.meta.method_params(m)
+    if len(ps)!=2 or any(not 0<=p.type<len(il.types) or il._closed_type_key(il.types[p.type])!=(14,0) for p in ps):return None
+    a,b=regs[:2]
+    if (not a or a._unk or il._closed_type_key(a.ty)!=(14,0) or not b or b._unk or b.kind!='str' or
+            not b.text.startswith('"') or not b.text.endswith('"') or a is b or
+            il.bin.read(ins.next_ip,3) not in (b'\x84\xc0\x74',b'\x84\xc0\x75') and il.bin.read(ins.next_ip,4) not in (b'\x84\xc0\x0f\x84',b'\x84\xc0\x0f\x85')):return None
+    return '((%s) %s (%s))'%(args[0],'==' if m.name=='op_Equality' else '!=',args[1])

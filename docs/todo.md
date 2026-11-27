@@ -1844,6 +1844,17 @@ including strict versus inclusive expiry, post-RPC field reloads and
 throwing callbacks. Validation: 2 exact countdown checks, 15 scalar/clamp/
 light/spawner regressions and 2,349 portable passes. Prior batch: `9b38e39`.
 
+**Distinct current event systems.** `Computer.ActuallySelectInputText`
+(24607, RVA `0x6A4210`) checked one `EventSystem.current`, then selected on
+that old receiver even though native code reacquires it after checking the
+input scheme. A static property result parked in a nonvolatile register is
+captured at its own call. The complete method passed with different first
+and second event systems, distinct but equal Gamepad strings, Unity-null,
+argument faults and a null second receiver. The camera listener refresh
+also now retains a typed camera; its final transform store/barrier remains
+open. Validation: 4 event-system checks, 4 saved-reference checks, the
+whole spawners and 2,349 portable tests. Prior test repair: `916d36f`.
+
 **Packed resets still open.** `FPSDisplay` resets `median`/`average` at
 `0x180518b62` and `accum`/`frames` at `0x180518d49` with one eight-byte
 write. The emitted assignment changes only the first field. The same
