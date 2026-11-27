@@ -20,6 +20,34 @@ Final lifter commit `aa978aa`. The fixed 19-method sample went from
 21 shared-body markers at 6 addresses to 14 at 2, and 261 to 249
 `object objN` declarations. The 503-file census below is historical.
 
+**Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
+`python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
+exact-build modules** with the fixture pair below. Local report:
+`work/shift_method_checks/0b0b7797016e/summary.json`.
+
+The new gameplay survey found failures outside those tests. Two small
+programs compiled eight unchanged baseline caller bodies against typed
+collaborators. Of 20 input/trace cases, 15 disagreed with native behavior.
+Re-lift the listed rows with `tools/inspect_methods.py --mi` using the same
+metadata, binary and `PYTHONHASHSEED=0`. Useful distinguishing cases:
+
+| MethodDef | Input or callback | Native behavior vs. baseline C# |
+|---|---|---|
+| 24284, 24655: item checks | Empty or all-miss list | Clear `constrictionAllows` and dispatch `StopLookAt`; both emitted callers take the match path. A last-element match is a passing control. |
+| 24195: camera FOV | 1920×1080, reference aspect 1.5 | Convert both integers to float before dividing and choose normal FOV; integer division chooses squashed FOV. An unordered reference aspect is a separate failing case. |
+| 25018: purchase hint | Replace the manager during `AddHint` | The second static-field load supplies the new manager to `NextHint`; the caller reuses the first manager. |
+| 24460, 24337: chase and car audio | Replace the audio source in the time getter | Read volume on the first source before the time callback, then set that same source. Both callers use the replacement; chase also reads volume twice. |
+| 25009: egg tooltip | Two transform getters return A and B | Read position from B and set A. The caller reads and sets A, and faults too early if A is null but B is live. |
+| 25285: gravity | Grounded, not looking, velocity −3, delta .25 | Reset velocity to −2 and call `Move` with Y = −.5. The caller reads time but omits the move. Airborne, it reads time a third time. |
+
+These are baseline reproductions, not fixed-method counts. The local
+paired traces use `work/survey_1127_{A,B,C}.json`; the fresh native flag and
+discarded-return probes use `work/survey_1127_stage2.json`. In particular,
+a `void` return falsely counting RAX as used can drop an entire call. Just
+removing that read restores `Instantiate` in 24066/27086, but the restored
+call reads the prefab field *after* the transform getter instead of using
+the prefab captured *before* it. Keep receiver replacement in the gate.
+
 For a resumable, serial check of the scoped exact-build methods, set
 `IL2CSHARP_BINARY` and `IL2CSHARP_METADATA` to the matching Downloads pair
 and run `python tools/check_shift_methods.py`. It verifies both SHA-256s,
