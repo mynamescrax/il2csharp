@@ -304,6 +304,9 @@ class _BuildMixin:
         insns, skip = self._decode(m)
         if not insns:
             return ['/* no code */']
+        from il2cpp.signed_division import signed_div_leaf
+        divided=signed_div_leaf(L,m,td,insns,self.eh)
+        if divided is not None:return divided
         from il2cpp.packed_projection import packed_projection
         projected=packed_projection(L,m,td,insns,self.eh)
         if projected is not None:return projected

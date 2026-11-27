@@ -1574,6 +1574,19 @@ also has a proved field receiver; the singleton access and timing remain open.
 Validation: 19 exact-build tests including both whole spawners; 2,334 portable
 tests passed in the single-worker selection. Previous batch: `6781fb6`.
 
+**Signed dword division in arithmetic leaves.** The old lifter skipped both
+`CDQ` and `IDIV`, so `ComputeMath.ThreadGroupCount` incremented the dividend
+instead of the quotient. On AMD64 a dword divide consumes sign-extended EAX,
+produces a quotient in EAX and a remainder in EDX, and can fault before either
+is used. Six whole helpers now compile and pass signed and wrapping cases:
+`ThreadGroupCount`, `NextMultiple`, `TMP_Math.Mod`, `ProbeBrickPool.DivRoundUp`,
+`ForwardLights.AlignByteCount`, and `MeshToSDFBaker.iDivUp`. The fixture gate
+compares against widened arithmetic including zero, negative divisors, and
+quotient overflow. An unused quotient/remainder must still fault. This batch
+passed 7 exact division tests, 4 whole-spawner regressions and 2,334 portable
+tests. The non-leaf divisions in the text iterators need a separate proof.
+Previous field-receiver batch: `fec6be8`.
+
 **Checkpoint only: split struct results (not on main).** `CleanSpill`
 sends forward X/Y and position Z as the origin. `CleanSpillHose` prints the
 same untyped argument for both vectors. Each registered getter writes a
