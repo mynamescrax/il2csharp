@@ -1384,6 +1384,16 @@ class _InsnMixin:
                 self._note_use(rhs)
                 cond = '(%s %s %s)' % (lhs.text if lhs else '?', op,
                                        rhs.text if rhs else '?')
+                # A managed Boolean call result was tested in AL. Comparing
+                # its C# spelling to integer zero is neither necessary nor
+                # legal. Do not apply to arbitrary TEST masks or integer lanes.
+                if (mn in (Mnemonic.CMOVE,Mnemonic.CMOVNE) and lhs and rhs and rhs.text in ('0','null') and
+                        lhs.ty and self.il._type_enum(lhs.ty)==2 and not lhs.ty[1]&(1<<29) and getattr(self,'_flags_mn',None)==Mnemonic.TEST):
+                    k=idx-1
+                    while k>=0 and insns[k].mnemonic in (Mnemonic.MOV,Mnemonic.LEA) and insns[k].next_ip==insns[k+1].ip:k-=1
+                    if (k>=1 and insns[k].mnemonic==Mnemonic.TEST and insns[k].op0_register==insns[k].op1_register==IReg.AL and
+                            insns[k-1].is_call_near and insns[k-1].next_ip==insns[k].ip and insns[k].next_ip==insns[k+1].ip):
+                        cond=('!' if mn==Mnemonic.CMOVE else '')+'('+lhs.text+')'
             if A(1) == OpKind.REGISTER:
                 src = self.reg(reg_name(ins.op1_register))
             elif A(1) == OpKind.MEMORY:

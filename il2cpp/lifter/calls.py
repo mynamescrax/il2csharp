@@ -2187,22 +2187,41 @@ class _CallsMixin:
             if e is None:
                 continue
             off = getattr(e, '_stack_offset', None)
+            name = e.text[1:] if e.text.startswith('&') and _REFARG_RX.fullmatch(e.text[1:]) else None
+            if name and off is None:
+                # A full-width home reload can retain the name but lose the
+                # offset. Do not guess if two physical homes share a name.
+                homes=[a for a,nm in self.stack_map.items() if nm==name]
+                if len(homes)==1:off=homes[0]
+            if name:
+                self._kill_stale(name)
             if off is None:
                 continue
-            name = e.text[1:] if e.text.startswith('&') and _REFARG_RX.fullmatch(e.text[1:]) else None
-            if name is None:
-                for addr, nm in self.stack_map.items():
-                    if addr == off:
-                        name = nm
-                        break
-            if name is None:
-                continue
-            pointee = (pt[0], pt[1] & ~(1 << 29))
-            size = self.il._sf_field_size(pointee, 0)
-            if size is not None:
-                self._stack_store(off, size, None)
-            self.stack_values.pop(name, None)
-            self._kill_stale(name)
+            # Invalidate bytes of the actual pointee, not the size of an
+            # open VAR or the size of a pointer. Preserve disjoint spills.
+            pt = self._class_type_subst(pt)
+            if ((bits >> 16) & 0xff) == 0x10:
+                pointee = self.il.type_from_ptr(pt[0])
+            else:
+                pointee = (pt[0], pt[1] & ~(1 << 29))
+            size = self.il._sf_field_size(pointee, 0) if pointee is not None and self.il._type_enum(pointee) not in (0x13,0x1e) else None
+            # A partial overlap invalidates the whole cached tile: leaving
+            # a fragment that still prints the pre-call whole value could
+            # manufacture a nonzero high dword. Keep only disjoint tiles.
+            for k in list(self.regs):
+                if k.startswith('!mem:'):
+                    _,lo,n=k.split(':');lo=int(lo)
+                    if lo+int(n)>off and (not size or size<0 or lo<off+size):self.regs.pop(k,None)
+            aliases=getattr(self,'addr_of',{})
+            for start,nm in self.stack_map.items():
+                if size and size>0 and start>=off+size:continue
+                v=self.stack_values.get(nm)
+                if nm!=name and v is None and nm not in aliases:continue
+                sl=getattr(v,'_slice',None);ty=getattr(v,'ty',None)
+                width=8 if nm in aliases else sl[2] if sl else self.il._sf_field_size(ty,0) if ty else None
+                if nm!=name and width and width>0 and start+width<=off:continue
+                self.stack_values.pop(nm,None);aliases.pop(nm,None)
+                if nm!=name:self._kill_stale(nm)
 
     @staticmethod
     def _single_field_arg(arg_text, param_ty, param_byref, x_ty, chain, is_enum, is_valuetype=True):
@@ -2393,6 +2412,7 @@ class _CallsMixin:
         self.delegate_mi = None
         self.delegate_recv = None
         self._call_class_args = None
+        self._call_class_refs = {}
         if ins.op0_kind == OpKind.NEAR_BRANCH64:
             target = ins.near_branch_target
             name = self._call_name(target)
@@ -2952,6 +2972,9 @@ class _CallsMixin:
                             rty = array_call[0]
                     self._call_class_args = self.il._method_spec_type_args(
                         self.il.method_specs[info[1]][1])
+                    if self._call_class_args:
+                        from il2cpp.class_byref import byref_context
+                        self._call_class_refs=byref_context(self,ins,info,gpr_exprs)
         if info and info[0] == 'generic':
             home = self._proved_struct_home(info, args, rty)
             if home is not None:
@@ -3462,8 +3485,8 @@ class _CallsMixin:
             # ABI position so float params, stack args and the hidden sret
             # slot all land in the right place before any arity trim.
             self._hint_arg_types(args, arg_exprs, mi, rty)
-            self._kill_byref_slots(mi, rty, arg_exprs)
             args = self._positional_args(args, m2, rty)
+            self._kill_byref_slots(mi, rty, arg_exprs)
             if len(args) > want:
                 args = args[:want]
             args = self._materialize_float_lanes(args, arg_exprs, m2, rty)

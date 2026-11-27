@@ -1613,6 +1613,21 @@ operations. The batch passed 5 exact cleanup checks, 15 exact collection,
 loop and spawner regressions, 77 broader exact checks and 2,337 portable
 tests. No full-tree measurement. Previous remainder batch: `7845395`.
 
+**Closed generic byref cache outputs.** A dictionary hit in `GetPlayerVolume`
+used `_` for the output address and returned the pre-call zero. Closing
+`TValue&` with `float` does not move the argument from R8 to XMM2. Preserve
+the signature's byref bit and invalidate the old bytes of the addressed
+home at the call. The hidden R9 MethodRef 167684 agrees with the live
+`Dictionary<string,float>` and the registered `Dictionary<object,float>`
+entry; the value-type argument cannot be shared as `object`. A saved name
+with a unique physical home is also invalidated. Two complete rank helpers
+(25164, 25165) and the volume getter's cache-hit slice now return the value
+written by the lookup, with misses, Unity-null NPCs and fault order tested.
+An unordered floating comparison on the volume miss path remains open.
+Validation: 4 exact byref checks, 25 exact collection/forward/spawner
+regressions, and 2,340 portable tests. A partial overlap invalidates the
+whole cached tile; a disjoint tile survives. Prior reverse-loop batch: `fb8312a`.
+
 **Checkpoint only: split struct results (not on main).** `CleanSpill`
 sends forward X/Y and position Z as the origin. `CleanSpillHose` prints the
 same untyped argument for both vectors. Each registered getter writes a

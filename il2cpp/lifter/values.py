@@ -267,7 +267,7 @@ class _ValuesMixin:
                     pointee = self.il.type_from_ptr(pt[0])
                 else:
                     pointee = None
-                if pointee is not None:
+                if pointee is not None and self.il._type_enum(pointee) not in (0x13,0x1e):
                     nm = at[1:]
                     if nm.startswith('s_'):
                         # slot_types is what the renamer reads for slots;
@@ -1321,11 +1321,18 @@ class _ValuesMixin:
         args = getattr(self, '_call_class_args', None)
         if ty is None or not args or self.il._type_enum(ty) != 0x13:
             return ty
+        if ty[1] & (1 << 29):
+            # The signature owns the ref bit, even when its pointee cannot
+            # be closed. Only expose a concrete slot type with matching ABI.
+            return getattr(self,'_call_class_refs',{}).get(ty,ty)
         gi = ty[0]
         if not (0 <= gi < len(self.meta.generic_parameters)):
             return ty
         ordinal = self.meta.generic_parameters[gi][4]
-        return args[ordinal] if 0 <= ordinal < len(args) and args[ordinal] else ty
+        actual = args[ordinal] if 0 <= ordinal < len(args) else None
+        if not actual or actual[1] & (1 << 29):
+            return ty
+        return actual
 
     def _byval_struct(self, ty):
         """fix 54: True when `ty` is a non-byref VALUETYPE -- including a

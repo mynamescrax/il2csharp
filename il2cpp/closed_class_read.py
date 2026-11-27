@@ -23,8 +23,15 @@ def _class_entry(il,si):
     if ci<0 or gi!=-1:return None
     va=_spec_entry(il,si,mi);indices=il._awaiter_spec_indices[mi]
     if si not in indices:
+        args=il._method_spec_type_args(ci)
+        if not args:return None
+        keys=[il._closed_type_key(a) for a in args]
+        if any(not k or k[-1] for k in keys):return None
+        # Only reference arguments canonicalize to Object. In a mixed
+        # instantiation every value argument, and its position, must agree.
+        want=tuple((0x1c,0) if k[0] in (0x0e,0x12,0x1c,0x1d,0x14) or k[0]==0x15 and k[1][0]==0x12 else k for k in keys)
         canonical=[s for s in indices if il.method_specs[s][2]==-1 and il.method_specs[s][1]>=0 and
-                   tuple(il._closed_type_key(a) for a in (il._method_spec_type_args(il.method_specs[s][1]) or ()))==((0x1c,0),)]
+                   tuple(il._closed_type_key(a) for a in (il._method_spec_type_args(il.method_specs[s][1]) or ()))==want]
         if len(canonical)!=1:return None
         va=_spec_entry(il,canonical[0],mi)
     return va if va and il.bin.is_exec_va(va) else None
