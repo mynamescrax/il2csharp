@@ -44,6 +44,8 @@ class _AnalyzeMixin:
         from il2cpp.array_member import checked_ref_elements
         checked_ref_loads=checked_ref_elements(L,m,blocks,self._pad_bids)
         scalar_fields,scalar_getters=scalar_sites(L,m,td,blocks,self._pad_bids)
+        from il2cpp.field_remainder import field_divisions,division_step
+        divisions=field_divisions(L,m,blocks,self._pad_bids)
         vector_getter = vector_field_getter(L,m) if len(blocks)==1 and len(blocks[0].insns)==6 and not self._pad_bids else None
         dec_getter = decrement_body(L,m) if len(blocks)==1 and len(blocks[0].insns)==3 and not self._pad_bids else None
         # _rpo appends the unreachable tail (the EH pads, entered only by the
@@ -166,6 +168,7 @@ class _AnalyzeMixin:
         jcc_fallthrough_flags = {}
 
         def exec_block(b, dry):
+            division_values={}
             element_plan=element_plans.get(b.bid);element_values={}
             L.out = _Sink(b)
             L.dry = dry
@@ -205,6 +208,7 @@ class _AnalyzeMixin:
                     L.regs['RDI'] = Expr(snapshot, capture[2], 'obj')
                     continue
                 mn = ins.mnemonic
+                if ins.ip in divisions and division_step(L,ins,divisions[ins.ip],division_values):continue
                 if ins.ip in headers:
                     array=dict.get(L.regs,'RAX')
                     if array is not None and L._captured_arrays.get(headers[ins.ip]) is array:

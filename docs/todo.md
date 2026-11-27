@@ -1587,6 +1587,17 @@ passed 7 exact division tests, 4 whole-spawner regressions and 2,334 portable
 tests. The non-leaf divisions in the text iterators need a separate proof.
 Previous field-receiver batch: `fec6be8`.
 
+**A saved remainder across a setter.** `RevealText.<RevealText_>d__9.MoveNext`
+used an undeclared integer for both `maxVisibleCharacters` and the loop
+threshold. At `0x1805a7a3a`, IDIV divides the saved counter by the incremented
+total; EDX reaches the setter and ESI preserves that same remainder. The
+comparison reads the total again after the call. A compiled slice checks
+both signs, overflow of the increment, mutations of both fields in the
+setter, and divide faults before the setter. Six exact slice/proof tests,
+7 exact arithmetic-leaf tests, both spawner regressions (4 tests) and 2,334
+portable tests passed. An illegal jump into the resume arm and captured-owner
+reads still block a complete iterator claim. Previous batch: `6817c8e`.
+
 **Checkpoint only: split struct results (not on main).** `CleanSpill`
 sends forward X/Y and position Z as the origin. `CleanSpillHose` prints the
 same untyped argument for both vectors. Each registered getter writes a
