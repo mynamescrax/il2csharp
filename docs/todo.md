@@ -23,6 +23,17 @@ foreground pytest processes, and writes per-module logs and checkpoints to
 `work/shift_method_checks/`. A clean checkout can resume at the same SHA;
 `--fresh` discards cached successes. `--minutes N` stops between modules.
 
+**2026-11-27 combined checkpoint (`ace1873`).** The driver selected 59
+exact-build modules and ran them one at a time. First pass: 433 passed,
+5 failed. All five stopped in the particle slice extractors: one assumed
+the filled array and a loop alias had identical names; another required a
+`do` immediately after the event query. The complete particle and gas
+methods passed during that run. The repaired slices follow the filled
+array's copy chain and bind the list and loop index independently from
+the indexed reads. Both affected modules passed (4 + 4), including wrong
+stride/bounds and removal between event reads. No lifter source changed
+in that repair. Local first-pass logs: `work/shift_method_checks/ace18731330c/`.
+
 This build has 16,945 types and 129,160 methods; its hashes differ from the
 frozen fixture. A strict `Assembly-CSharp` run lifted 6,791 bodies into 503
 C# files, with no failures, fallbacks or syntax errors. Two signed/unsigned

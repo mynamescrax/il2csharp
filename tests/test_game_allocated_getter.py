@@ -17,6 +17,28 @@ _POSITION = re.compile(
     r'(?P<array>\w+)\[(?P<index>\w+)\]\.position /\* shared getter \*/;', re.M)
 
 
+def _filled_aliases(segment,root):
+    """Only copies of the filled array, including loop-carried copy cycles.
+    Require every write to every accepted name to be a bare reference copy;
+    a later reassignment to another producer invalidates the entire chain."""
+    writes={};decls=[];ty=r'UnityEngine\.ParticleSystem\.Particle\[\]'
+    rx=re.compile(r'^(?:('+ty+r') )?(\w+) = ([^;]+);$')
+    for line in segment.splitlines():
+        m=rx.fullmatch(line.strip())
+        if not m:continue
+        dst,src=m[2],m[3];writes.setdefault(dst,set()).add(src)
+        if m[1]:decls.append((dst,src,line.strip()))
+    assert root not in writes
+    known={root};prefix={root:[]}
+    for dst,src,line in decls:
+        if src in prefix:known.add(dst);prefix[dst]=prefix[src]+[line]
+    while True:
+        bad={n for n in known-{root} if not writes[n]<=known}
+        if not bad:break
+        known-=bad
+    return {n:prefix[n] for n in known}
+
+
 @pytest.fixture(scope='module')
 def collision_method(shift_runtime):
     meta, il = shift_runtime
@@ -38,7 +60,8 @@ def test_indexed_positions_on_the_filled_arrays(collision_method, tmp_path):
         # Bind the inputs independently of the read under test. In particular,
         # the outer collision-event loop has a different, live index here.
         latch = re.search(r'^\s*(\w+) \+= 1;', text[getter.end():end], re.M)
-        assert latch and (getter['array'], getter['index']) == (fill[1], latch[1])
+        aliases=_filled_aliases(text[fill.end():end],fill[1]);assert getter['array'] in aliases
+        assert latch and getter['index']==latch[1]
         result = getter['result']
         decl = ''
         if not getter['type']:
@@ -46,7 +69,7 @@ def test_indexed_positions_on_the_filled_arrays(collision_method, tmp_path):
             assert separate, f'missing Vector3 declaration for {result}'
             decl = separate[0] + ';'
         methods.append(f'public static Vector3 Read{n}(Particle[] {fill[1]}, int {latch[1]}) {{\n'
-                       f'{decl}\n{getter[0]}\nreturn {result};\n}}')
+                       + '\n'.join(aliases[getter['array']]) + f'\n{decl}\n{getter[0]}\nreturn {result};\n}}')
 
     runner = tmp_path / 'runner'
     runner.mkdir()
@@ -112,6 +135,12 @@ def test_indexed_position_declines_changed_native_setup(collision_method, monkey
     text = '\n'.join(dec.lift_method(md, td))
     # One loop still resolves. Check the fallback on the other particle array,
     # not the unrelated collision-event getter calls that share this address.
-    good, = _POSITION.finditer(text)
-    rejected_array, = (name for name in _FILL.findall(text) if name != good['array'])
-    assert re.search(r'sub_1808a5780/\*shared body,[^;\n]*\b' + re.escape(rejected_array) + r'\b', text)
+    good, = _POSITION.finditer(text);fills=list(_FILL.finditer(text));assert len(fills)==2
+    # 0x5812fc is the later spawn arm in structured order; 0x5814bc
+    # is the earlier cleanup arm. Check each array separately, even if the
+    # structurer retained an independent local on the loop backedge.
+    for n,fill in enumerate(fills):
+        end=fills[n+1].start() if n==0 else len(text);part=text[fill.end():end];aliases=_filled_aliases(part,fill[1])
+        if n==int(ip==0x1805812e0):
+            assert not _POSITION.search(part) and any(re.search(r'sub_1808a5780/\*shared body,[^;\n]*\b'+re.escape(name)+r'\b',part) for name in aliases)
+        else:assert fill.end()<good.start()<end and good['array'] in aliases

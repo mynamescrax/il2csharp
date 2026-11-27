@@ -28,10 +28,11 @@ def _spawn_slice(text):
     look, = re.finditer(r'(\w+) = UnityEngine\.Quaternion\.LookRotation\([^;\n]+\);', text)
     # Bind the list and index from the collision query and loop header,
     # independently of the indexer expressions under test.
-    heads = re.finditer(r'\.GetCollisionEvents\([^;\n]*, (\w+)\);\s+int (\w+) = 0;\s+do\s*\{',
-                        text[:look.start()])
-    head = list(heads)[-1]
+    query=list(re.finditer(r'\.GetCollisionEvents\([^;\n]*, (\w+)\);',text[:look.start()]))[-1]
+    head=re.compile(r'int (\w+) = 0;\s*(?:(?:UnityEngine\.ParticleSystem\.Particle\[\]|int) \w+ = \w+;\s*)*do\s*\{').search(text,query.end(),look.start())
+    assert head
     code = text[head.end():look.end()]
+    assert len(re.findall(r'= '+query[1]+r'\['+head[1]+r'\];',code))==2
     assert code.count('.intersection /* shared getter */') == 1
     assert code.count('.normal /* shared getter */') == 1
     point, = re.findall(r'(\w+) = [^;\n]*\.intersection /\* shared getter \*/;', code)
@@ -45,7 +46,7 @@ def _spawn_slice(text):
         decl = re.search(rf'^[ \t]*([\w.]+ {name})(?: = [^;]+)?;', text[:head.start()], re.M)
         assert decl, f'missing declaration for {name}'
         decls.append(decl[1] + ';')
-    return (f'public static (Vector3, Quaternion) Run(List_1<ParticleCollisionEvent> {head[1]}, int {head[2]}) {{\n'
+    return (f'public static (Vector3, Quaternion) Run(List_1<ParticleCollisionEvent> {query[1]}, int {head[1]}) {{\n'
             + '\n'.join(decls) + code + f'\nreturn ({point}, {look[1]});\n}}')
 
 
