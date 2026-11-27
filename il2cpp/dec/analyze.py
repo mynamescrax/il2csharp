@@ -407,6 +407,11 @@ class _AnalyzeMixin:
                                 ((lhs, rhs), getattr(L, '_flags_mn', None))
                     lt = lhs.text if lhs else '?'
                     rt = rhs.text if rhs else '?'
+                    if idx and mn in (Mnemonic.JB,Mnemonic.JBE):
+                        from il2cpp.float_branch import unordered_bound
+                        bound=unordered_bound(b.insns[idx-1],ins,getattr(L,'_flags_mn',None),lhs,rhs)
+                        if bound is not None:
+                            b.cond=bound;L.flags=None;continue
                     op = L.CMP_OPS.get(mn)
                     # an int literal compared against an enum-typed
                     # lhs names the member (`Stage != 4` -> `!=

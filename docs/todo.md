@@ -1628,6 +1628,19 @@ Validation: 4 exact byref checks, 25 exact collection/forward/spawner
 regressions, and 2,340 portable tests. A partial overlap invalidates the
 whole cached tile; a disjoint tile survives. Prior reverse-loop batch: `fb8312a`.
 
+**Volume clamps preserve unordered values.** After scalar SSE comparison,
+`JB` and `JBE` take the branch on NaN; C# `<` and `<=` do not. Preserve
+the Boolean complement of the opposite ordered comparison so later edge
+inversion stays correct. `VoiceVolumeController.SetMicVolume` previously
+replaced NaN with `2f`; now the original payload reaches `micGain`. Three
+whole methods passed: that setter, `PerPlayerVolumeRow.SetVolumeWithoutNotification`
+and `VoiceVolumeManager.GetPlayerVolume`, including its cache miss. Tests
+check bounds, both zero signs, quiet NaN payloads, replacement of the slider
+or cache during callbacks, and fault cutoffs. The predicate proof requires
+an adjacent matching scalar compare and a compatible low-lane value.
+Validation: 6 clamp tests, 77 broader exact checks, 7 light/whole-spawner
+regressions and 2,340 portable checks. Previous cache-output batch: `99b740c`.
+
 **Checkpoint only: split struct results (not on main).** `CleanSpill`
 sends forward X/Y and position Z as the origin. `CleanSpillHose` prints the
 same untyped argument for both vectors. Each registered getter writes a
