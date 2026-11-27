@@ -1812,6 +1812,19 @@ construction remains outside the gate. Scoped unresolved calls across these
 two methods: 2 → 0. Validation: 5 fork checks, 15 exact indexer/spawner
 regressions and 2,349 portable passes. Previous batch: `baf830a`.
 
+**Timer value before the clock call.** `CFX_AutoStopLoopedEffect.Update`
+(23765, RVA `0x514D40`) guarded on `d` but used to reread it after
+`Time.deltaTime`. XMM6 saves the original value across the call. The
+receiver proof now follows both edges of the metadata-init guard. With
+`d=2`, a clock callback writing `133` and returning `3` still gives `-1`
+and stops the particle system. The trace then uses the new game object,
+looks up the translator once and disables only the compared result.
+Complete gates also cover CFX `OnEnable`, `WFX_Demo_DeleteAfterDelay.Update`,
+`GasCollisionSpawner.FixedUpdate` and `ThirdPersonManager.FixedUpdate`,
+including strict versus inclusive expiry, post-RPC field reloads and
+throwing callbacks. Validation: 2 exact countdown checks, 15 scalar/clamp/
+light/spawner regressions and 2,349 portable passes. Prior batch: `9b38e39`.
+
 **Packed resets still open.** `FPSDisplay` resets `median`/`average` at
 `0x180518b62` and `accum`/`frames` at `0x180518d49` with one eight-byte
 write. The emitted assignment changes only the first field. The same

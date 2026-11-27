@@ -106,9 +106,9 @@ def scalar_sites(lift,method,td,blocks,pads):
             reg=load.op1_register;load=_last(byip,pred,load.ip,reg,method.addr)
         if (not load or load.mnemonic!=M.MOVSS or load.op0_register!=reg or load.op1_kind!=K.MEMORY or load.has_segment_prefix or
                 load.memory_index!=R.NONE or load.memory_base not in _SAVED|{R.RCX}):continue
-        base=_last(byip,pred,load.ip,load.memory_base,method.addr)
-        if base!='this':
-            if not base or base.mnemonic!=M.MOV or base.op0_register!=load.memory_base or base.op1_register!=R.RCX or _last(byip,pred,base.ip,R.RCX,method.addr)!='this':continue
+        # Metadata-init branches can interrupt a unique-predecessor walk
+        # without changing the saved this. Check *all* raw incoming paths.
+        if not _receiver(il,method,byip,pred,load.ip,td.index,initial=load.memory_base,this_only=True):continue
         row=_own_field(il,td,sdisp(load.memory_displacement),4)
         if not row or key(row[1])!=(0x0c,0):continue
         fields[load.ip]=row;calls[call.ip]=mi
