@@ -1724,6 +1724,19 @@ capacity, resize, identity, replacement and fault tests. Validation: 10 shelf
 checks, 19 list-append checks, 4 whole-spawner regressions, 8 purchase-lookup
 checks earlier in the batch, and 2,345 portable tests. Prior batch: `76d3674`.
 
+**Packed call arguments.** `RopeSweepCut.Rope_OnBeginSimulation` (23994,
+RVA `0x523F40`) passed two `unknown` arguments to `ScreenSpaceCut`. Two
+qword reads at `+0x38` and `+0x44` feed shuffles and unpack operations.
+Tracing dwords to the final `MOVQ`s gives start XY in RDX and end XY in R8.
+Capture the original qword reads through the proven sequential float-field
+layout, then build the by-value arguments without invoking a constructor.
+The complete callback preserved signed zero, subnormal and NaN payload bits,
+skipped the call on false, and cleared the flag only after a normal return.
+The throwing case retried once. Validation: 8 packed-call checks, 19 exact
+projection/forward/spawner regressions, 2,345 portable passes. This checks
+the callback, not the intersection algorithm in `ScreenSpaceCut`. Prior
+shelf batch: `5015261`.
+
 **Packed resets still open.** `FPSDisplay` resets `median`/`average` at
 `0x180518b62` and `accum`/`frames` at `0x180518d49` with one eight-byte
 write. The emitted assignment changes only the first field. The same
