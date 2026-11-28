@@ -174,6 +174,12 @@ class _AnalyzeMixin:
             for ip,(field,ty,kind) in truth_fields.items():
                 load=next(i for b in blocks for i in b.insns if i.ip==ip)
                 applications[ip]=('field_value',(field,ty),reg_name(load.op0_register),kind)
+        from il2cpp.precall_addend import addend_sites
+        old_fields,old_calls=addend_sites(L,m,td,blocks,self._pad_bids)
+        if (not set(old_fields).intersection(self.skip_ips) and
+                not any(ip in scalar_fields or ip in applications or ip in dispatch_reads or ip in owner_loads or ip in nested_fields for ip in old_fields) and
+                not any(ip in self.skip_ips or ip in scalar_getters and scalar_getters[ip]!=mi for ip,mi in old_calls.items())):
+            scalar_fields.update(old_fields);scalar_getters.update(old_calls)
         replaced_selects = set()
         checked_selects = getattr(self, '_checked_selects', {})
         capture = getattr(self, '_captured_receiver', None)

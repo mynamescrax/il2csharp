@@ -84,6 +84,13 @@ complement to a lock mode, then uses the original byte for visibility.
 The complete emitted callback handles a lock setter that mutates the field
 or reenters, and preserves each throwing callback's cutoff.
 
+**Scheduled and accumulated time.** `Delete.OnEnable` (24846) cancels
+the old invocation before reading the configured delay, but reads that delay
+*before* the optional random draw. In `ChangeFX.Update` and `ChangeFX2.Update`
+(28572/28580), the elapsed-time field is saved before polling the clock. The
+complete emitted callers keep those samples when a callback changes the
+field, including the inactive, nonrandom, input, unordered and throwing paths.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:
