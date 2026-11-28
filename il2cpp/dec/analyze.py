@@ -154,6 +154,12 @@ class _AnalyzeMixin:
         L._aggregate_phi_sources = {}
         L._aggregate_phi_types = {}
 
+        from il2cpp.sampled_element import sampled_elements
+        sampled_fields = sampled_elements(L, m, td, blocks, self._pad_bids)
+        if all(ip not in scalar_fields and ip not in owner_loads and ip not in dispatch_reads and
+               ip not in applications and ip not in self.skip_ips and ip not in nested_fields for ip in sampled_fields):
+            dispatch_reads.update(sampled_fields)
+
         replaced_selects = set()
         checked_selects = getattr(self, '_checked_selects', {})
         capture = getattr(self, '_captured_receiver', None)

@@ -30,6 +30,15 @@ cutoffs. The proof checks the hidden return pointer, incoming argument
 positions, unique registered producers, unwind-matched saves/restores
 and one full dword per output field.
 
+**Step and landing audio selection.** In MethodDefs 23714 and 23715,
+the Unity equality check can replace the source. Native reacquires it
+after that check, saves the clip-array reference, draws an index, then
+reads the selected element of the saved array. Both complete callbacks
+passed runs where the draw replaces both fields and mutates the old
+array. The old source plays the new clip from the old array. Empty arrays,
+null clips, invalid indices, null receivers and callback exceptions pin
+the selection and fault order.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:
