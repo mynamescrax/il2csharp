@@ -164,6 +164,9 @@ class _AnalyzeMixin:
         retries = retry_sites(L,m,td,blocks,self._pad_bids)
         from il2cpp.string_ratio import string_ratios,string_score
         string_scores,metric_calls=string_ratios(L,m,td,blocks,self._pad_bids)
+        from il2cpp.joined_barrier import joined_marks,store_witness
+        marks,mark_calls,mark_writes=joined_marks(L,m,td,blocks,self._pad_bids)
+        mark_values=set()
         m_returns = self._returns_value(m)
         self.phi_pre = {}
         L._phi_bytes = {}
@@ -231,6 +234,8 @@ class _AnalyzeMixin:
             L._decision_calls=decision_calls
             L._sample_call_sites = dict(mask_calls)
             L._sample_call_sites.update(ratio_calls)
+            L._sample_call_sites.update(mark_calls)
+            mark_values.clear()
             L._sample_call_sites.update(metric_calls)
             L._sample_call_values = {}
             L._module_reads.update(L._sample_call_sites)
@@ -326,6 +331,9 @@ class _AnalyzeMixin:
                     continue
                 if ins.ip in string_scores and string_score(L,ins,string_scores[ins.ip]):
                     copied_until=idx+11
+                    continue
+                if ins.ip in marks and all(ip in mark_values for ip in marks[ins.ip]):
+                    L.emit(ins.ip,'return;',None)
                     continue
                 if ins.ip in boxed and apply_division(L, boxed[ins.ip]):
                     copied_until = idx + 6
@@ -910,6 +918,7 @@ class _AnalyzeMixin:
                                                  marker=False)
                     continue
                 L._insn(ins, b.insns, idx, None, self.last_ip)
+                if ins.ip in mark_writes and store_witness(L,mark_writes[ins.ip]):mark_values.add(ins.ip)
                 if ins.ip in float_flags:saved_compare=save_comparison(L,ins,float_flags[ins.ip])
                 if ins.ip in bounds:
                     field_bound = sample_bound(L, ins, bounds[ins.ip])

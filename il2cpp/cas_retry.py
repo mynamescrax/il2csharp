@@ -86,11 +86,8 @@ def retry_sites(lift,m,td,blocks,pads):
         va=cas.near_branch_target;raw=il.bin.read(va+22,4)
         if not lift._is_interlocked_helper(va) or not raw or len(raw)!=4:continue
         barrier=va+26+int.from_bytes(raw,'little',signed=True)
-        # Some wrappers tail-jump directly to the bookkeeping helper.
-        # Match one exact rel32 thunk; no address proximity or name guess.
-        if not any((lambda raw,addr: raw and len(raw)==5 and raw[0]==0xe9 and
-                addr+5+int.from_bytes(raw[1:],'little',signed=True)==barrier)(il.bin.read(v,5),v)
-                for v in lift.rt_wbarrier) and barrier not in lift.rt_wbarrier:continue
+        from il2cpp.gc_mark import mark_only
+        if not mark_only(il,barrier):continue
         definitions=_definitions(by,pred,m.addr,cas.ip,R.R8)
         if definitions!=_definitions(by,pred,m.addr,cmp.ip,cmp.op1_register) or (cas.ip,R.RAX) not in definitions or len(definitions)!=2:continue
         initial,=definitions-{(cas.ip,R.RAX)};first=by[initial[0]]

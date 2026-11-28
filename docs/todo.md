@@ -142,6 +142,14 @@ empty input, and preserves a thrown distance exception. Different lengths
 above 255 distinguish this from the earlier byte-spelled denominator.
 This is the score helper; the outer search and its ordering remain separate.
 
+**Listener field after conditional stores.** `DistanceFade2DAudio.RefreshListenerFromCameraManager`
+(23684) assigns the result of one transform getter on success and clears
+the field on the other normal paths. A shared tail is certified as GC
+bookkeeping by the exported reference store and the card table operation.
+The complete emitted caller checks the retained field and every callback
+fault, including a getter that throws if evaluated twice. The delegate
+retry proof uses the same strict post-store mark identity.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:
