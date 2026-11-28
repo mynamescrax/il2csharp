@@ -1657,8 +1657,8 @@ class _StateMixin:
         self._current_method = m
         self._current_td = td
         self._module_reads = {}
-        self._mask_call_sites = {}
-        self._mask_call_values = {}
+        self._sample_call_sites = {}
+        self._sample_call_values = {}
         self._module_conversion = self._converted_setter = None
         self._stored_getter_lane = None
         self._hierarchy_values = {}

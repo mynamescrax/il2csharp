@@ -135,6 +135,20 @@ getter throws after an inner invocation completes, the inner color stays
 in the field. The decal also reloads the stored alpha. `MaterialFader`'s
 extra register copy/alpha projection is a different case.
 
+**Fractional camera aspect.** `AdaptiveFovByAspect.ApplyFovIfNeeded`
+(24195) stores the screen width, polls height, stores it, then reloads
+the width for positive heights. Both signed dwords undergo `CVTDQ2PS`
+before `DIVSS` at `0x1805F64B9`. At 1920×1080 with reference 1.5 the
+old integer division selected squashed FOV. The complete callback now
+selects normal FOV, including on the unordered `COMISS; JBE` edge. The
+gate also changes width and camera during the height getter, checks both
+fault cutoffs, and distinguishes converting the operands from dividing
+in double and rounding the quotient. The proof requires both captured
+operands to reach the divide together and excludes packed observations
+on either continuation. The adjacent cache reset in `OnEnable` remains
+separate. **Combined checkpoint before this change: 484 exact-build tests
+in 66 modules at `3e9dc29`.**
+
 The new gameplay survey found failures outside those tests. Two small
 programs compiled eight unchanged baseline caller bodies against typed
 collaborators. Of 20 input/trace cases, 15 disagreed with native behavior.

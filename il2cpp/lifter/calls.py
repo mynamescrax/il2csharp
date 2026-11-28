@@ -3990,8 +3990,8 @@ class _CallsMixin:
                 if not call.startswith('__accget('):
                     result.text = acc_get(call)
                 self._bind(result)
-                if getattr(self, '_mask_call_sites', {}).get(ins.ip) == mi:
-                    self._mask_call_values[ins.ip] = result
+                if getattr(self, '_sample_call_sites', {}).get(ins.ip) == mi:
+                    self._sample_call_values[ins.ip] = result
                 return
             binding = getattr(self, '_hierarchy_bindings', {}).get(ins.ip)
             if binding and (binding == ('method',mi) or (binding == ('parent',target) and call.endswith(' /* shared getter */'))):

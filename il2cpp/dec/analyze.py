@@ -140,6 +140,8 @@ class _AnalyzeMixin:
         L._ref_array_pads = self._pad_bids
         from il2cpp.low_byte_test import mask_sites, predicate
         masks, mask_calls = mask_sites(L, m, blocks, self._pad_bids)
+        from il2cpp.scalar_ratio import ratio_sites, ratio_step
+        ratios, ratio_calls = ratio_sites(L, m, td, blocks, self._pad_bids)
         m_returns = self._returns_value(m)
         self.phi_pre = {}
         L._phi_bytes = {}
@@ -180,9 +182,10 @@ class _AnalyzeMixin:
                 L.regs[r] = e
             L._setup_entry(m, td)
             L._parked_getter_values=set()
-            L._mask_call_sites = mask_calls
-            L._mask_call_values = {}
-            L._module_reads.update(mask_calls)
+            L._sample_call_sites = dict(mask_calls)
+            L._sample_call_sites.update(ratio_calls)
+            L._sample_call_values = {}
+            L._module_reads.update(L._sample_call_sites)
             L._module_reads.update(scalar_getters)
             L._module_reads.update(lookup_producers)
 
@@ -221,6 +224,7 @@ class _AnalyzeMixin:
 
         def exec_block(b, dry):
             division_values={}
+            ratio_values={}
             element_plan=element_plans.get(b.bid);element_values={}
             L.out = _Sink(b)
             L.dry = dry
@@ -261,6 +265,7 @@ class _AnalyzeMixin:
                     L.regs['RDI'] = Expr(snapshot, capture[2], 'obj')
                     continue
                 mn = ins.mnemonic
+                if ins.ip in ratios and ratio_step(L,ins,ratios[ins.ip],ratio_values):continue
                 if ins.ip in boxed and apply_division(L, boxed[ins.ip]):
                     copied_until = idx + 6
                     continue
@@ -824,7 +829,7 @@ class _AnalyzeMixin:
                     continue
                 L._insn(ins, b.insns, idx, None, self.last_ip)
                 if ins.ip in masks:
-                    mask_condition = predicate(L, ins, masks[ins.ip], L._mask_call_values)
+                    mask_condition = predicate(L, ins, masks[ins.ip], L._sample_call_values)
                 binding = L._hierarchy_bindings.get(ins.ip)
                 if binding and binding[0] in ('array','element'):
                     bind_array_operand(L, ins, binding)
