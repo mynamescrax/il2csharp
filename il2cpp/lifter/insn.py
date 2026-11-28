@@ -777,6 +777,14 @@ class _InsnMixin:
                 self.set_reg(dst, self._mk('!(%s)' % a.text, a.ty, 'int'))
                 self.flags = None
                 return
+            # The signed loop limit comes from SUB r32,r32; the immediately
+            # following CMP replaces its flags. Preserve dword wraparound
+            # even if the emitted assembly is compiled in checked mode.
+            bound=getattr(self,'_length_differences',{}).get(ins.ip)
+            if (bound and a and be and a.text==bound[0]+'.Length' and be.text==bound[1] and
+                    self.il._closed_type_key(a.ty)==self.il._closed_type_key(be.ty)==(8,0)):
+                e=self._mk('unchecked(%s - %s)' % (a.text,be.text),_INT_TY,'int')
+                self.set_reg(dst,e);self.flags=None;return
             # GPR arithmetic/logic is integer by construction (floats go
             # through SSE): type the operands and, when nothing better is
             # known, the result
@@ -1981,6 +1989,12 @@ class _InsnMixin:
                 scale, disp_add(disp)), None, 'ptr')
         if be is None:
             return Expr('mem_%x' % disp, None, 'ptr')
+        bound=getattr(self,'_length_bounds',{}).get(ins.ip)
+        if bound:
+            rhs=dict.get(self.regs,reg_name(ins.op1_register))
+            if (not be._unk and be.text==bound[0] and self.il._closed_type_key(be.ty)==(14,0) and
+                    rhs and not rhs._unk and rhs.text==bound[1] and self.il._closed_type_key(rhs.ty)==(8,0)):
+                return Expr('%s.Length' % _recv_fold(be.text), _INT_TY, 'int')
         if (ins.mnemonic == Mnemonic.MOV and size == 4 and disp == 0x10 and
                 not ins.has_segment_prefix and _reg_size(ins.memory_base) == 8 and
                 _reg_size(ins.op0_register) == 4 and be.kind == 'int' and be.ty and

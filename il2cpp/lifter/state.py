@@ -1658,6 +1658,8 @@ class _StateMixin:
         self._current_td = td
         self._module_reads = {}
         self._terminal_actions = {}
+        self._length_bounds = {}
+        self._length_differences = {}
         self._cas_retry_sites = {}
         self._cas_retry_values = {}
         self._arg_nulls = {}

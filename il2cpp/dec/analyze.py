@@ -169,6 +169,9 @@ class _AnalyzeMixin:
         mark_values=set()
         from il2cpp.reference_cells import ref_loads,read_cell
         cells=ref_loads(L,m,td,blocks,self._pad_bids)
+        from il2cpp.string_length_bound import bound_sites,difference_sites
+        length_bounds=bound_sites(L,m,blocks,self._pad_bids)
+        length_differences=difference_sites(L,m,blocks,length_bounds)
         m_returns = self._returns_value(m)
         self.phi_pre = {}
         L._phi_bytes = {}
@@ -231,6 +234,8 @@ class _AnalyzeMixin:
             L._setup_entry(m, td)
             L._parked_getter_values=set()
             L._terminal_actions=terminal_actions
+            L._length_bounds=length_bounds
+            L._length_differences=length_differences
             L._cas_retry_sites = retries
             L._arg_nulls=arg_nulls
             L._decision_calls=decision_calls

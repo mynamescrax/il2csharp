@@ -174,6 +174,14 @@ qword loads after actual stores, and rejects offered/escaped addresses or
 partial and offset accesses. This verifies the cleanability helper; its
 physics callers' query arguments remain a separate proof.
 
+**N-gram search keys.** `Computer.BuildNGrams` (24616) compares the full
+UTF-16 string length against `n`. Its previous byte read treated a
+256-character input as shorter than two and inserted the entire string.
+The complete caller checks every attempted add (including duplicates),
+the BCL set contents, 65,537 code units, surrogate halves, empty inputs,
+signed/overflowing bounds and exceptions. `Computer.Similarity` and
+the search ordering are separate callers.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:

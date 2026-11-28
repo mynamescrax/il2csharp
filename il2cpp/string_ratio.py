@@ -18,7 +18,7 @@ if HAVE_ICED:
     from il2cpp.array_origin import _INFO,_SAVED,_WRITES
 
 
-def _parameter(by,pred,entry,site,r,expect):
+def _parameter(by,pred,entry,site,r,expect,*,low32=False):
     todo=[(site,r)];seen=set();ok=False
     while todo:
         ip,reg=todo.pop()
@@ -33,6 +33,7 @@ def _parameter(by,pred,entry,site,r,expect):
             i=by[p]
             if i.is_call_near and reg not in _SAVED:return False
             if i.mnemonic==M.MOV and i.op0_register==reg and RX.is_gpr64(i.op1_register):todo.append((p,i.op1_register))
+            elif (low32 and i.mnemonic==M.MOV and RX.is_gpr32(i.op0_register) and RX.is_gpr32(i.op1_register) and RX.full_register(i.op0_register)==reg):todo.append((p,RX.full_register(i.op1_register)))
             elif any(u.access in _WRITES and RX.full_register(u.register)==reg for u in _INFO.info(i).used_registers()):return False
             else:todo.append((p,reg))
     return ok
