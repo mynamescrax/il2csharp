@@ -106,6 +106,13 @@ the rope before looking up its renderer. The `Cow.InitialDialogue` call slice
 stack argument, and true in the following byte slot. Only a full-width
 machine zero at an exact, unambiguous closed parameter is promoted.
 
+**Unordered effect delays.** `CFX_LightIntensityFade.OnEnable` (23834)
+stores zero lifetime and copies the delay bits before its conditional light
+lookup. The earlier SSE comparison is still live at the branch. A NaN or
+nonpositive delay skips the lookup, while a positive delay disables the
+returned light. The complete emitted callback checks both stores, signed
+zero, NaN payloads and fault ordering.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:

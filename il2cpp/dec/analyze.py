@@ -155,6 +155,8 @@ class _AnalyzeMixin:
         decisions,decision_calls=decision_sites(L,m,td,blocks,self._pad_bids)
         from il2cpp.null_argument import null_sites
         arg_nulls=null_sites(L,m,blocks,self._pad_bids)
+        from il2cpp.saved_float_flags import comparison_sites,save_comparison
+        float_flags=comparison_sites(L,m,td,blocks,self._pad_bids)
         m_returns = self._returns_value(m)
         self.phi_pre = {}
         L._phi_bytes = {}
@@ -272,6 +274,7 @@ class _AnalyzeMixin:
             copied_until = -1
             mask_condition = None
             field_bound = None
+            saved_compare = None
             receiver_stores = {}
             joined_echo = None
             finish_spill = None
@@ -518,6 +521,9 @@ class _AnalyzeMixin:
                 if fc == FlowControl.CONDITIONAL_BRANCH and ins.op0_kind == OpKind.NEAR_BRANCH64:
                     lhs, rhs = (L.flags or (Expr('?', None, '?'), Expr('?', None, '?')))
                     L._jcc_flags = (L.flags, getattr(L, '_flags_mn', None))
+                    if (saved_compare and saved_compare[0]==ins.ip and saved_compare[1] is lhs and saved_compare[2] is rhs
+                            and L._flags_mn in (Mnemonic.COMISS,Mnemonic.UCOMISS)):
+                        b.cond=saved_compare[3]; L.flags=None; continue
                     if (field_bound and field_bound[0] == ins.ip and L._flags_mn == Mnemonic.CMP and
                             field_bound[1] is lhs and field_bound[2] is rhs):
                         b.cond = field_bound[3]
@@ -883,6 +889,7 @@ class _AnalyzeMixin:
                                                  marker=False)
                     continue
                 L._insn(ins, b.insns, idx, None, self.last_ip)
+                if ins.ip in float_flags:saved_compare=save_comparison(L,ins,float_flags[ins.ip])
                 if ins.ip in bounds:
                     field_bound = sample_bound(L, ins, bounds[ins.ip])
                 if ins.ip in masks:
