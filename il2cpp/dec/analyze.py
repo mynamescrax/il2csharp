@@ -162,6 +162,8 @@ class _AnalyzeMixin:
         float_flags=comparison_sites(L,m,td,blocks,self._pad_bids)
         from il2cpp.cas_retry import retry_sites
         retries = retry_sites(L,m,td,blocks,self._pad_bids)
+        from il2cpp.string_ratio import string_ratios,string_score
+        string_scores,metric_calls=string_ratios(L,m,td,blocks,self._pad_bids)
         m_returns = self._returns_value(m)
         self.phi_pre = {}
         L._phi_bytes = {}
@@ -229,6 +231,7 @@ class _AnalyzeMixin:
             L._decision_calls=decision_calls
             L._sample_call_sites = dict(mask_calls)
             L._sample_call_sites.update(ratio_calls)
+            L._sample_call_sites.update(metric_calls)
             L._sample_call_values = {}
             L._module_reads.update(L._sample_call_sites)
             L._module_reads.update(output_samples)
@@ -320,6 +323,9 @@ class _AnalyzeMixin:
                 if ins.ip in ratios and ratio_step(L,ins,ratios[ins.ip],ratio_values):continue
                 if ins.ip in projections and project_result(L,ins,projections[ins.ip]):
                     copied_until=idx+5
+                    continue
+                if ins.ip in string_scores and string_score(L,ins,string_scores[ins.ip]):
+                    copied_until=idx+11
                     continue
                 if ins.ip in boxed and apply_division(L, boxed[ins.ip]):
                     copied_until = idx + 6

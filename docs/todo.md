@@ -135,6 +135,13 @@ two `MOVSS` offsets, scales, `UNPCKLPS` and return in RAX select the
 lanes. The complete callers test distinct center and extents, signed
 zero, subnormal values, null receivers and throwing component/bounds reads.
 
+**Search similarity.** `Computer.Similarity` (24613) reads full UTF-16
+string lengths and converts both signed dwords before division. Its
+complete caller uses a single distance sample, returns zero for null or
+empty input, and preserves a thrown distance exception. Different lengths
+above 255 distinguish this from the earlier byte-spelled denominator.
+This is the score helper; the outer search and its ordering remain separate.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:
