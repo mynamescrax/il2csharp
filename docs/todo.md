@@ -199,6 +199,14 @@ emitted suffix runs with a real `List<T>` on capacity, growth, null and
 sort-fault paths. The null network-state exception in the prefix is a
 separate problem, so this is a slice, not yet a second whole shelf caller.
 
+**Puzzle placement and player snap-back.** `TangledPeg.Awake` (24017)
+gets the destination transform before reloading `currentSlot` for its
+source position. A null destination faults only after the source getter.
+The complete caller checks component setup and the original backlink;
+the guarded position-copy slice in `JumpscarePlayer.OnEnable` (25847)
+has the same order. Both tests replace the source field during the
+destination getter and distinguish getter exceptions from setter faults.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:

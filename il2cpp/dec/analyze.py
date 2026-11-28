@@ -174,6 +174,8 @@ class _AnalyzeMixin:
         length_differences=difference_sites(L,m,blocks,length_bounds)
         from il2cpp.two_lane_scale import operand_samples
         scale_operands,shared_divisors=operand_samples(L,m,td,blocks,self._pad_bids)
+        from il2cpp.parked_destination import destination_reads
+        parked_destinations=destination_reads(L,m,td,blocks,self._pad_bids)
         m_returns = self._returns_value(m)
         self.phi_pre = {}
         L._phi_bytes = {}
@@ -250,6 +252,7 @@ class _AnalyzeMixin:
             L._module_reads.update(L._sample_call_sites)
             L._module_reads.update(output_samples)
             L._module_reads.update(scalar_getters)
+            L._module_reads.update(parked_destinations)
             L._scale_operands=scale_operands
             L._module_reads.update(shared_divisors)
             L._module_reads.update(lookup_producers)
