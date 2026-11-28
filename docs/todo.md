@@ -121,6 +121,20 @@ an alternate entry, or a public getter flag belonging to the caller's
 string initialization vetoes the grouped proof. `IDCard.CheckIfFakeID`
 still has a separate search-exit defect before its two corrected reads.
 
+**Whole-color copies into effect fields.** `Blinker.Awake` (23889),
+`RealFireLightFlicker.Start` (28635), `TangledPegSlot.Awake` (24029) and
+`WFX_BulletHoleDecal.Awake` (23837) now assign the color returned by the
+getter. The direct `MOVUPS` load through RAX and its 16-byte field store
+must share one uninterrupted native path. The live RAX must be the
+recorded return-buffer echo from that call, and all four dwords must
+belong to its local. Only the destination store is replaced. A separate
+8-byte transfer cannot acquire a 16-byte spelling from this rule.
+The complete callers check register/field receivers, subnormal and NaN
+payload bits, earlier reference assignments and reentry. If an outer
+getter throws after an inner invocation completes, the inner color stays
+in the field. The decal also reloads the stored alpha. `MaterialFader`'s
+extra register copy/alpha projection is a different case.
+
 The new gameplay survey found failures outside those tests. Two small
 programs compiled eight unchanged baseline caller bodies against typed
 collaborators. Of 20 input/trace cases, 15 disagreed with native behavior.

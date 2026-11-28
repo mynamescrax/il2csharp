@@ -125,6 +125,9 @@ class _AnalyzeMixin:
                 prev=ip
         L._snapshot_srets, packed_loads, snapshot_getters = snapshot_plans(L, td, blocks, self._pad_bids)
         for site,_ in element_plans.values():L._snapshot_srets.update((*site.getters,site.rotate))
+        from il2cpp.echo_field import echo_stores, emit_copy
+        echo_fields = echo_stores(L, m, td, blocks, self._pad_bids)
+        L._snapshot_srets.update(plan[0] for plan in echo_fields.values())
         binary_reads,binary_stores,binary_uses=binary_sites(L,m,blocks,self._pad_bids)
         L._snapshot_srets.update(binary_reads.values());L._snapshot_srets.update(v[0] for v in binary_uses.values())
         binary_values={}
@@ -261,6 +264,7 @@ class _AnalyzeMixin:
                 if ins.ip in boxed and apply_division(L, boxed[ins.ip]):
                     copied_until = idx + 6
                     continue
+                if ins.ip in echo_fields and emit_copy(L, ins, echo_fields[ins.ip]):continue
                 if ins.ip in saved_reads:save_echo(L,saved_reads[ins.ip],saved_values)
                 if ins.ip in saved_calls and call_binary(L,ins,saved_calls[ins.ip],saved_values):continue
                 if ins.ip in value_loads and ins.ip not in packed_loads and bind_value(L,ins,value_loads[ins.ip]):continue
