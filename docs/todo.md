@@ -187,7 +187,8 @@ the search ordering are separate callers.
 both by a single clock read. The later body velocity getter supplies Y
 and can replace the receiver for the setter. The complete caller tests
 those replacements, changed multiplier, zero and unordered time, disabled
-motion, nulls and faults at each callback.
+motion, nulls and faults at each callback. A decoded variant with distinct X/Z scale
+fields also checks that reentering the callback preserves each outer sample.
 
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60

@@ -40,3 +40,21 @@ def test_each_product_and_its_single_sample_are_proven(shift_runtime,monkeypatch
     elif bad=='bypass second scale':i.near_branch64=0x18062d4f0
     else:i.op1_register=R.EDX
     monkeypatch.setattr(b,'insns',b.insns[:j]+[i]+b.insns[j+1:]);assert scan()==({},{})
+
+
+def test_two_independent_scale_fields_during_reentrant_clock(shift_runtime,tmp_path,monkeypatch):
+    meta,il=shift_runtime;m=meta.methods[28798];em=Emitter(il,str(tmp_path/'out'));original=em.decompiler._decode
+    def decode(md):
+        s,skip=original(md)
+        if md.index==m.index:
+            s=list(s);j=next(j for j,i in enumerate(s) if i.ip==0x18062d4e0);q=s[j].copy();q.memory_displacement=0x38;s[j]=q
+        return s,skip
+    monkeypatch.setattr(em.decompiler,'_decode',decode);out=[];em.emit_method(m,meta.typedefs[m.declaring],out,'    ')
+    src='''using System;using System.Collections.Generic;using UnityEngine;
+var c=new C();int phase=0;var writes=new List<Vector3>();c.m_Animator=new Animator();c.m_Rigidbody=new Rigidbody();c.m_Rigidbody.Write=writes.Add;c.m_IsGrounded=true;
+c.m_Animator.Read=()=>{c.m_MoveSpeedMultiplier=phase==0?2f:-3f;c.m_AnimSpeedMultiplier=phase==0?-.5f:4f;return new Vector3{x=8,y=9,z=2};};
+Time.Read=()=>{if(++phase==1){c.Run();return .25f;}if(phase!=2)throw new Exception("repeated clock");c.m_MoveSpeedMultiplier=0;c.m_AnimSpeedMultiplier=0;return 2f;};c.Run();
+if(writes.Count!=2||writes[0].x!=-12f||writes[0].y!=5f||writes[0].z!=4f||writes[1].x!=64f||writes[1].y!=5f||writes[1].z!=-4f)throw new Exception("lost outer or inner samples");Console.WriteLine("reentrant clock preserved independent scales on both activations");
+namespace UnityEngine{public struct Vector3{public float x,y,z;}public class Animator{public Func<Vector3> Read;public Vector3 deltaPosition=>Read();}public class Rigidbody{public Action<Vector3> Write;public Vector3 linearVelocity{get=>new Vector3{y=5f};set=>Write(value);}}public static class Time{public static Func<float> Read;public static float deltaTime=>Read();}}
+class C{public bool m_IsGrounded;public float m_MoveSpeedMultiplier,m_AnimSpeedMultiplier;public Animator m_Animator;public Rigidbody m_Rigidbody;public void Run()=>OnAnimatorMove();\n'''+ '\n'.join(out)+'\n}'
+    r=tmp_path/'r';r.mkdir();(r/'Program.cs').write_text(src,encoding='utf8');print(run_case(tmp_path,r))
