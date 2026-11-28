@@ -25,6 +25,29 @@ Final lifter commit `aa978aa`. The fixed 19-method sample went from
 exact-build modules** with the fixture pair below. Local report:
 `work/shift_method_checks/0b0b7797016e/summary.json`.
 
+**Low-byte branch tests (2026-11-28).** A native `TEST` branches on the
+bit intersection. The old lift compared its two operands for equality.
+`Computer.OnApplicationFocus` (24571) now reads the console flag once,
+including on focus loss, and deactivates/selects only when both flags are
+true and the interaction/tab checks pass. The complete emitted callback
+passed all four flag combinations, null input and fault-order checks.
+For 23693, the two decision heads at `0x1805082C0` and `0x1805082C8` use
+one registered Int32 result. The old decision slice disagreed on 515 of
+1,025 inputs; the new slice agreed on every input. Tests also vary the
+encoded mask to `0x80` and `0xff` and force the producer to throw.
+
+The structured lift checks reaching definitions in the native CFG, the
+return ABI and the actual bound sample at the adjacent `TEST; JE/JNE`.
+A Boolean pair additionally needs an untouched by-value parameter saved in
+the prologue. Binding two arbitrary calls by their operand text reordered
+the raycast and input poll in 23937; that case stays outside this rule.
+**Scoped measurement:** of 530 candidate rows, 943 integer-mask and four
+Boolean predicates were applied in 476 callers during the real pass. This
+counts instruction sites, not complete methods. `test_game_low_byte_test.py`
+passed 11 tests; both whole-spawner modules passed (2 + 2), and the portable
+selection passed 2,349. The 77-case Shift regression also passed on the
+isolated candidate before the final parameter-name and state-reset guards.
+
 The new gameplay survey found failures outside those tests. Two small
 programs compiled eight unchanged baseline caller bodies against typed
 collaborators. Of 20 input/trace cases, 15 disagreed with native behavior.

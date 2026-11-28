@@ -129,6 +129,8 @@ class _AnalyzeMixin:
         saved_reads,saved_calls=binary_arguments(L,m,blocks,self._pad_bids);saved_values={}
         L._snapshot_srets.update(ip for ip,ty,home in saved_reads.values())
         L._ref_array_pads = self._pad_bids
+        from il2cpp.low_byte_test import mask_sites, predicate
+        masks, mask_calls = mask_sites(L, m, blocks, self._pad_bids)
         m_returns = self._returns_value(m)
         self.phi_pre = {}
         L._phi_bytes = {}
@@ -169,6 +171,9 @@ class _AnalyzeMixin:
                 L.regs[r] = e
             L._setup_entry(m, td)
             L._parked_getter_values=set()
+            L._mask_call_sites = mask_calls
+            L._mask_call_values = {}
+            L._module_reads.update(mask_calls)
             L._module_reads.update(scalar_getters)
             L._module_reads.update(lookup_producers)
 
@@ -212,6 +217,7 @@ class _AnalyzeMixin:
             L.dry = dry
             L._jcc_flags = None
             copied_until = -1
+            mask_condition = None
             receiver_stores = {}
             joined_echo = None
             finish_spill = None
@@ -449,6 +455,12 @@ class _AnalyzeMixin:
                 if fc == FlowControl.CONDITIONAL_BRANCH and ins.op0_kind == OpKind.NEAR_BRANCH64:
                     lhs, rhs = (L.flags or (Expr('?', None, '?'), Expr('?', None, '?')))
                     L._jcc_flags = (L.flags, getattr(L, '_flags_mn', None))
+                    if (mask_condition and mask_condition[0] == ins.ip and
+                            L._flags_mn == Mnemonic.TEST and mn in (Mnemonic.JE, Mnemonic.JNE)):
+                        _, value, zero = mask_condition
+                        b.cond = '%s %s %s' % (value, '==' if mn == Mnemonic.JE else '!=', zero)
+                        L.flags = None
+                        continue
                     L._note_use(lhs)
                     L._note_use(rhs)
                     next_bid = bmap.get(ins.next_ip)
@@ -798,6 +810,8 @@ class _AnalyzeMixin:
                                                  marker=False)
                     continue
                 L._insn(ins, b.insns, idx, None, self.last_ip)
+                if ins.ip in masks:
+                    mask_condition = predicate(L, ins, masks[ins.ip], L._mask_call_values)
                 binding = L._hierarchy_bindings.get(ins.ip)
                 if binding and binding[0] in ('array','element'):
                     bind_array_operand(L, ins, binding)
