@@ -153,6 +153,8 @@ class _AnalyzeMixin:
         output_samples = sampled_returns(L, m, td, blocks, self._pad_bids)
         from il2cpp.saved_decision import decision_sites,apply_decision,continue_decision
         decisions,decision_calls=decision_sites(L,m,td,blocks,self._pad_bids)
+        from il2cpp.null_argument import null_sites
+        arg_nulls=null_sites(L,m,blocks,self._pad_bids)
         m_returns = self._returns_value(m)
         self.phi_pre = {}
         L._phi_bytes = {}
@@ -215,6 +217,7 @@ class _AnalyzeMixin:
             L._setup_entry(m, td)
             L._parked_getter_values=set()
             L._terminal_actions=terminal_actions
+            L._arg_nulls=arg_nulls
             L._decision_calls=decision_calls
             L._sample_call_sites = dict(mask_calls)
             L._sample_call_sites.update(ratio_calls)

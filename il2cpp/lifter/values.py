@@ -130,6 +130,10 @@ class _ValuesMixin:
                     xe = e
                     break
             out[pos] = xe.text if xe is not None and xe.text else '_'
+        nulls=getattr(self,'_arg_nulls',{}).get(getattr(self,'_cur_ip',None))
+        if nulls and nulls[0]==m2.index:
+            for slot in nulls[1]:
+                if slot<len(out) and out[slot]=='0':out[slot]='null'
         while len(out) > gpr_want and out[-1] == '_':
             out.pop()
         return out

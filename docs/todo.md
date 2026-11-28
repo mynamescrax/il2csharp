@@ -99,6 +99,13 @@ the manager twice around `AddHint` and skips the latch before cleanup.
 Tests cover replaced slots, short-circuiting, faults, and distinct phi
 copies on match, rejection and exhaustion edges.
 
+**Null reference arguments.** `ExtendableGrapplingHook.DetachHook` (23951)
+passes null to the rope blueprint setter. The complete caller also reloads
+the rope before looking up its renderer. The `Cow.InitialDialogue` call slice
+(24702) verifies two string literals, null in R9 and in a separate eight-byte
+stack argument, and true in the following byte slot. Only a full-width
+machine zero at an exact, unambiguous closed parameter is promoted.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:
