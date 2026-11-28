@@ -1037,7 +1037,8 @@ class _HighLevelMixin:
         return 'v%d' % n
 
     def _array_elem_type(self, arr_tok) -> str:
-        t = self._var_types.get(arr_tok) or getattr(self.L, '_type_hints', {}).get(arr_tok)
+        t = (self._var_types.get(arr_tok) or getattr(self.L, '_type_hints', {}).get(arr_tok)
+             or getattr(self.L, '_var_types', {}).get(arr_tok))
         if not t or not isinstance(t, tuple):
             return 'object'
         te = (t[1] >> 16) & 0xFF

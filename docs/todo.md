@@ -49,6 +49,16 @@ the already-written new Z when the opposite store order is used. This
 field-layout proof does not identify the reused query stack homes in the
 two spill methods.
 
+**Keep the checked element through the action.** `NodeSwitch.TriggerSwitchLocal`
+(26532) and `RegularBrowsingNPC.Die` (27034) park each array element in a
+nonvolatile register before calling the Unity truth conversion. A callback
+can replace that slot. The action must still target the checked object,
+while the next iteration sees the next live element. Both complete callers
+passed with replacements and throwing checks/actions. In the NPC tail,
+`pathfinder` really is reloaded after its truth conversion; the replacement
+gets the speed write. The foreach element type comes from the captured
+array's declared type, including declarations minted by the lifter.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:

@@ -163,6 +163,15 @@ class _AnalyzeMixin:
                ip not in applications and ip not in self.skip_ips and ip not in nested_fields for ip in sampled_fields):
             dispatch_reads.update(sampled_fields)
 
+        from il2cpp.truth_element import checked_elements, park_element
+        truth_fields, truth_reads = checked_elements(L,m,td,blocks,self._pad_bids)
+        if any(ip in applications or ip in dispatch_reads or ip in scalar_fields or ip in owner_loads or
+               ip in nested_fields or ip in self.skip_ips for ip in (*truth_fields,*truth_reads)):
+            truth_reads = {}
+        else:
+            for ip,(field,ty,kind) in truth_fields.items():
+                load=next(i for b in blocks for i in b.insns if i.ip==ip)
+                applications[ip]=('field_value',(field,ty),reg_name(load.op0_register),kind)
         replaced_selects = set()
         checked_selects = getattr(self, '_checked_selects', {})
         capture = getattr(self, '_captured_receiver', None)
@@ -366,6 +375,7 @@ class _AnalyzeMixin:
                     if end is not None:
                         copied_until=end
                         continue
+                if ins.ip in truth_reads and park_element(L,ins,truth_reads[ins.ip],app_values):continue
                 if ins.ip in applications and application_step(L,ins,applications[ins.ip],app_values):continue
                 if vector_getter or dec_getter:
                     if mn == Mnemonic.RET:
