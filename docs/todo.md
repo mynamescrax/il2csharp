@@ -113,6 +113,14 @@ nonpositive delay skips the lookup, while a positive delay disables the
 returned light. The complete emitted callback checks both stores, signed
 zero, NaN payloads and fault ordering.
 
+**Closed generic spawns.** EndingScene (25117), NuisanceCustomer (24066)
+and RemoteTrap (27086) now pass the prefab captured before the aggregate
+reads. The actual R9 MethodRef closes the overload; both outgoing homes
+are complete, disjoint, and agree with the registered signature. The
+emitted callers preserve all seven float lanes, the class initialization
+before the factory, independent inputs and callback failures. A property
+can replace the prefab field without changing the already captured original.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:

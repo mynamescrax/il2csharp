@@ -357,6 +357,9 @@ class _BuildMixin:
                                       skip=skip if isinstance(skip, set) else None)
             except Exception:
                 pass
+        from il2cpp.closed_factory import closed_factory
+        factory=closed_factory(L,m,td,blocks,insns,self._pad_bids)
+        if factory is not None:return factory
         self._prune_nonreturning(blocks)
         L._array_allocation_loop_guard = self._allocation_needs_loop_guard(blocks)
         self._analyze(m, td, blocks, bmap)

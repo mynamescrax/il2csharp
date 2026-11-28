@@ -52,7 +52,15 @@ def _static_read(lift,m):
     f=_frame(s[:2],s[-3:]);g=init_guards(lift,s,2,f[1]) if f else None
     if not g:return None
     j,dst,inits=g;body=s[j:-3]
-    if len(body)!=7:return None
+    if len(body)==5 and 0<=m.return_type<len(il.types) and il._sf_field_size(il.types[m.return_type],0)==16:
+        klass,blob,src,store,echo=body
+        if (not _rr(echo,M.MOV,R.RAX,dst) or klass.mnemonic!=M.MOV or klass.op0_register!=R.RAX or klass.memory_base!=R.RIP or
+                inits!={klass.ip_rel_memory_address} or blob.mnemonic!=M.MOV or blob.op0_register not in (R.RAX,R.RCX,R.RDX) or
+                blob.memory_base!=R.RAX or blob.memory_displacement!=KLASS_STATIC_FIELDS or src.mnemonic!=M.MOVUPS or
+                not R.XMM0<=src.op0_register<=R.XMM5 or src.memory_base!=blob.op0_register or store.mnemonic!=M.MOVUPS or
+                store.op0_kind!=K.MEMORY or store.memory_base!=dst or store.memory_displacement or store.op1_register!=src.op0_register):return None
+        return klass.ip_rel_memory_address,sdisp(src.memory_displacement)
+    if len(body)!=7 or not 0<=m.return_type<len(il.types) or il._sf_field_size(il.types[m.return_type],0)!=12:return None
     klass,blob,xy,z,lo,hi,echo=body
     if (klass.mnemonic!=M.MOV or klass.memory_base!=R.RIP or klass.op0_register!=R.RAX or
             inits!={klass.ip_rel_memory_address} or blob.mnemonic!=M.MOV or blob.op0_register!=R.RAX or blob.memory_base!=R.RAX or
@@ -67,7 +75,7 @@ def static_value_alias(lift,method,slot,off,ty):
     il=lift.il;key=il._closed_type_key;u=il.decode_slot(slot) or {};own=u.get('td',-1)
     if u.get('kind')!=1 or not 0<=own<len(il.meta.typedefs) or not 0<=own<len(il.field_offsets) or key(u.get('type'))!=(0x11,own,0):return None
     td=il.meta.typedefs[own];width=il._sf_field_size(ty,0)
-    if (width!=12 or not td.is_valuetype or td.generic_container!=-1 or td.declaring!=-1 or td.flags&7!=1 or
+    if (width not in (12,16) or not td.is_valuetype or td.generic_container!=-1 or td.declaring!=-1 or td.flags&7!=1 or
             td.has_cctor and not td.flags&0x100000):return None
     offsets=il.field_offsets[own];fields=[]
     if not offsets or len(offsets)!=td.field_count:return None
