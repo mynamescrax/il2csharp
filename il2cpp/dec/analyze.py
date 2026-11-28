@@ -46,6 +46,8 @@ class _AnalyzeMixin:
         L._saved_references.update(header_calls)
         from il2cpp.array_member import checked_ref_elements
         checked_ref_loads=checked_ref_elements(L,m,blocks,self._pad_bids)
+        from il2cpp.indexed_lookup import fixed_lookup_elements
+        checked_ref_loads.update(fixed_lookup_elements(L,m,td,blocks,self._pad_bids))
         scalar_fields,scalar_getters=scalar_sites(L,m,td,blocks,self._pad_bids)
         from il2cpp.parked_scalar_pair import scalar_pairs
         paired_fields, paired_calls = scalar_pairs(L, m, td, blocks, self._pad_bids)

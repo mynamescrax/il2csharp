@@ -207,6 +207,13 @@ the guarded position-copy slice in `JumpscarePlayer.OnEnable` (25847)
 has the same order. Both tests replace the source field during the
 destination getter and distinguish getter exceptions from setter faults.
 
+**Prefab dimensions.** The concert/street `GetRealPeopleModelSize`
+callers (23587/23599) select the second array element before the
+closed `GetComponent<MeshRenderer>` call. A matching unsigned bound,
+reference stride, two null guards, and the actual MethodRef establish
+the receiver and return type. The complete callers run against a generic-only
+lookup with null/short arrays, replaced slots, distinct extents and faults.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:
