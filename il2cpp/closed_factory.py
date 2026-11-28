@@ -80,7 +80,7 @@ def _frame(il,m,s):
     return k,epi,returns[0],size,spans,late,set(push)|{r for r,_,_ in moves}
 
 
-def _usage_guards(lift,s,pred):
+def _usage_guards(lift,s,pred,*,kinds=(1,6)):
     """Only erase the flag protocol; intervening hot-path reads still run."""
     il=lift.il;skip=set();ready={};flags={}
     for j,i in enumerate(s):
@@ -94,7 +94,7 @@ def _usage_guards(lift,s,pred):
         while n+1<len(s) and s[n].mnemonic==M.LEA:
             get,call=s[n:n+2];v=get.ip_rel_memory_address
             if (get.op0_register!=R.RCX or get.memory_base!=R.RIP or not call.is_call_near or call.near_branch_target!=lift.rt_init_meta or
-                    (il.decode_slot(v) or {}).get('kind') not in (1,6)):return None
+                    (il.decode_slot(v) or {}).get('kind') not in kinds):return None
             slots.append(v);cold.extend((get.ip,call.ip));n+=2
         if not slots or len(slots)!=len(set(slots)) or n>=len(s):return None
         z=s[n]
