@@ -190,6 +190,15 @@ those replacements, changed multiplier, zero and unordered time, disabled
 motion, nulls and faults at each callback. A decoded variant with distinct X/Z scale
 fields also checks that reentering the callback preserves each outer sample.
 
+**Server shelf append.** The `ServerAddItem` (27397) suffix stores a
+spawned transform at the old count. As in the local variant, the getter
+can replace the list before `Add`. Two GPR restores separate the factory
+call from its result test here; the chain unwind record, save/store homes,
+and raw CFG certify that RAX still carries that call. The contiguous
+emitted suffix runs with a real `List<T>` on capacity, growth, null and
+sort-fault paths. The null network-state exception in the prefix is a
+separate problem, so this is a slice, not yet a second whole shelf caller.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:

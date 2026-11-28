@@ -59,13 +59,17 @@ def _contract(lift,slot):
 def _sp_add(i,r,n):return i.mnemonic==M.ADD and i.op0_register==r and i.op1_kind==K.IMMEDIATE8TO64 and i.immediate8to64==n
 
 
-def _factory(il,by,pred,method,getter,prev,base,nre):
+def _factory(il,by,pred,method,getter,prev,base,nre,restores):
     # Do not trust a typed temp left in end_state by a modelled instruction:
     # every path has to carry the result of the same registered call in RAX.
     if len(prev.insns)<3:return False
-    call,check,fail=prev.insns[-3:]
+    check,fail=prev.insns[-2:];j=len(prev.insns)-3
+    while j>=0 and prev.insns[j].ip in restores:j-=1
+    if j<0 or {q.ip for q in prev.insns[j+1:-2]}!=restores:return False
+    call=prev.insns[j]
+    if any(pred[z.ip]!=[a.ip] or a.next_ip!=z.ip for a,z in zip(prev.insns[j:-2],prev.insns[j+1:-1])):return False
     if (not call.is_call_near or not _rr(check,M.TEST,R.RAX,R.RAX) or fail.mnemonic!=M.JE or not _raise_at(by,fail.near_branch_target,nre) or
-            pred[check.ip]!=[call.ip] or pred[fail.ip]!=[check.ip] or
+            pred[fail.ip]!=[check.ip] or
             _definitions(by,pred,method.addr,getter.ip,R.RCX)!={(call.ip,R.RAX)}):return False
     defs=_definitions(by,pred,method.addr,call.ip,R.R8)
     if len(defs)!=1:return False
@@ -158,7 +162,11 @@ def fold_reference_append(dec,method,td,blocks,pads):
         if not _jump(resize,M.CALL,slow) or not _jump(wb,M.CALL,barrier):continue
         seq=[i for b in blocks for i in b.insns];by={i.ip:i for i in seq}
         if not _raise_at(by,null.near_branch_target,nre) or not _raise_at(by,fail.near_branch_target,ior):continue
-        graph=_graph(il,seq);frame=stack_local_frame(lift,method,blocks,pads)
+        graph=_graph(il,seq,chained=True);frame=stack_local_frame(lift,method,blocks,pads);restores=set()
+        if graph and not frame:
+            from il2cpp.split_restore import restored_frame
+            witness=restored_frame(il,method,seq,*graph,h.insns[0].ip)
+            if witness:frame,restores=witness
         if not graph or not frame or not _continuation(lift,method,blocks,j,frame,sr,by,graph[0]):continue
         pred,_=graph;part=h.insns+[x for b in region for x in b.insns]
         if not all(_plain(i) for i in part) or not _receiver(il,method,by,pred,field.ip,td.index,initial=sr,this_only=True):continue
@@ -171,7 +179,7 @@ def fold_reference_append(dec,method,td,blocks,pads):
         prev=blocks[h.preds[0]];base=(prev.end_state or {}).get('RAX');es=h.end_state or {};val=es.get('R10');lst=es.get('R9')
         if pred[zero.ip]!=[prev.insns[-1].ip] or set(pred[j.insns[0].ip])!={leave.ip,wb.ip}:continue
         ids=il.addr_candidates.get(getter.near_branch_target,())
-        if len(ids)!=1 or ids[0][0]!='method' or not base or not base.ty or not re.fullmatch(r't\d+',base.text) or not _factory(il,by,pred,method,getter,prev,base,nre):continue
+        if len(ids)!=1 or ids[0][0]!='method' or not base or not base.ty or not re.fullmatch(r't\d+',base.text) or not _factory(il,by,pred,method,getter,prev,base,nre,restores):continue
         md=il.meta.methods[ids[0][1]];prop=lift._accessor_prop(md.index)
         if (not row or row[0]!=td.index or key(row[2])!=lk or not prop or prop[0]!='get' or prop[2] or md.param_count or md.is_static or md.flags&0x40 or
                 md.addr!=getter.near_branch_target or md.flags&7!=6 or md.declaring!=base.ty[0] or key(base.ty)!=(0x12,md.declaring,0) or
