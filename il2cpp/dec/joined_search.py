@@ -51,16 +51,23 @@ def joined_search(dec,bs,hdr,stop,outer,out,depth):
             if dest in body:expected[dest].add(n)
         if step=='diamond':expected[args[1]].add(args[0])
     if any(parents(n)!=expected[n] for n in body if n!=hdr):return None
+    terminating=False
+    if parents(join)=={hdr}:
+        from il2cpp.dec.search_completion import terminal_hit
+        certified=terminal_hit(dec,bs,hdr,k,hit,join,body,stop)
+        if certified is None:return None
+        terminating=True
     path=[];prev=k;k=hit
-    while k!=join:
+    while not terminating and k!=join:
         if (k not in reach or not 0<=k<len(bs) or k in path or k in body or k in stop or k in dec.loop_of_hdr or bs[k].consumed or
                 bs[k].is_entry or len(path)>=32 or parents(k)!={prev} or not linear(bs[k])):return None
         path.append(k);prev,k=k,bs[k].succs[0]
-    if not path or parents(join)!={hdr,path[-1]}:return None
+    if terminating:path=certified
+    elif not path or parents(join)!={hdr,path[-1]}:return None
     # Do not claim a continuation already owned by a sibling. Follow only
     # private linear cleanup, stopping before the parent's own boundary.
     end=join;previous={hdr,path[-1]};used=set()
-    while end not in stop:
+    while not terminating and end not in stop:
         if (end not in reach or not 0<=end<len(bs) or end in body or end in used or end in path or bs[end].consumed or
                 bs[end].is_entry or end in dec.loop_of_hdr or len(used)>=32 or parents(end)!=previous):return None
         z=bs[end]
@@ -87,7 +94,7 @@ def joined_search(dec,bs,hdr,stop,outer,out,depth):
         else:
             open_(b,hit);edge(n,hit)
             for a in path:block(a);edge(a,bs[a].succs[0])
-            out.append('break;');close();edge(n,latch)
+            out.append('return;' if terminating else 'break;');close();edge(n,latch)
     for n in reversed(reject):
         close()
         if dec.phi_copies.get((n,latch)):

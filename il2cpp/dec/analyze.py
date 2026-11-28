@@ -178,6 +178,8 @@ class _AnalyzeMixin:
         scale_operands,shared_divisors=operand_samples(L,m,td,blocks,self._pad_bids)
         from il2cpp.parked_destination import destination_reads
         parked_destinations=destination_reads(L,m,td,blocks,self._pad_bids)
+        from il2cpp.guarded_ref_alias import compared_fields
+        alias_reads=compared_fields(L,m,td,blocks,self._pad_bids)
         m_returns = self._returns_value(m)
         self.phi_pre = {}
         L._phi_bytes = {}
@@ -370,6 +372,10 @@ class _AnalyzeMixin:
                 if ins.ip in dispatch_reads and ins.ip not in owner_loads and ins.ip not in scalar_fields:
                     bind_dispatch_field(L,ins,dispatch_reads[ins.ip])
                     L._lookup_field_values[ins.ip]=dict.get(L.regs,reg_name(ins.op0_register));continue
+                if ins.ip in alias_reads:
+                    r,expected,origin,member,ty=alias_reads[ins.ip];value=dict.get(L.regs,r)
+                    if (value and not value._unk and value.text==expected and (not origin or L.il._closed_type_key(value.ty)==L.il._closed_type_key(origin))):
+                        capture_field(L,ins,(expected+'.'+member,ty));continue
                 if ins.ip in nested_fields:
                     source,name,ty=nested_fields[ins.ip];base=dict.get(L.regs,reg_name(ins.memory_base))
                     if base and base is L._lookup_field_values.get(source):

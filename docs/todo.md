@@ -231,6 +231,14 @@ second event system and updates the submenu flag only after the call.
 The public selection getter is a proved qword leaf; the previous field is
 preserved on early faults and the first assignment survives a later fault.
 
+**Tutorial cleanup checks (28331/28332).** `CheckForLimbsDone` and
+`CheckForBloodDone` now schedule another poll only on an active match.
+Exhaustion runs the image update and completion checks; successful
+completion starts the objective and updates the UI in order. The two
+complete methods retain the checked element when Unity truth replaces an
+array slot, read checked public sprite aliases, and preserve faults through
+the last UI callback. A shared native epilogue does not merge their effects.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:

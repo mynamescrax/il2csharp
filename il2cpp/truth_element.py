@@ -50,7 +50,7 @@ def checked_elements(lift,method,td,blocks,pads):
         if action is None:continue
         truth=_unique(il,call);m=_unique(il,seq[action])
         if not m or m.is_static or m.flags&0x40 or m.generic_container!=-1 or not 0<=m.return_type<len(il.types):continue
-        if _null_pair(il,truth):
+        if _null_pair(il,truth) or truth_owner(il,truth) and il._closed_type_key(il.types[m.return_type])==(2,0):
             prop=lift._accessor_prop(m.index);last=seq[action]
             if (not prop or prop[0]!='get' or prop[2] or m.param_count or il._closed_type_key(il.types[m.return_type])!=(2,0) or
                     action+2>=len(seq) or seq[action+1].mnemonic!=M.TEST or seq[action+1].op0_register!=seq[action+1].op1_register or
@@ -74,7 +74,7 @@ def checked_elements(lift,method,td,blocks,pads):
                 if z.mnemonic!=M.XOR or z.op0_register!=z.op1_register or z.op0_register!=dword:ok=False;break
             if not ok:continue
             reg=seq[j+3].op0_register
-        w=seq[j:k+3] if _null_pair(il,truth) else seq[j:k+1]
+        w=seq[j:k+3] if il._closed_type_key(il.types[m.return_type])==(2,0) else seq[j:k+1]
         if any(a.next_ip!=b.ip or pred[b.ip]!=[a.ip] for a,b in zip(w,w[1:])):continue
         throw=by.get(seq[j+4].near_branch_target)
         if not throw or not throw.is_call_near or lift._named_raise_throw(throw.near_branch_target,lift._call_name(throw.near_branch_target))!='System.NullReferenceException':continue
@@ -82,7 +82,10 @@ def checked_elements(lift,method,td,blocks,pads):
         if (len(defs)!=1 or defs!=_definitions(by,pred,method.addr,consumer.ip,R.RCX) or
                 defs!=_definitions(by,pred,method.addr,seq[j+3].ip,reg)):continue
         ip,r=defs.pop();load=by[ip];base=load.memory_base;idx=load.memory_index
-        if (load.mnemonic!=M.MOV or load.op0_register!=reg or r!=reg or reg==R.RBP or load.op1_kind!=K.MEMORY or
+        if reg==R.RBP:
+            from il2cpp.stack_local_frame import stack_local_frame
+            if not stack_local_frame(lift,method,blocks,pads):continue
+        if (load.mnemonic!=M.MOV or load.op0_register!=reg or r!=reg or load.op1_kind!=K.MEMORY or
                 base not in _SAVED or base==reg or not RX.is_gpr64(idx) or load.memory_index_scale!=8 or load.memory_displacement!=32 or
                 load.has_segment_prefix or load.has_lock_prefix or MS.size(load.memory_size)!=8):continue
         idxdefs=_definitions(by,pred,method.addr,ip,idx)
