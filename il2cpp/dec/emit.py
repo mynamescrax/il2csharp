@@ -114,7 +114,10 @@ class _EmitMixin:
                 # open/close calls after it
                 self._seh_open_here(cur, out)
                 self._seh_close_here(cur, blocks, out, depth)
-                exit_bid = self._emit_loop(blocks, cur, out, in_loop, depth)
+                from il2cpp.dec.search_loop import terminal_search
+                exit_bid = terminal_search(self, blocks, cur, stop, in_loop, out, depth)
+                if exit_bid is None:
+                    exit_bid = self._emit_loop(blocks, cur, out, in_loop, depth)
                 if exit_bid is None or exit_bid in stop:
                     return
                 cur = exit_bid

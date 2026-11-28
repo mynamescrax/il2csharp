@@ -48,6 +48,25 @@ passed 11 tests; both whole-spawner modules passed (2 + 2), and the portable
 selection passed 2,349. The 77-case Shift regression also passed on the
 isolated candidate before the final parameter-name and state-reset guards.
 
+**Item searches with separate match and exhaustion tails.** In
+`Barricade.CheckForCurItem` (24284), exhaustion clears the flag *before*
+deactivating the holder and then calls virtual `StopLookAt`. A match
+activates the holder first and sets the flag only on success. The
+active-barricade bypass deactivates the holder without touching the flag.
+In `ConstrictedInteractable.CheckForCurItem` (24655), a match sets the
+flag before obtaining `ClientPlayer.Instance` and clearing the current
+interactable; a miss clears the flag and calls `StopLookAt`. The former
+compact loop sent exhaustion to the match continuation in both callers.
+
+The new structuring rule checks the whole simple cycle, the match arm's
+private return or registered write-barrier tail, and ownership of the miss
+continuation before emitting either. Match-edge copies execute before the
+terminal action; exhaustion copies also execute when the array is empty.
+Both complete emitted methods have typed gates in
+`tests/test_game_terminal_search.py` with callback failures and virtual
+overrides. `tests/test_terminal_search.py` covers the edge copies, shared
+tails, lexical boundaries, and rejected terminal transfers.
+
 The new gameplay survey found failures outside those tests. Two small
 programs compiled eight unchanged baseline caller bodies against typed
 collaborators. Of 20 input/trace cases, 15 disagreed with native behavior.
