@@ -162,6 +162,18 @@ The complete emitted caller checks the retained field and every callback
 fault, including a getter that throws if evaluated twice. The delegate
 retry proof uses the same strict post-store mark identity.
 
+**Spill classification reloads the caller's reference slots.** Native
+`InventoryManager.TryGetCleanable` (25687) writes the first lookup result
+through `ref spill` *before* its Unity truth test. A false result runs the
+second lookup before writing `ref mop`; the true arm explicitly writes
+null. The final comparisons reload the live slots. Previously the emitter
+used the input objects' apparent class pointers. The complete new gate
+mutates both slots inside callbacks and checks output values after failures.
+The rule follows full-width copies of each byref address, accepts bounded
+qword loads after actual stores, and rejects offered/escaped addresses or
+partial and offset accesses. This verifies the cleanability helper; its
+physics callers' query arguments remain a separate proof.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:

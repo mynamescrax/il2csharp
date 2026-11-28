@@ -167,6 +167,8 @@ class _AnalyzeMixin:
         from il2cpp.joined_barrier import joined_marks,store_witness
         marks,mark_calls,mark_writes=joined_marks(L,m,td,blocks,self._pad_bids)
         mark_values=set()
+        from il2cpp.reference_cells import ref_loads,read_cell
+        cells=ref_loads(L,m,td,blocks,self._pad_bids)
         m_returns = self._returns_value(m)
         self.phi_pre = {}
         L._phi_bytes = {}
@@ -335,6 +337,8 @@ class _AnalyzeMixin:
                 if ins.ip in marks and all(ip in mark_values for ip in marks[ins.ip]):
                     L.emit(ins.ip,'return;',None)
                     continue
+                if ins.ip in cells:
+                    read_cell(L,ins,cells[ins.ip]);continue
                 if ins.ip in boxed and apply_division(L, boxed[ins.ip]):
                     copied_until = idx + 6
                     continue
