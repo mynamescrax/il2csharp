@@ -1927,15 +1927,11 @@ class _InsnMixin:
                 # pointer-first: value-identical at scale 1 and the
                 # only compilable order (ptr*int does not exist).
                 be, ie = ie, be
-            if be.kind == 'arr':
-                be0, d0 = self._arr_unbias(be, disp)
-                fe = self._arr_elem_expr(be0, ie, scale or 1, d0, size)
-                if fe is not None:
-                    return fe
             # Resolved calls can carry an exact reference-array return with
             # the coarse kind 'obj'. A qword load from its element area at
             # pointer stride produces a managed element reference, not a byte.
-            if (be.kind == 'obj' and not be._unk and be.ty and not be.ty[1] & (1 << 29)
+            if ((be.kind == 'obj' or be.kind == 'arr' and ins.ip in getattr(self,'_snapshot_ref_elements',()))
+                    and not be._unk and be.ty and not be.ty[1] & (1 << 29)
                     and self.il._type_enum(be.ty) == 0x1d and disp == 0x20 and scale == size == 8
                     and ins.mnemonic == Mnemonic.MOV and ins.op0_kind == OpKind.REGISTER
                     and _reg_size(ins.op0_register) == _reg_size(ins.memory_base) == 8
@@ -1959,7 +1955,14 @@ class _InsnMixin:
                             self.emit(ins.ip,f'var {local} = {acc_get(indexed)};',None);indexed=local
                         value = Expr(indexed, element, 'obj')
                         self._ref_array_elements.add(value)
+                        if be.kind=='arr' and not self.dry and ins.ip in getattr(self,'_snapshot_ref_elements',()):
+                            self._element_samples[ins.ip]=value
                         return value
+            if be.kind == 'arr':
+                be0, d0 = self._arr_unbias(be, disp)
+                fe = self._arr_elem_expr(be0, ie, scale or 1, d0, size)
+                if fe is not None:
+                    return fe
             # scaled index in the BASE slot, array in the INDEX slot
             # (`imul r,idx,S; ... [r + arr + D]`): roles swap
             if be.kind == 'int' and ie is not None and ie.kind == 'arr':

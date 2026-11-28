@@ -59,6 +59,17 @@ passed with replacements and throwing checks/actions. In the NPC tail,
 gets the speed write. The foreach element type comes from the captured
 array's declared type, including declarations minted by the lifter.
 
+**Camera search returns null on exhaustion.** `CameraManager.GetActiveCamera`
+(26059) now obtains `allCameras` once, checks each live element in order,
+and returns null for an empty or all-inactive array. On a match, native
+calls `gameObject` twice on the same camera: the first object supplies
+`activeInHierarchy`, the second is the return value. A getter can replace
+the current slot without changing that receiver. The complete caller
+checks replacement of both current and next slots, distinct getter results,
+nulls and callback failures. The structurer verifies the zero-return
+epilogue, registered getter tail, exact element producer and existing
+return statement before moving the successful path into the loop.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:

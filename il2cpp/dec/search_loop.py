@@ -31,6 +31,58 @@ def _owns_miss(blocks, start, hdr, stop, loops):
     return True
 
 
+def _null_or_tail(dec, blocks, miss, hdr, stop, hit, caller, rt):
+    """A private exhaustion arm returns a native null reference; the hit
+    already contains a value-returning tail. Neither arm can fall into the
+    other. Verify the return ABI and both actual root-frame epilogues."""
+    from types import SimpleNamespace
+    from il2cpp.array_origin import _graph
+    from il2cpp.equivalent_binary import _amd64
+    from il2cpp.terminal_effect import _terminal_frame
+    from iced_x86 import OpKind as K, Register as R
+    il=dec.L.il; no=blocks[miss]; yes=blocks[hit]
+    if (not _amd64(getattr(il,'bin',None)) or il.meta.version!=31 or rt[0]!=0x12 or rt[-1] or
+            miss in stop or hit in stop or no.consumed or yes.consumed or set(no.preds)!={hdr} or
+            no.term!=('ret',) or no.succs or no.stmts or no.ret not in ('0','null') or not no.insns or
+            no.insns[-1].mnemonic!=M.RET or no.insns[-1].op_count or no.insns[-1].stack_pointer_increment!=8 or
+            yes.term!=('stop',) or yes.succs or len(yes.stmts)!=1 or not yes.stmts[0].startswith('return ') or
+            not yes.stmts[0].endswith('; /* tail */') or not yes.insns):return False
+    seq=[i for b in blocks for i in b.insns];g=_graph(il,seq,allow_tail=True,chained=True,nested_chains=True)
+    if not g or seq[0].ip!=caller.addr:return False
+    by={i.ip:i for i in seq};pred,_=g
+    zeros=[i for i in no.insns if i.mnemonic==M.XOR and i.op0_register==i.op1_register==R.EAX]
+    if len(zeros)!=1 or any(a.next_ip!=z.ip or pred[z.ip]!=[a.ip] for a,z in zip(no.insns,no.insns[1:])):return False
+    restore=[i for i in no.insns if i.ip!=zeros[0].ip]
+    if not _terminal_frame(il,seq,by,pred,no.insns[0].ip,SimpleNamespace(insns=restore),-1):return False
+    tail=yes.insns[-1];ids=il.addr_candidates.get(tail.near_branch_target,()) if tail.is_jmp_short_or_near else ()
+    if len(ids)!=1 or ids[0][0]!='method' or not 0<=ids[0][1]<len(il.meta.methods):return False
+    md=il.meta.methods[ids[0][1]]; prop=dec.L._accessor_prop(md.index)
+    if (md.addr!=tail.near_branch_target or md.generic_container!=-1 or md.is_static or md.param_count or md.flags&0x40 or
+            not prop or prop[0]!='get' or prop[2] or not 0<=md.return_type<len(il.types) or il._closed_type_key(il.types[md.return_type])!=rt):return False
+    # The existing resolved tail must stand alone. Validate the setup and
+    # terminal stack restoration, never take a textual stop as a return.
+    if len(yes.insns)<4:return False
+    z,recv=yes.insns[:2]
+    if (z.mnemonic!=M.XOR or z.op0_register!=z.op1_register or z.op0_register!=R.EDX or recv.mnemonic!=M.MOV or recv.op0_register!=R.RCX or
+            recv.op1_kind!=K.REGISTER or recv.op1_register not in (R.RBX,R.RSI,R.RDI,R.R12,R.R13,R.R14,R.R15) or
+            any(a.next_ip!=n.ip or pred[n.ip]!=[a.ip] for a,n in zip(yes.insns,yes.insns[1:]))):return False
+    witness=getattr(dec.L,'_element_tail_returns',{}).get(tail.ip)
+    if not witness:return False
+    ip,mi,value,call=witness
+    from il2cpp.array_origin import _definitions
+    from il2cpp.csharp import declares_member_name
+    from il2cpp.expr import acc_get
+    if (mi!=md.index or getattr(dec.L,'_element_samples',{}).get(ip) is not value or not value.ty or
+            il._closed_type_key(value.ty)!=(0x12,value.ty[0],0) or call!=acc_get(value.text+'.'+prop[1]) or
+            yes.stmts!=['return '+call+'; /* tail */']):return False
+    chain=il.base_chain_tds(value.ty[0])
+    if md.declaring not in chain or any(declares_member_name(il,il.meta.typedefs[t],prop[1]) for t in chain[:chain.index(md.declaring)]):return False
+    source={(ip,by[ip].op0_register)}
+    if (_definitions(by,pred,caller.addr,tail.ip,R.RCX)!=source or not any(i.is_call_near and
+            i.near_branch_target==md.addr and _definitions(by,pred,caller.addr,i.ip,R.RCX)==source for i in seq)):return False
+    return _terminal_frame(il,seq,by,pred,z.ip,yes,1)
+
+
 def terminal_search(dec, blocks, hdr, stop, outer, out, depth):
     if (not HAVE_ICED or outer or dec._sw_depth or dec._seh_regions or dec._pad_bids):
         return None
@@ -60,7 +112,10 @@ def terminal_search(dec, blocks, hdr, stop, outer, out, depth):
     if miss == hit or not _owns_miss(blocks, miss, hdr, stop, dec.loop_of_hdr):
         return None
     m = getattr(dec.L, '_current_method', None); il = dec.L.il
-    if (not m or not 0 <= m.return_type < len(il.types) or il._closed_type_key(il.types[m.return_type]) != (1, 0)):
+    if not m or not 0 <= m.return_type < len(il.types):return None
+    rt=il._closed_type_key(il.types[m.return_type])
+    returned = rt != (1, 0)
+    if returned and (not rt or not _null_or_tail(dec,blocks,miss,hdr,stop,hit,m,rt)):
         return None
     path = []; prev = match; k = hit
     while (k not in body and k != miss and k not in path and k not in stop and 0 <= k < len(blocks) and len(path) < 32):
@@ -68,6 +123,9 @@ def terminal_search(dec, blocks, hdr, stop, outer, out, depth):
         if (b.consumed or b.is_entry or k in dec.loop_of_hdr or set(b.preds) != {prev}):
             return None
         path.append(k)
+        if returned and k==hit:
+            result=None  # the checked tail is a return statement already
+            break
         if t == ('ret',) and not b.succs and b.ret == '' and b.insns and b.insns[-1].mnemonic == M.RET:
             result = 'return;'
             break
@@ -104,8 +162,10 @@ def terminal_search(dec, blocks, hdr, stop, outer, out, depth):
                 z = blocks[a]; z.consumed = True; out.extend(z.stmts)
                 if z.succs:
                     dec._edge(a, z.succs[0], out)
-            out.extend((result, '}')); dec._brace_pop(blocks, out, depth + 1)
+            if result is not None:out.append(result)
+            out.append('}'); dec._brace_pop(blocks, out, depth + 1)
         dec._edge(n, next(s for s in b.succs if s in body), out)
     out.append('}'); dec._brace_pop(blocks, out, depth)
     dec._edge(hdr, miss, out)
+    if returned:blocks[miss].ret='null'
     return miss

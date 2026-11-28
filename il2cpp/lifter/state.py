@@ -1665,6 +1665,8 @@ class _StateMixin:
         self._hierarchy_values = {}
         self._material_values = {}
         self._captured_arrays = {}
+        self._element_samples = {}
+        self._element_tail_returns = {}
         self._bound_constructor_types = {}
         self._scratch_getter_lanes = None
         self._last_sret = None

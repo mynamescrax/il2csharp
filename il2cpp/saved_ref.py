@@ -87,6 +87,17 @@ def parked_properties(lift,method,blocks,pads):
     il=lift.il;result={};windows=[]
     if not HAVE_ICED or pads or not _amd64(getattr(il,'bin',None)) or il.meta.version!=31:return result
     for b in blocks:
+        for k in range(1,len(b.insns)-1):
+            zero,call,save=b.insns[k-1:k+2]
+            if (zero.mnemonic!=M.XOR or zero.op0_register!=zero.op1_register or zero.op0_register!=R.ECX or
+                    not call.is_call_near or save.mnemonic!=M.MOV or save.op1_register!=R.RAX or save.op0_register not in _SAVED):continue
+            ids=il.addr_candidates.get(call.near_branch_target,())
+            if len(ids)!=1 or ids[0][0]!='method' or not 0<=ids[0][1]<len(il.meta.methods):continue
+            md=il.meta.methods[ids[0][1]];prop=lift._accessor_prop(md.index)
+            if (md.addr==call.near_branch_target and md.is_static and not md.param_count and md.generic_container==-1 and
+                    not md.flags&0x40 and md.flags&7==6 and prop and prop[0]=='get' and not prop[2] and md.name=='get_'+prop[1] and
+                    prop[1].isidentifier() and safe_ident(prop[1])==prop[1] and 0<=md.return_type<len(il.types) and
+                    reference_vector(il,il.types[md.return_type])):windows.append((b.insns[k-1:k+2],md))
         for k in range(1,len(b.insns)-2):
             zero,call,load,save=b.insns[k-1:k+3]
             if (not call.is_call_near or zero.mnemonic!=M.XOR or zero.op0_register!=zero.op1_register or zero.op0_register!=R.ECX or
@@ -135,9 +146,16 @@ def capture_saved_reference(lift,ins,mi,recv,result,dispatch):
     # Unlike a late use-bind, no text has escaped this result yet. In
     # particular an identical earlier call is a separate evaluation.
     from il2cpp.expr import Expr,acc_get
-    local=lift.new_var();lift._var_types[local]=rt;lift._type_hints[local]=rt
+    local=lift.new_var()
+    if fact[0]=='getter':
+        from il2cpp.metadata import source_params
+        from il2cpp.names import safe_ident
+        caller=getattr(lift,'_current_method',None)
+        taken={safe_ident(p.name) for p in source_params(lift.meta,caller)} if caller else set()
+        while local in taken:local=lift.new_var()
+    lift._var_types[local]=rt;lift._type_hints[local]=rt
     lift.emit(ins.ip,'var %s = %s;'%(local,result.text if result.text.startswith('__accget(') else acc_get(result.text)),None)
-    value=Expr(local,rt,'obj');lift.regs['RAX']=value
+    value=Expr(local,rt,'arr' if fact[0]=='getter' and reference_vector(il,rt) else 'obj');lift.regs['RAX']=value
     if fact[0]=='getter':lift._parked_getter_values.add(value)
     if reference_vector(il,rt):lift._captured_arrays[ins.ip]=value
     return True

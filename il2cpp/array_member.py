@@ -41,7 +41,7 @@ def checked_ref_elements(lift,method,blocks,pads):
         defs=_definitions(by,pred,method.addr,cmp.ip,br)
         if len(defs)!=1:continue
         source,reg=defs.pop();fact=lift._saved_references.get(source)
-        if reg!=R.RAX or not fact or fact[0]!='method':continue
+        if reg!=R.RAX or not fact or fact[0] not in ('method','getter'):continue
         m=il.meta.methods[fact[1]];rt=il.types[m.return_type]
         if (by[source].mnemonic==M.CALL and by[source].op0_kind==K.NEAR_BRANCH64 and m.addr==by[source].near_branch_target and
                 m.generic_container==-1 and il.meta.typedefs[m.declaring].generic_container==-1 and reference_vector(il,rt)):

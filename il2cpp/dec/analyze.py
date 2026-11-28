@@ -766,6 +766,11 @@ class _AnalyzeMixin:
                                     void = 0 <= rti < len(L.il.types) and \
                                         ((L.il.types[rti][1] >> 16) & 0xFF) == 0x01
                                     L._emit_tail(ins.ip, call, None, void=void)
+                                    if _sg137 is not None and not void and not L.dry and arg_exprs and len(args)==1:
+                                        for ip,v in L._element_samples.items():
+                                            if v is arg_exprs[0] and rc==v.text:
+                                                L._element_tail_returns[ins.ip]=(ip,m2.index,v,call)
+                                                break
                             else:
                                 nm = L._call_name(t)
                                 if t in getattr(L, 'rt_isinst', ()) and len(arg_exprs) >= 2:
