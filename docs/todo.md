@@ -163,6 +163,17 @@ chained region uses the root frame; an earlier path-local RSI save is not
 part of its pop sequence. A similarly printed pending call is not evidence
 that a second call has already happened.
 
+**A finished particle iterator stays finished.** In MethodDef 28689
+(`ParticleHandler.<WaitUntilParticleSystemStops>.MoveNext`), native
+`CMP dword [this+0x10],1; MOV; JA` accepts states 0 and 1. The old
+signed `<= 1` admitted −1: an ordinary second `MoveNext` after completion
+polled `IsAlive(true)` again and could restart the iterator. The structured
+lift samples the exact Int32 field at the comparison and uses the unsigned
+condition, including sign-extension of an imm8 before interpreting it
+as a dword. The complete emitted method passed entry, yield, completion,
+repeat and throwing-poll checks. The same instruction pattern is present
+in other iterators; their other effects need independent verification.
+
 The new gameplay survey found failures outside those tests. Two small
 programs compiled eight unchanged baseline caller bodies against typed
 collaborators. Of 20 input/trace cases, 15 disagreed with native behavior.

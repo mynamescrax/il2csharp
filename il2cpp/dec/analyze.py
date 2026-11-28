@@ -144,6 +144,8 @@ class _AnalyzeMixin:
         ratios, ratio_calls = ratio_sites(L, m, td, blocks, self._pad_bids)
         from il2cpp.terminal_effect import terminal_effects
         terminal_actions = terminal_effects(L, m, td, blocks, self._pad_bids)
+        from il2cpp.unsigned_field import field_bounds, sample_bound
+        bounds = field_bounds(L, m, td, blocks, self._pad_bids)
         m_returns = self._returns_value(m)
         self.phi_pre = {}
         L._phi_bytes = {}
@@ -234,6 +236,7 @@ class _AnalyzeMixin:
             L._jcc_flags = None
             copied_until = -1
             mask_condition = None
+            field_bound = None
             receiver_stores = {}
             joined_echo = None
             finish_spill = None
@@ -476,6 +479,11 @@ class _AnalyzeMixin:
                 if fc == FlowControl.CONDITIONAL_BRANCH and ins.op0_kind == OpKind.NEAR_BRANCH64:
                     lhs, rhs = (L.flags or (Expr('?', None, '?'), Expr('?', None, '?')))
                     L._jcc_flags = (L.flags, getattr(L, '_flags_mn', None))
+                    if (field_bound and field_bound[0] == ins.ip and L._flags_mn == Mnemonic.CMP and
+                            field_bound[1] is lhs and field_bound[2] is rhs):
+                        b.cond = field_bound[3]
+                        L.flags = None
+                        continue
                     if (mask_condition and mask_condition[0] == ins.ip and
                             L._flags_mn == Mnemonic.TEST and mn in (Mnemonic.JE, Mnemonic.JNE)):
                         _, value, zero = mask_condition
@@ -831,6 +839,8 @@ class _AnalyzeMixin:
                                                  marker=False)
                     continue
                 L._insn(ins, b.insns, idx, None, self.last_ip)
+                if ins.ip in bounds:
+                    field_bound = sample_bound(L, ins, bounds[ins.ip])
                 if ins.ip in masks:
                     mask_condition = predicate(L, ins, masks[ins.ip], L._sample_call_values)
                 binding = L._hierarchy_bindings.get(ins.ip)
