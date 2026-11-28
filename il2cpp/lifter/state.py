@@ -1658,6 +1658,8 @@ class _StateMixin:
         self._current_td = td
         self._module_reads = {}
         self._terminal_actions = {}
+        self._decision_calls = set()
+        self._decision_results = {}
         self._sample_call_sites = {}
         self._sample_call_values = {}
         self._module_conversion = self._converted_setter = None

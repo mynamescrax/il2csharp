@@ -151,6 +151,8 @@ class _AnalyzeMixin:
         bounds = field_bounds(L, m, td, blocks, self._pad_bids)
         from il2cpp.sampled_return import sampled_returns
         output_samples = sampled_returns(L, m, td, blocks, self._pad_bids)
+        from il2cpp.saved_decision import decision_sites,apply_decision,continue_decision
+        decisions,decision_calls=decision_sites(L,m,td,blocks,self._pad_bids)
         m_returns = self._returns_value(m)
         self.phi_pre = {}
         L._phi_bytes = {}
@@ -207,6 +209,7 @@ class _AnalyzeMixin:
             L._setup_entry(m, td)
             L._parked_getter_values=set()
             L._terminal_actions=terminal_actions
+            L._decision_calls=decision_calls
             L._sample_call_sites = dict(mask_calls)
             L._sample_call_sites.update(ratio_calls)
             L._sample_call_values = {}
@@ -250,6 +253,7 @@ class _AnalyzeMixin:
 
         def exec_block(b, dry):
             division_values={}
+            decision_values={}
             split_values={}
             ratio_values={}
             element_plan=element_plans.get(b.bid);element_values={}
@@ -293,6 +297,8 @@ class _AnalyzeMixin:
                     L.regs['RDI'] = Expr(snapshot, capture[2], 'obj')
                     continue
                 mn = ins.mnemonic
+                if ins.ip in decisions and apply_decision(L,ins.ip,decisions[ins.ip],decision_values,self.skip_ips | replaced_selects):continue
+                if ins.ip in decision_values and continue_decision(L,ins,decision_values[ins.ip]):continue
                 if ins.ip in ratios and ratio_step(L,ins,ratios[ins.ip],ratio_values):continue
                 if ins.ip in boxed and apply_division(L, boxed[ins.ip]):
                     copied_until = idx + 6

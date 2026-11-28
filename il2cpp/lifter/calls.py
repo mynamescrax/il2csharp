@@ -2732,6 +2732,7 @@ class _CallsMixin:
                 self.regs.pop('XMM%d' % i, None)
             self._fresh_unknowns()
             self.regs['RAX'] = result
+            if ins.ip in getattr(self,'_decision_calls',()):self._decision_results[ins.ip]=result
             if self.asm_comments and asm:
                 self.emit(ins.ip, '', asm)
             return

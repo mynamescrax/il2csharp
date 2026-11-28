@@ -77,6 +77,13 @@ handles replacement at each hop, nulls after deactivation, and callback faults.
 Both native field paths must be public, layout-proven and null-checked, with
 the appropriate low-byte argument at the registered terminal action.
 
+**One cursor decision supplies both setters.** The request field in
+`CursorControlSchemeGate.SetCursorUnlockRequested` (23627) is read after
+the control-scheme poll. Native saves the combined Boolean, converts its
+complement to a lock mode, then uses the original byte for visibility.
+The complete emitted callback handles a lock setter that mutates the field
+or reenters, and preserves each throwing callback's cutoff.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:
