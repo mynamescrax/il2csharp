@@ -224,6 +224,13 @@ formatter must belong to the unique `System.String` owner. Both complete
 interface callbacks run with mode mutation during
 format/log, extreme values, cold initialization and exceptions.
 
+**Pause-menu navigation.** `PauseMenu.OnMenuOptionSelected` (26552)
+samples `EventSystem.current`, saves its selected object, then samples
+`current` again. The complete caller sends the requested object to the
+second event system and updates the submenu flag only after the call.
+The public selection getter is a proved qword leaf; the previous field is
+preserved on early faults and the first assignment survives a later fault.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:

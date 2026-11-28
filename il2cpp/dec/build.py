@@ -357,6 +357,9 @@ class _BuildMixin:
                                       skip=skip if isinstance(skip, set) else None)
             except Exception:
                 pass
+        from il2cpp.double_property import reacquired_after_store
+        update=reacquired_after_store(L,m,td,insns,self.eh)
+        if update is not None:return update
         from il2cpp.logged_selection import logged_selection
         selection=logged_selection(L,m,td,insns,self.eh)
         if selection is not None:return selection
