@@ -108,6 +108,19 @@ formats as `−01:−01` (with the culture's minus sign), not a positive or
 rounded-up result. Non-leaf timer updates and ring-buffer indexing need
 their own input and liveness proofs.
 
+**Hint callbacks reload the manager after `AddHint`.** The same metadata
+initialization byte can guard two independent reads of one static field.
+Previously the caller reused the first manager for `NextHint`, even if
+`AddHint` replaced it. `EggDiffuser.PurchaseHint` (25018),
+`Car.NewQuestioningTopicHint` (24348), and `IDCard.CheckComputerHint` /
+`PayAttentionHint` (25554/25555) now pass complete emitted-caller gates.
+They check the message, both acquisitions, the receiver of `NextHint`
+and the effects that precede each exception. A second cold arm that
+touches another slot, another access overlapping the initialization byte,
+an alternate entry, or a public getter flag belonging to the caller's
+string initialization vetoes the grouped proof. `IDCard.CheckIfFakeID`
+still has a separate search-exit defect before its two corrected reads.
+
 The new gameplay survey found failures outside those tests. Two small
 programs compiled eight unchanged baseline caller bodies against typed
 collaborators. Of 20 input/trace cases, 15 disagreed with native behavior.

@@ -60,6 +60,7 @@ def checked_statics(lift,method,blocks,pads):
     graph=_graph(il,seq,allow_tail=True,chained=True,switch_slots=slots)
     if not graph or seq[0].ip!=method.addr:return out
     pred,_=graph;by={i.ip:i for i in seq}
+    certified = {}
     for w in candidates:
         cmp,skip,lea,init,set_,klass,fields,value,test,guard=w
         if any(a.next_ip!=b.ip or set(pred[b.ip])!=({a.ip,skip.ip} if b is klass else {a.ip}) for a,b in zip(w,w[1:])):continue
@@ -75,12 +76,11 @@ def checked_statics(lift,method,blocks,pads):
             sec=_writable(il.bin,f,1)
             return sec and not slot<=f<slot+8 and (f>=sec.addr+sec.rawsize or il.bin.read(f,1)==b'\0')
         data=_writable(il.bin,slot,8)
-        if (not private_flag(flag) or not data or slot%8 or slot+8>data.addr+data.rawsize or
-                any(x.ip not in (cmp.ip,set_.ip) and x.is_ip_rel_memory_operand and
-                    x.ip_rel_memory_address<=flag<x.ip_rel_memory_address+max(1,MemorySizeExt.size(x.memory_size)) for x in seq)):continue
+        if not private_flag(flag) or not data or slot%8 or slot+8>data.addr+data.rawsize:continue
         alias=alias_for_slot(il,slot,lift.rt_init_meta,offset)
         if not alias:continue
         member,ty=alias;td=il.meta.typedefs[ty[0]];name=member.rsplit('.',1)[-1]
+        if pred.get(guard.next_ip)!=[guard.ip]:continue
         if il._closed_type_key(ty)!=(0x12,td.index,0) or not _direct_use(il,by,pred,guard.next_ip,value.op0_register,td.index):continue
         matches=[md for j in il.meta.type_methods(td) if (md:=il.meta.methods[j]).name=='get_'+name and md.param_count==0]
         if len(matches)!=1:continue
@@ -92,6 +92,19 @@ def checked_statics(lift,method,blocks,pads):
         raw=il.bin.read(addr+6,4)
         # Independently inlined copies need not share their one-shot byte.
         # Both cold arms initialize only this same, idempotent TypeInfo slot.
-        if not raw or not private_flag(addr+11+int.from_bytes(raw,'little',signed=True)):continue
-        out[value.ip]=('field_value',('global::'+member,ty),reg_name(value.op0_register),'obj')
+        if not raw:continue
+        getter_flag=addr+11+int.from_bytes(raw,'little',signed=True)
+        if not private_flag(getter_flag):continue
+        if getter_flag!=flag and any(x.is_ip_rel_memory_operand and
+                x.ip_rel_memory_address<=getter_flag<x.ip_rel_memory_address+max(1,MemorySizeExt.size(x.memory_size)) for x in seq):continue
+        plan=('field_value',('global::'+member,ty),reg_name(value.op0_register),'obj')
+        certified.setdefault(flag,[]).append((slot,offset,cmp.ip,set_.ip,value.ip,plan))
+    for flag,group in certified.items():
+        # All accesses to the byte must belong to complete guarded reads of
+        # the same slot. One mismatched/partial cold arm vetoes the group.
+        if len({(slot,off) for slot,off,*_ in group}) != 1:continue
+        allowed={ip for _,_,c,s,_,_ in group for ip in (c,s)}
+        if any(i.is_ip_rel_memory_operand and i.ip not in allowed and
+               i.ip_rel_memory_address <= flag < i.ip_rel_memory_address + max(1,MemorySizeExt.size(i.memory_size)) for i in seq):continue
+        for _,_,_,_,ip,plan in group:out[ip]=plan
     return out
