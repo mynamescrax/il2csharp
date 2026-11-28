@@ -20,6 +20,18 @@ Final lifter commit `aa978aa`. The fixed 19-method sample went from
 21 shared-body markers at 6 addresses to 14 at 2, and 261 to 249
 `object objN` declarations. The 503-file census below is historical.
 
+**Second campaign checkpoint:** `5c861b3` passed 601 exact-build tests in
+82 modules. Compare the [fixed 55-row selection](samples/shift-2026-11-28.txt)
+at any two committed revisions from the repository root:
+
+```powershell
+python tools/compare_shift_sample.py --before 0b0b779 --after f7abb2d --selection docs/samples/shift-2026-11-28.txt --binary $env:IL2CSHARP_BINARY --metadata $env:IL2CSHARP_METADATA
+```
+
+The tool verifies fixture hashes and the per-row signature, VA, and native
+instructions, and lifts each revision in a separate process. At `f7abb2d`
+all four former return-only bodies in this sample have effects again.
+
 **Independent draws for returned vectors.** `FVectorMethods.RandomVector`
 (28968) used to return three copies of one sample. Native calls the
 two-Single producer three times, parks the first two results in separate
@@ -248,8 +260,8 @@ They check the message, both acquisitions, the receiver of `NextHint`
 and the effects that precede each exception. A second cold arm that
 touches another slot, another access overlapping the initialization byte,
 an alternate entry, or a public getter flag belonging to the caller's
-string initialization vetoes the grouped proof. `IDCard.CheckIfFakeID`
-still has a separate search-exit defect before its two corrected reads.
+string initialization vetoes the grouped proof. `IDCard.CheckIfFakeID`'s
+separate search-exit defect was subsequently fixed at `c3d6ef2`.
 
 **Whole-color copies into effect fields.** `Blinker.Awake` (23889),
 `RealFireLightFlicker.Start` (28635), `TangledPegSlot.Awake` (24029) and
