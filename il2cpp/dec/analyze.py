@@ -136,6 +136,9 @@ class _AnalyzeMixin:
         binary_values={}
         packs, extra_srets = return_plans(L, m, blocks, self._pad_bids, snapshot_getters)
         L._snapshot_srets.update(extra_srets)
+        from il2cpp.scaled_projection import project_sites,project_result
+        projections=project_sites(L,m,td,blocks,self._pad_bids)
+        L._snapshot_srets.update(p[0] for p in projections.values())
         L._snapshot_srets.update(fresh_app)
         from il2cpp.saved_binary import binary_arguments,save_echo,call_binary
         saved_reads,saved_calls=binary_arguments(L,m,blocks,self._pad_bids);saved_values={}
@@ -315,6 +318,9 @@ class _AnalyzeMixin:
                 if ins.ip in decisions and apply_decision(L,ins.ip,decisions[ins.ip],decision_values,self.skip_ips | replaced_selects):continue
                 if ins.ip in decision_values and continue_decision(L,ins,decision_values[ins.ip]):continue
                 if ins.ip in ratios and ratio_step(L,ins,ratios[ins.ip],ratio_values):continue
+                if ins.ip in projections and project_result(L,ins,projections[ins.ip]):
+                    copied_until=idx+5
+                    continue
                 if ins.ip in boxed and apply_division(L, boxed[ins.ip]):
                     copied_until = idx + 6
                     continue

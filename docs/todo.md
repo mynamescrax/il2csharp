@@ -128,6 +128,13 @@ Two distinct delegates with equal invocation lists must retry. The complete
 emitted accessors run against a forwarding shim using the real BCL CAS;
 an injected competing exchange preserves the listener that won the race.
 
+**Plane dimensions.** Both `StandingPeople*.GetRealPlaneSize` callbacks
+(23586/23598) now return twice the X/Z extents from the single bounds
+sample. A verified public getter copies the private nested field; the
+two `MOVSS` offsets, scales, `UNPCKLPS` and return in RAX select the
+lanes. The complete callers test distinct center and extents, signed
+zero, subnormal values, null receivers and throwing component/bounds reads.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:
