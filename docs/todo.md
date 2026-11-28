@@ -252,6 +252,13 @@ target reads, passes all seven lanes to the virtual override, and defers a
 null actor fault until after rotation. The paired vtable/MethodInfo words
 and RDX receiver distinguish this dispatch from an ordinary RCX call.
 
+**Pool registration prefix (23861).** The emitted `addObjectToPool`
+prefix obtains one instance ID, then checks the dictionary loaded after
+the key callback. On a miss it reads the current map before constructing
+the new list. A comparer that replaces the map distinguishes both epochs.
+The contiguous registration slice tests hits, misses, nulls, allocations
+and exceptions; the later child-component loops remain unverified.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:

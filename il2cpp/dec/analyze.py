@@ -188,6 +188,10 @@ class _AnalyzeMixin:
         buffered_fields=buffered_receivers(L,m,td,blocks,self._pad_bids)
         if not any(ip in self.skip_ips or ip in applications or ip in owner_loads or ip in dispatch_reads or ip in nested_fields or ip in scalar_fields for ip in buffered_fields):
             scalar_fields.update(buffered_fields)
+        from il2cpp.sampled_membership import membership_samples
+        map_fields,map_calls=membership_samples(L,m,td,blocks,self._pad_bids)
+        if not any(ip in self.skip_ips or ip in applications or ip in dispatch_reads or ip in owner_loads or ip in nested_fields or scalar_fields.get(ip,row)!=row for ip,row in map_fields.items()):
+            scalar_fields.update(map_fields);scalar_getters.update(map_calls)
         m_returns = self._returns_value(m)
         self.phi_pre = {}
         L._phi_bytes = {}
