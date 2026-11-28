@@ -927,6 +927,9 @@ class _InsnMixin:
             else:
                 e = self._read_mem(ins, asm)
                 be = e
+                if ins.ip in getattr(self,'_scale_operands',()):
+                    from il2cpp.two_lane_scale import sample_operand
+                    be=sample_operand(self,ins,e,self._scale_operands[ins.ip])
             op = {Mnemonic.ADDSS: '+', Mnemonic.ADDSD: '+', Mnemonic.SUBSS: '-', Mnemonic.SUBSD: '-',
                   Mnemonic.MULSS: '*', Mnemonic.MULSD: '*', Mnemonic.DIVSS: '/', Mnemonic.DIVSD: '/'}[mn]
             sfx = 'f' if mn in (Mnemonic.ADDSS, Mnemonic.SUBSS, Mnemonic.MULSS, Mnemonic.DIVSS) else 'd'
