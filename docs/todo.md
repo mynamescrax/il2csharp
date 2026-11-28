@@ -70,6 +70,13 @@ nulls and callback failures. The structurer verifies the zero-return
 epilogue, registered getter tail, exact element producer and existing
 return statement before moving the successful path into the loop.
 
+**Blink reacquires the object to enable.** `FinaleStartCutscene.SmallBlink`
+(25329) resolves the singleton, player and blink object, calls `SetActive(false)`,
+then traverses the chain again before `SetActive(true)`. The complete caller
+handles replacement at each hop, nulls after deactivation, and callback faults.
+Both native field paths must be public, layout-proven and null-checked, with
+the appropriate low-byte argument at the registered terminal action.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:

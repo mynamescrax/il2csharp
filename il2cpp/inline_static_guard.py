@@ -37,6 +37,47 @@ def _direct_use(il,by,pred,start,reg,owner):
     return False
 
 
+def _guarded_receiver_use(il,by,pred,start,reg,owner,throw,seq,blocks):
+    """Read two public reference fields from the checked object before a
+    boolean instance action. Each acquisition belongs to this guard only."""
+    from il2cpp.csharp import declares_member_name,field_attrs,source_field_name
+    from il2cpp.names import safe_ident
+    from il2cpp.shared_field import reference_field_at
+    ip=start
+    for _ in range(2):
+        i=by.get(ip);t=by.get(i.next_ip) if i else None;j=by.get(t.next_ip) if t else None
+        if (not j or pred[t.ip]!=[i.ip] or pred[j.ip]!=[t.ip] or i.mnemonic!=M.MOV or i.op1_kind!=K.MEMORY or
+                i.memory_base!=reg or not RX.is_gpr64(i.op0_register) or i.op0_register in (R.RSP,R.RBP) or
+                i.has_segment_prefix or i.has_lock_prefix or i.memory_index!=R.NONE or MemorySizeExt.size(i.memory_size)!=8 or
+                t.mnemonic!=M.TEST or t.op0_register!=t.op1_register or t.op0_register!=i.op0_register or
+                j.mnemonic!=M.JE or j.near_branch_target!=throw.ip or pred.get(j.next_ip)!=[j.ip]):return False
+        row=reference_field_at(il,owner,sdisp(i.memory_displacement))
+        if not row or field_attrs(il,il.meta.fields[row[1]])&7!=6:return False
+        member=source_field_name(il,row[1]);chain=il.base_chain_tds(owner)
+        if (not member.isidentifier() or safe_ident(member)!=member or row[0] not in chain or
+                any(declares_member_name(il,il.meta.typedefs[x],member) for x in chain[:chain.index(row[0])])):return False
+        reg=i.op0_register;owner=row[2][0];ip=j.next_ip
+    h=by.get(ip);v=by.get(h.next_ip) if h else None
+    if (reg!=R.RCX or not v or h.mnemonic!=M.XOR or h.op0_register!=h.op1_register or h.op0_register!=R.R8D or
+            pred[v.ip]!=[h.ip] or not (v.mnemonic==M.XOR and v.op0_register==v.op1_register==R.EDX or
+                v.mnemonic==M.MOV and v.op0_register==R.DL and v.op1_kind==K.IMMEDIATE8 and v.immediate8 in (0,1))):return False
+    use=by.get(v.next_ip)
+    if not use or pred[use.ip]!=[v.ip]:return False
+    if use.mnemonic==M.ADD and use.op0_register==R.RSP and use.op1_kind in (K.IMMEDIATE8TO64,K.IMMEDIATE32TO64):
+        prev=use;use=by.get(prev.next_ip)
+        if not use or pred[use.ip]!=[prev.ip] or not use.is_jmp_short_or_near:return False
+        from il2cpp.terminal_effect import _terminal_frame
+        block=next((b for b in blocks if b.insns and b.insns[-1].ip==use.ip),None)
+        if not block or len(block.insns)<3 or block.insns[-3].ip!=v.ip or not _terminal_frame(il,seq,by,pred,h.ip,block,len(block.insns)-3):return False
+    elif not use.is_call_near:return False
+    ids=il.addr_candidates.get(use.near_branch_target,())
+    if len(ids)!=1 or ids[0][0]!='method' or not 0<=ids[0][1]<len(il.meta.methods):return False
+    m=il.meta.methods[ids[0][1]];ps=il.meta.method_params(m)
+    return (m.addr==use.near_branch_target and m.declaring==owner and m.generic_container==-1 and not m.is_static and
+            m.flags&7==6 and not m.flags&(0x40|0x800) and 0<=m.return_type<len(il.types) and il._closed_type_key(il.types[m.return_type])==(1,0) and
+            m.param_count==len(ps)==1 and 0<=ps[0].type<len(il.types) and il._closed_type_key(il.types[ps[0].type])==(2,0))
+
+
 def checked_statics(lift,method,blocks,pads):
     il=lift.il;out={};candidates=[]
     if not HAVE_ICED or pads or il.meta.version!=31 or not _amd64(getattr(il,'bin',None)):return out
@@ -81,7 +122,9 @@ def checked_statics(lift,method,blocks,pads):
         if not alias:continue
         member,ty=alias;td=il.meta.typedefs[ty[0]];name=member.rsplit('.',1)[-1]
         if pred.get(guard.next_ip)!=[guard.ip]:continue
-        if il._closed_type_key(ty)!=(0x12,td.index,0) or not _direct_use(il,by,pred,guard.next_ip,value.op0_register,td.index):continue
+        if il._closed_type_key(ty)!=(0x12,td.index,0):continue
+        if not (_direct_use(il,by,pred,guard.next_ip,value.op0_register,td.index) or
+                _guarded_receiver_use(il,by,pred,guard.next_ip,value.op0_register,td.index,throw,seq,blocks)):continue
         matches=[md for j in il.meta.type_methods(td) if (md:=il.meta.methods[j]).name=='get_'+name and md.param_count==0]
         if len(matches)!=1:continue
         getter=matches[0];addr=getter.addr
