@@ -26,7 +26,8 @@ def plain_alias(l,receiver,off,width):
         if len(s)<2:continue
         a,r=s[:2];end=r.next_ip;limit=il.function_extent(m.addr)
         boundaries=(il.next_function_start(m.addr),il.next_method_start(m.addr))
-        if (limit[0]!=m.addr or end>limit[1] or any(x is not None and x<end for x in boundaries) or
+        if (not il.bin.is_exec_va(m.addr) or not any(sec.is_exec and sec.addr<=m.addr and end<=sec.addr+min(sec.size,sec.rawsize) for sec in il.bin.sections) or
+                limit[0]!=m.addr or end>limit[1] or any(x is not None and x<end for x in boundaries) or
                 any(x in il.addr_to_method or x in il.bin.exports for x in range(m.addr+1,end)) or
                 a.mnemonic!=M.MOV or a.op0_register!=(R.EAX if width==4 else R.RAX) or a.op1_kind!=K.MEMORY or
                 a.memory_base!=R.RCX or a.memory_index!=R.NONE or sdisp(a.memory_displacement)!=off or MS.size(a.memory_size)!=width or

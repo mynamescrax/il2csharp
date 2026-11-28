@@ -10,6 +10,7 @@ def test_logged_join_and_leave_use_second_mode_and_original_player(shift_runtime
     meta,il=shift_runtime;em=Emitter(il,str(tmp_path/'out'));out=[]
     for mi in (28708,28709):
         m=meta.methods[mi];em.emit_method(m,meta.typedefs[m.declaring],out,'    ')
+    code='\n'.join(out);assert code.count('RunClassConstructor(typeof(global::UnityEngine.Debug).TypeHandle)')==2
     source='''using System;using System.Linq;using System.Reflection;using System.Runtime.Loader;using System.Collections.Generic;using Fusion;
 foreach(bool join in new[]{true,false})foreach(bool logs in new[]{false,true})foreach(int mode in new[]{int.MinValue,-1,0,1,2,3,4,5,int.MaxValue}){
  Case.Run(join,logs,mode,mode,"ok");}
@@ -29,7 +30,7 @@ public static class Case{
  var want=new List<string>();bool noRunner=fault is "null" or "null before logging";if(!noRunner){if(logs){want.Add("mode before logging");want.Add("format");if(fault=="cctor")want.Add("cctor");want.Add("log");}want.Add("decision");int m=logs?later:initial;if(m==1||m==3||m==4)want.Add("action");}
  int cut=want.IndexOf(fault=="cold format"?"format":fault);if(!trace.SequenceEqual(cut<0?want:want.Take(cut+1))||(noRunner?ex is not NullReferenceException:fault=="cctor"?ex is not TypeInitializationException||!ReferenceEquals(ex.InnerException,err):cut<0?ex!=null:!ReferenceEquals(ex,err)))throw new Exception($"{join}/{logs}/{initial}/{later}/{fault}: {string.Join(',',trace)}",ex);
  }}
-namespace UnityEngine{public static class Debug{static Debug()=>Case.Init("cctor");public static void Log(object message)=>Case.Sink(message);}}
+namespace UnityEngine{public static class Debug{static Debug()=>Case.Init("cctor");public static void Log(string wrong)=>throw new Exception("wrong overload");public static void Log(object message)=>Case.Sink(message);}}
 namespace Fusion{public enum GameMode{Single=1,Shared=2,Server=3,Host=4}public struct PlayerRef{public int Raw;public override string ToString()=>Case.PlayerString();}public class NetworkRunner{public Func<GameMode> Read;public GameMode GameMode=>Read();}public interface INetworkRunnerCallbacks{void OnPlayerJoined(NetworkRunner runner,PlayerRef player);void OnPlayerLeft(NetworkRunner runner,PlayerRef player);}}
 public class PrefabSpawner:INetworkRunnerCallbacks{public bool debugLogs;public Func<NetworkRunner,PlayerRef,bool> Act;private bool TryDespawnPlayer(NetworkRunner runner,PlayerRef player)=>Act(runner,player);private void SpawnPlayer(NetworkRunner runner,PlayerRef player)=>Act(runner,player);\n'''+ '\n'.join(out)+'\n}'
     r=tmp_path/'r';r.mkdir();(r/'Program.cs').write_text(source,encoding='utf8');print(run_case(tmp_path,r))
@@ -51,3 +52,11 @@ def test_logged_mode_selection_needs_both_loads_and_all_action_edges(shift_runti
     elif bad=='wrong initialization owner':i.memory_displacement=s[21].ip_rel_memory_address
     else:i=Decoder(64,bytes.fromhex('4889442448'),ip=i.ip).decode()
     assert i.len==s[j].len;s[j]=i;assert match() is None
+
+
+def test_mode_field_alias_requires_an_executable_registered_getter(shift_runtime,monkeypatch):
+    from il2cpp import Lifter
+    from il2cpp.plain_property import plain_alias
+    meta,il=shift_runtime;l=Lifter(il);m=meta.methods[28709];t=il.types[meta.method_params(m)[0].type][0];res=plain_alias(l,t,0x1a8,4);assert res and res[0]=='GameMode'
+    md=next(meta.methods[n] for n in meta.type_methods(meta.typedefs[t]) if meta.methods[n].name=='get_GameMode');orig=il.bin.is_exec_va
+    monkeypatch.setattr(il.bin,'is_exec_va',lambda a:False if a==md.addr else orig(a));assert plain_alias(l,t,0x1a8,4) is None

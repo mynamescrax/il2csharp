@@ -219,7 +219,9 @@ logs the player and enum in their original types; both callbacks then read
 the public mode again and accept exactly 1, 3 and 4. A false despawn return
 does not cancel the call. The getter's complete field load, closed value
 box homes, format overload, log initialization and both action predecessors
-are checked. Both complete interface callbacks run with mode mutation during
+are checked. The getter must fit in one executable section and the literal
+formatter must belong to the unique `System.String` owner. Both complete
+interface callbacks run with mode mutation during
 format/log, extreme values, cold initialization and exceptions.
 
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial

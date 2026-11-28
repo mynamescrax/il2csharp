@@ -95,7 +95,7 @@ def logged_selection(l,m,td,s,eh):
             not _rr(zh,M.XOR,R.R9D,R.R9D) or not _rr(eb,M.MOV,R.R8,R.RAX) or not _rr(pb,M.MOV,R.RDX,save)):return None
     strings=_signature(il,fmt,[(14,0),(28,0),(28,0)],{(14,0)},static=True);sink=_signature(il,log,[(28,0)],{(1,0)},static=True)
     a=_slot(lit,R.RCX,M.MOV);u=il.decode_slot(a) if a else None;lc=_slot(logger,R.RCX,M.MOV);klass=il.decode_slot(lc) if lc else None
-    if (not strings or il.typedef_full(strings.declaring)!='System.String' or strings.name!='Format' or strings.flags&7!=6 or not sink or
+    if (not strings or [t.index for t in il.meta.typedefs if t.namespace=='System' and t.name=='String']!=[strings.declaring] or il.typedef_full(strings.declaring)!='System.String' or strings.name!='Format' or strings.flags&7!=6 or not sink or
             sink.flags&7!=6 or not sink.name.isidentifier() or safe_ident(sink.name)!=sink.name or not u or u.get('kind')!=5 or not 0<=u['idx']<len(il.meta.string_literals) or
             not klass or klass.get('kind')!=1 or klass.get('td')!=sink.declaring or il.meta.typedefs[sink.declaring].generic_container!=-1 or
             set(next(iter(ready.values())))!={a,lc,kp.ip_rel_memory_address,ke.ip_rel_memory_address} or next(iter(ready))!=guard.ip or
