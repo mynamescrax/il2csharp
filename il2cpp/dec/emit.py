@@ -117,6 +117,9 @@ class _EmitMixin:
                 from il2cpp.dec.search_loop import terminal_search
                 exit_bid = terminal_search(self, blocks, cur, stop, in_loop, out, depth)
                 if exit_bid is None:
+                    from il2cpp.dec.joined_search import joined_search
+                    exit_bid = joined_search(self, blocks, cur, stop, in_loop, out, depth)
+                if exit_bid is None:
                     exit_bid = self._emit_loop(blocks, cur, out, in_loop, depth)
                 if exit_bid is None or exit_bid in stop:
                     return

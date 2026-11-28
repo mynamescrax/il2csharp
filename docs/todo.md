@@ -91,6 +91,14 @@ the old invocation before reading the configured delay, but reads that delay
 complete emitted callers keep those samples when a callback changes the
 field, including the inactive, nonrandom, input, unordered and throwing paths.
 
+**Filtered array searches with a shared continuation.** `IDCard.CheckIfFakeID`
+(25546) returns without a hint on bypass, empty input, or exhaustion. Both
+the Unity inequality check and the activity getter see the same element;
+a rejected element advances the index once. The successful path obtains
+the manager twice around `AddHint` and skips the latch before cleanup.
+Tests cover replaced slots, short-circuiting, faults, and distinct phi
+copies on match, rejection and exhaustion edges.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:

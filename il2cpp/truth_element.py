@@ -30,6 +30,14 @@ def _unique(il,call):
     return m if m.addr==call.near_branch_target else None
 
 
+def _null_pair(il,md):
+    if (not md or md.name!='op_Inequality' or not md.is_static or not md.flags&0x800 or md.flags&7!=6 or
+            not 0<=md.declaring<len(il.meta.typedefs) or md.generic_container!=-1 or md.param_count!=2 or
+            not 0<=md.return_type<len(il.types) or il._closed_type_key(il.types[md.return_type])!=(2,0)):return False
+    ps=il.meta.method_params(md)
+    return len(ps)==2 and all(0<=p.type<len(il.types) and il._closed_type_key(il.types[p.type])==(0x12,md.declaring,0) for p in ps)
+
+
 def checked_elements(lift,method,td,blocks,pads):
     il=lift.il;fields={};sites={};candidates=[]
     if not HAVE_ICED or pads or method.is_static or td.is_valuetype or method.generic_container!=-1 or td.generic_container!=-1:return fields,sites
@@ -39,10 +47,16 @@ def checked_elements(lift,method,td,blocks,pads):
         if (not call.is_call_near or test.mnemonic!=M.TEST or test.op0_register!=test.op1_register or test.op0_register!=R.AL or
                 branch.mnemonic!=M.JE or null.mnemonic!=M.TEST or null.op0_register!=null.op1_register or null.op0_register not in _SAVED or throw.mnemonic!=M.JE):continue
         action=next((n for n in range(j+5,min(j+11,len(seq))) if seq[n].is_call_near),None)
-        if action is None or seq[action].next_ip!=branch.near_branch_target:continue
-        truth=_unique(il,call);m=_unique(il,seq[action]);
-        if (not truth_owner(il,truth) or not m or m.is_static or m.flags&(0x40|0x800) or m.generic_container!=-1 or
-                not 0<=m.return_type<len(il.types) or il._closed_type_key(il.types[m.return_type])!=(1,0)):continue
+        if action is None:continue
+        truth=_unique(il,call);m=_unique(il,seq[action])
+        if not m or m.is_static or m.flags&0x40 or m.generic_container!=-1 or not 0<=m.return_type<len(il.types):continue
+        if _null_pair(il,truth):
+            prop=lift._accessor_prop(m.index);last=seq[action]
+            if (not prop or prop[0]!='get' or prop[2] or m.param_count or il._closed_type_key(il.types[m.return_type])!=(2,0) or
+                    action+2>=len(seq) or seq[action+1].mnemonic!=M.TEST or seq[action+1].op0_register!=seq[action+1].op1_register or
+                    seq[action+1].op0_register!=R.AL or seq[action+2].mnemonic!=M.JNE or seq[action+2].next_ip!=branch.near_branch_target):continue
+        elif (seq[action].next_ip!=branch.near_branch_target or not truth_owner(il,truth) or m.flags&0x800 or
+                il._closed_type_key(il.types[m.return_type])!=(1,0)):continue
         candidates.append((j,action,truth,m))
     if (not candidates or not _amd64(getattr(il,'bin',None)) or il.meta.version!=31 or
             any(n.startswith('t') and n[1:].isdigit() for n in (safe_ident(p.name) for p in source_params(il.meta,method)))):return fields,sites
@@ -51,7 +65,16 @@ def checked_elements(lift,method,td,blocks,pads):
     pred,succ=g;ordinal={i.ip:n for n,i in enumerate(seq)}
     for j,k,truth,m in candidates:
         call,consumer=seq[j],seq[k];reg=seq[j+3].op0_register
-        w=seq[j:k+1]
+        if _null_pair(il,truth):
+            ok=True
+            for reg,dword in ((R.RDX,R.EDX),(R.R8,R.R8D)):
+                defs=_definitions(by,pred,method.addr,call.ip,reg)
+                if len(defs)!=1:ok=False;break
+                z=by[defs.pop()[0]]
+                if z.mnemonic!=M.XOR or z.op0_register!=z.op1_register or z.op0_register!=dword:ok=False;break
+            if not ok:continue
+            reg=seq[j+3].op0_register
+        w=seq[j:k+3] if _null_pair(il,truth) else seq[j:k+1]
         if any(a.next_ip!=b.ip or pred[b.ip]!=[a.ip] for a,b in zip(w,w[1:])):continue
         throw=by.get(seq[j+4].near_branch_target)
         if not throw or not throw.is_call_near or lift._named_raise_throw(throw.near_branch_target,lift._call_name(throw.near_branch_target))!='System.NullReferenceException':continue
