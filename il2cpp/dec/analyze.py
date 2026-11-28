@@ -59,6 +59,8 @@ class _AnalyzeMixin:
         for ip,row in paired_fields.items():scalar_fields.setdefault(ip,row)
         from il2cpp.field_remainder import field_divisions,division_step
         divisions=field_divisions(L,m,blocks,self._pad_bids)
+        from il2cpp.boxed_quotient import boxed_divisions, apply_division
+        boxed = boxed_divisions(L, m, blocks, self._pad_bids)
         from il2cpp.dispatch_fields import dispatch_fields,bind_dispatch_field
         dispatch_reads=dispatch_fields(L,m,blocks,self._pad_bids)
         from il2cpp.packed_call import packed_calls,apply_packed_call
@@ -256,6 +258,9 @@ class _AnalyzeMixin:
                     L.regs['RDI'] = Expr(snapshot, capture[2], 'obj')
                     continue
                 mn = ins.mnemonic
+                if ins.ip in boxed and apply_division(L, boxed[ins.ip]):
+                    copied_until = idx + 6
+                    continue
                 if ins.ip in saved_reads:save_echo(L,saved_reads[ins.ip],saved_values)
                 if ins.ip in saved_calls and call_binary(L,ins,saved_calls[ins.ip],saved_values):continue
                 if ins.ip in value_loads and ins.ip not in packed_loads and bind_value(L,ins,value_loads[ins.ip]):continue

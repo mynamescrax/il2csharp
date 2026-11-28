@@ -113,7 +113,7 @@ def _epilogue(seq, j, size, pushed, moves):
     return start
 
 
-def stack_local_frame(lift, method, blocks, pads):
+def stack_local_frame(lift, method, blocks, pads, *, incoming=None):
     """Return (allocation_size, entry_depth, saved_spans), or None.
 
     Entry RSP is final RSP + entry_depth. The sorted (offset, width) spans
@@ -210,10 +210,14 @@ def stack_local_frame(lift, method, blocks, pads):
             # a word *beyond* the nominal effective address/operand width.
             if i.mnemonic in (M.BT, M.BTC, M.BTR, M.BTS) and i.op1_kind == K.REGISTER:
                 return None
+            # A caller may prove a bounded scalar borrow in incoming Win64
+            # shadow space. Keep its entire width off the save/return spans.
+            borrow = (incoming or {}).get(i.ip) if i.mnemonic == M.LEA else None
+            in_home = borrow == 4 and not off % 4 and depth+8 <= off and off+4 <= depth+40
             if i.mnemonic == M.LEA and (i.op0_register not in (R.RCX, R.RDX, R.R8, R.R9) or
-                                        not 32 <= off < size):
+                                        not (32 <= off < size or in_home)):
                 return None  # allow local argument borrows, not a second stack base
-            width = 1 if i.mnemonic == M.LEA else MemorySizeExt.size(i.memory_size)
+            width = (borrow if in_home else 1) if i.mnemonic == M.LEA else MemorySizeExt.size(i.memory_size)
             if (i.has_segment_prefix or i.memory_index != R.NONE or not width or
                     any(off < a+w and a < off+width for a, w in protected)):
                 return None

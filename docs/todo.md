@@ -85,6 +85,29 @@ field during the getter and mutate the old volume during the clock read.
 The gate checks both branches, interpolation, null sources, throwing
 getters/clocks/setters, and no clock read on the inactive car path.
 
+**Signed minutes and seconds.** The emitted `FormatTime(int)` bodies on
+`RatCountdown` (27003), `RoachCountdown` (27188) and `StoreManager` (27817)
+used unknown multipliers and clobbered the dividend. Native one-operand
+`IMUL` leaves its explicit operand alone and puts the high dword in EDX.
+For the observed add/shift/logical-correction sequence, `60 * 0x88888889
+− 2^37 = 28`: the error is positive and less than one quotient interval
+even at `int.MinValue`. Both windows compute signed division by 60; the
+second subtracts the quotient times 60 from the original seconds. The
+caller boxes **Int32** samples, not the corresponding unsigned values.
+
+The proof checks the signed parameter copy, instruction widths, flags,
+dead scratch registers, exact box export, and disjoint four-byte borrows
+in an unwind-verified frame. In the Rat formatter the incoming shadow
+homes are `[rsp+0x30]` and `[rsp+0x40]`; `[rsp+0x38]` restores RBX and
+is not available. The BSS cell's sole direct writer at `0x1804387B6`
+stores the return of the exported class lookup with `System` and `Int32`.
+`tests/test_game_boxed_quotient.py` compiles the three complete emitted
+callers and tests signed minute boundaries, both integer extrema and
+deterministic random inputs under two cultures. In particular, `−61`
+formats as `−01:−01` (with the culture's minus sign), not a positive or
+rounded-up result. Non-leaf timer updates and ring-buffer indexing need
+their own input and liveness proofs.
+
 The new gameplay survey found failures outside those tests. Two small
 programs compiled eight unchanged baseline caller bodies against typed
 collaborators. Of 20 input/trace cases, 15 disagreed with native behavior.
