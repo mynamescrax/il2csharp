@@ -9,13 +9,13 @@ pytestmark=pytest.mark.game
 def test_pool_creation_prefix_uses_one_key_and_one_membership_check(shift_runtime,tmp_path):
     meta,il=shift_runtime;m=meta.methods[23861];d=Decompiler(Lifter(il));b=d.lift_method(m,meta.typedefs[m.declaring]);start=next(j for j,s in enumerate(b) if s not in ('unsafe','{'));end=next(j for j,s in enumerate(b) if s.strip().startswith('if (number '));prefix=b[start:end]
     src='''using System;using System.Linq;using System.Collections.Generic;using UnityEngine;using Lists=System.Collections.Generic.List_1<UnityEngine.GameObject>;
-foreach(string mode in new[]{"hit","miss","null source","key","no map","probe","allocate","insert","cursor"}){
+foreach(string mode in new[]{"hit","miss","null source","key","no map","captured null","probe","allocate","insert","cursor"}){
  var c=new Pool();var trace=new List<string>();var err=new ApplicationException();void Step(string s){trace.Add(s);if(mode==s)throw err;}
  var p=new Watch();var q=new Watch();var h=new Watch();var before=new Dictionary_2<int,Lists>(p);var after=new Dictionary_2<int,Lists>(q);var spare=new Dictionary_2<int,Lists>();var curs=new Dictionary_2<int,int>(h);var original=new Lists();before.Add(mode=="hit"?37:99,original);after.Add(91,original);curs.Add(91,2);
- c.instantiatedObjects=spare;c.poolCursors=new();var go=new GameObject();go.Read=()=>{Step("key");c.instantiatedObjects=mode=="no map"?null:before;return 37;};p.Observe=()=>{Step("probe");c.instantiatedObjects=after;};Lists.Born=()=>{Step("allocate");c.instantiatedObjects=spare;};q.Observe=()=>{Step("insert");c.poolCursors=curs;};h.Observe=()=>Step("cursor");
+ c.instantiatedObjects=spare;c.poolCursors=new();var go=new GameObject();go.Read=()=>{Step("key");c.instantiatedObjects=mode=="no map"?null:before;return 37;};p.Observe=()=>{Step("probe");c.instantiatedObjects=mode=="captured null"?null:after;};Lists.Born=()=>{Step("allocate");c.instantiatedObjects=spare;};q.Observe=()=>{Step("insert");c.poolCursors=curs;};h.Observe=()=>Step("cursor");
  Exception ex=null;try{c.Run(mode=="null source"?null:go);}catch(Exception e){ex=e;}p.Observe=q.Observe=h.Observe=Lists.Born=null;
- string[] steps={"key","probe","allocate","insert","cursor"};int n=mode switch{"hit"=>2,"miss"=>5,"null source"=>0,"no map"=>1,_=>Array.IndexOf(steps,mode)+1};
- if(!trace.SequenceEqual(steps.Take(n))||(mode is "null source" or "no map"?ex is not NullReferenceException:mode is "hit" or "miss"?ex!=null:!ReferenceEquals(ex,err))||before.Count!=1||spare.Count!=0||after.ContainsKey(37)!=(mode is "miss" or "cursor")||curs.ContainsKey(37)!=(mode=="miss"))throw new Exception(mode+":"+string.Join(',',trace),ex);
+ string[] steps={"key","probe","allocate","insert","cursor"};int n=mode switch{"hit"=>2,"miss"=>5,"null source"=>0,"no map"=>1,"captured null"=>3,_=>Array.IndexOf(steps,mode)+1};
+ if(!trace.SequenceEqual(steps.Take(n))||(mode is "null source" or "no map" or "captured null"?ex is not NullReferenceException:mode is "hit" or "miss"?ex!=null:!ReferenceEquals(ex,err))||before.Count!=1||spare.Count!=0||after.ContainsKey(37)!=(mode is "miss" or "cursor")||curs.ContainsKey(37)!=(mode=="miss"))throw new Exception(mode+":"+string.Join(',',trace),ex);
 }
 Console.WriteLine("pool registration prefix: one ID, one membership hash, map replacement on miss, allocation and two writes in order");
 class Watch:IEqualityComparer<int>{public Action Observe;public bool Equals(int a,int b)=>a==b;public int GetHashCode(int x){Observe?.Invoke();return x;}}

@@ -10,7 +10,6 @@ def test_logged_join_and_leave_use_second_mode_and_original_player(shift_runtime
     meta,il=shift_runtime;em=Emitter(il,str(tmp_path/'out'));out=[]
     for mi in (28708,28709):
         m=meta.methods[mi];em.emit_method(m,meta.typedefs[m.declaring],out,'    ')
-    code='\n'.join(out);assert code.count('RunClassConstructor(typeof(global::UnityEngine.Debug).TypeHandle)')==2
     source='''using System;using System.Linq;using System.Reflection;using System.Runtime.Loader;using System.Collections.Generic;using Fusion;
 foreach(bool join in new[]{true,false})foreach(bool logs in new[]{false,true})foreach(int mode in new[]{int.MinValue,-1,0,1,2,3,4,5,int.MaxValue}){
  Case.Run(join,logs,mode,mode,"ok");}
@@ -34,6 +33,7 @@ namespace UnityEngine{public static class Debug{static Debug()=>Case.Init("cctor
 namespace Fusion{public enum GameMode{Single=1,Shared=2,Server=3,Host=4}public struct PlayerRef{public int Raw;public override string ToString()=>Case.PlayerString();}public class NetworkRunner{public Func<GameMode> Read;public GameMode GameMode=>Read();}public interface INetworkRunnerCallbacks{void OnPlayerJoined(NetworkRunner runner,PlayerRef player);void OnPlayerLeft(NetworkRunner runner,PlayerRef player);}}
 public class PrefabSpawner:INetworkRunnerCallbacks{public bool debugLogs;public Func<NetworkRunner,PlayerRef,bool> Act;private bool TryDespawnPlayer(NetworkRunner runner,PlayerRef player)=>Act(runner,player);private void SpawnPlayer(NetworkRunner runner,PlayerRef player)=>Act(runner,player);\n'''+ '\n'.join(out)+'\n}'
     r=tmp_path/'r';r.mkdir();(r/'Program.cs').write_text(source,encoding='utf8');print(run_case(tmp_path,r))
+    assert '\n'.join(out).count('RunClassConstructor(typeof(global::UnityEngine.Debug).TypeHandle)')==2
 
 
 @pytest.mark.parametrize('bad',['miss equality edge','signed range','swapped boxes','wrong argument home','stale enum','action consumes other runner','wrong initialization owner','return observed'])

@@ -8,7 +8,6 @@ pytestmark=pytest.mark.game
 
 def test_spawn_samples_manager_before_prefab_and_position(shift_runtime,tmp_path):
     meta,il=shift_runtime;m=meta.methods[25213];out=[];Emitter(il,str(tmp_path/'out')).emit_method(m,meta.typedefs[m.declaring],out,'    ')
-    code='\n'.join(out);assert code.index('RunClassConstructor(')<code.index('FusionNetworkManager.Instance')
     s='''using System;using System.Linq;using System.Collections.Generic;using System.Runtime.Loader;using UnityEngine;using Fusion;
 foreach(string m in new[]{"ok","cctor","manager","no object","component","null component","no transform","position","no manager","no manager and position throws","identity","spawn"}){var ctx=new AssemblyLoadContext("case",true);try{ctx.LoadFromAssemblyPath(typeof(Host).Assembly.Location).GetType("Host").GetMethod("Test").Invoke(null,new object[]{m});}finally{ctx.Unload();}}
 Console.WriteLine("whole spawn: saved manager and component, refreshed position source, explicit init and late null, identity/optional arguments and faults");
@@ -23,6 +22,7 @@ namespace UnityEngine{public struct Vector3{public float x,y,z;}public struct Qu
 namespace Fusion{public class NetworkObject{}}namespace System{public delegate void Action_1<T>(T x);}public class FusionNetworkManager{static FusionNetworkManager()=>Host.Init();public static FusionNetworkManager Instance=>Host.Get();public Func<NetworkObject,Vector3,Quaternion,Action_1<NetworkObject>,NetworkObject> Factory;public NetworkObject SpawnItem(NetworkObject n,Vector3 p,Quaternion q,Action_1<NetworkObject> a)=>Factory(n,p,q,a);}
 class EventManager{public Transform playerDoppelgangerSpawnpoint;public GameObject roach;\n'''+ '\n'.join(out)+'\n}'
     p=tmp_path/'r';p.mkdir();(p/'Program.cs').write_text(s,encoding='utf8');print(run_case(tmp_path,p))
+    code='\n'.join(out);assert code.index('RunClassConstructor(')<code.index('FusionNetworkManager.Instance')
 
 
 @pytest.mark.parametrize('bad',['spilled XY','wrong restore','other manager','other component','stale Z','overwrite optional','wrong methodref','early null','unaligned aggregate','conflicting getter flag'])

@@ -32,6 +32,13 @@ The tool verifies fixture hashes and the per-row signature, VA, and native
 instructions, and lifts each revision in a separate process. At `f7abb2d`
 all four former return-only bodies in this sample have effects again.
 
+The [broader survey](samples/shift-2026-11-28-broad.txt) pins the 2,119
+rows separately. The [compiled gate manifest](samples/shift-2026-11-28-gates.txt)
+identifies 61 whole callers, as well as slices and decoded variants. Use
+`python tools/replay_shift_gates.py --source COMMIT --gates-at TEST_COMMIT --selection docs/samples/shift-2026-11-28-gates.txt`
+to replay one test at a time against an archived package. The report
+distinguishes C# compile errors, runtime mismatches, and pre-run failures.
+
 **Independent draws for returned vectors.** `FVectorMethods.RandomVector`
 (28968) used to return three copies of one sample. Native calls the
 two-Single producer three times, parks the first two results in separate
