@@ -184,6 +184,10 @@ class _AnalyzeMixin:
         vector_scales,component_bounds=vector_polls(L,m,td,blocks,self._pad_bids)
         for ip,row in vector_scales.items():
             if ip not in self.skip_ips and ip not in applications and ip not in dispatch_reads:scalar_fields.setdefault(ip,row)
+        from il2cpp.buffered_dispatch import buffered_receivers
+        buffered_fields=buffered_receivers(L,m,td,blocks,self._pad_bids)
+        if not any(ip in self.skip_ips or ip in applications or ip in owner_loads or ip in dispatch_reads or ip in nested_fields or ip in scalar_fields for ip in buffered_fields):
+            scalar_fields.update(buffered_fields)
         m_returns = self._returns_value(m)
         self.phi_pre = {}
         L._phi_bytes = {}

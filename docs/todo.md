@@ -246,6 +246,12 @@ again. The native `JBE` includes NaN velocity Y in the short ground-check
 distance path. The complete emitted caller checks six velocity inputs,
 receiver replacement and synchronous failures through the final write.
 
+**Actor teleport.** `ObiActorTeleport.Teleport` (23919) catches the actor
+before sampling position and rotation. The complete caller preserves both
+target reads, passes all seven lanes to the virtual override, and defers a
+null actor fault until after rotation. The paired vtable/MethodInfo words
+and RDX receiver distinguish this dispatch from an ordinary RCX call.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:
