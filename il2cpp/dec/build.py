@@ -363,6 +363,9 @@ class _BuildMixin:
         from il2cpp.logged_selection import logged_selection
         selection=logged_selection(L,m,td,insns,self.eh)
         if selection is not None:return selection
+        from il2cpp.singleton_factory import singleton_factory
+        singleton=singleton_factory(L,m,td,insns,self.eh)
+        if singleton is not None:return singleton
         from il2cpp.closed_factory import closed_factory
         factory=closed_factory(L,m,td,blocks,insns,self._pad_bids)
         if factory is not None:return factory

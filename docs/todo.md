@@ -265,6 +265,15 @@ array, but loads each next element live. The complete caller verifies a
 callback that replaces both the field and a later slot, and checks that
 the flag stays committed after a null array, null element or callback fault.
 
+**Roach spawn event (25213).** `EventManager.SpawnRoach` previously
+stopped after the component lookup. It now samples the singleton first,
+obtains the closed component, reads the live spawn position, and calls
+the saved manager with the exact position, rotation and null callback.
+The complete caller checks class initialization, receiver replacement,
+the return-buffer lanes and exceptions, including a null manager paired
+with a throwing position source. The second outgoing zero is hidden
+MethodInfo, not another argument.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:
