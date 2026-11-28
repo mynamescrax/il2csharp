@@ -142,6 +142,8 @@ class _AnalyzeMixin:
         masks, mask_calls = mask_sites(L, m, blocks, self._pad_bids)
         from il2cpp.scalar_ratio import ratio_sites, ratio_step
         ratios, ratio_calls = ratio_sites(L, m, td, blocks, self._pad_bids)
+        from il2cpp.terminal_effect import terminal_effects
+        terminal_actions = terminal_effects(L, m, td, blocks, self._pad_bids)
         m_returns = self._returns_value(m)
         self.phi_pre = {}
         L._phi_bytes = {}
@@ -182,6 +184,7 @@ class _AnalyzeMixin:
                 L.regs[r] = e
             L._setup_entry(m, td)
             L._parked_getter_values=set()
+            L._terminal_actions=terminal_actions
             L._sample_call_sites = dict(mask_calls)
             L._sample_call_sites.update(ratio_calls)
             L._sample_call_values = {}

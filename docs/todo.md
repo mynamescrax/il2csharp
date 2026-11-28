@@ -149,6 +149,20 @@ on either continuation. The adjacent cache reset in `OnEnable` remains
 separate. **Combined checkpoint before this change: 484 exact-build tests
 in 66 modules at `3e9dc29`.**
 
+**Calls immediately before void returns.** `SteamDeckInputField.OnInputFieldSelected`
+(27684) now requests the floating keyboard exactly once. The native fifth
+argument is a four-byte height at `[rsp+0x20]`; the null MethodInfo is a
+different eight-byte store at `[rsp+0x28]`. `VoiceVolumeManager.RemovePlayerRow`
+(28419) now invokes `RefreshLayoutAsync` even on a row miss. A live row is
+destroyed first; a throwing destroy prevents refresh. The caller ignores
+the returned task (including a faulted one) but propagates a synchronous
+exception from the invocation. Both complete emitted methods passed their
+typed behavior gates. The rule verifies the target, arguments, dead return
+lanes and unwind-owned epilogue at the call site. In 28419 the terminal
+chained region uses the root frame; an earlier path-local RSI save is not
+part of its pop sequence. A similarly printed pending call is not evidence
+that a second call has already happened.
+
 The new gameplay survey found failures outside those tests. Two small
 programs compiled eight unchanged baseline caller bodies against typed
 collaborators. Of 20 input/trace cases, 15 disagreed with native behavior.

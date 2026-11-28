@@ -3964,6 +3964,10 @@ class _CallsMixin:
                         self._stack_store(off, sz, Expr(slot, (m2.declaring, 0x11 << 16), 'obj'))
                         self.slot_types[slot] = (m2.declaring, 0x11 << 16)
                 return
+            action=getattr(self,'_terminal_actions',{}).get(ins.ip)
+            if action is not None:
+                from il2cpp.terminal_effect import terminal_statement
+                if terminal_statement(self,action,mi,call,gpr_exprs[0]):return
             dstreg = self._return_value_register(rty)
             isf = dstreg == 'XMM0'
             result = Expr(call, rty,
