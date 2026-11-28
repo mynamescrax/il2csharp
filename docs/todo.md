@@ -121,6 +121,13 @@ emitted callers preserve all seven float lanes, the class initialization
 before the factory, independent inputs and callback failures. A property
 can replace the prefab field without changing the already captured original.
 
+**Event subscriptions under contention.** Native retry edges on the
+`FusionNetworkManager.OnVoiceConnectionReady` accessors compare reference
+identity between the observed old delegate and this attempt's comparand.
+Two distinct delegates with equal invocation lists must retry. The complete
+emitted accessors run against a forwarding shim using the real BCL CAS;
+an injected competing exchange preserves the listener that won the race.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:

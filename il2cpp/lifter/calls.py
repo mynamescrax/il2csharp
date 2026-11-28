@@ -3231,6 +3231,14 @@ class _CallsMixin:
                     % (_loc.text[1:], _val.text, _cmp.text),
                     _val.ty if isinstance(_val.ty, tuple) else None, 'obj')
                 self.regs['RAX'] = _e
+                retry=getattr(self,'_cas_retry_sites',{}).get(ins.ip)
+                if retry:
+                    jump,cmp,field,ty,owner,reg=retry
+                    expected=dict.get(self.regs,reg)
+                    if (_loc.text in ('&'+self.il.typedef_full(owner)+'.'+field,'&typeof('+self.il.typedef_full(owner)+').'+field) and
+                            expected is _cmp and not expected._unk and
+                            self.il._closed_type_key(_val.ty)==self.il._closed_type_key(ty)):
+                        self._cas_retry_values[jump]=_e,expected,cmp
                 if self.asm_comments and asm:
                     self.emit(ins.ip, '', asm)
                 return

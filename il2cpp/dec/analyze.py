@@ -157,6 +157,8 @@ class _AnalyzeMixin:
         arg_nulls=null_sites(L,m,blocks,self._pad_bids)
         from il2cpp.saved_float_flags import comparison_sites,save_comparison
         float_flags=comparison_sites(L,m,td,blocks,self._pad_bids)
+        from il2cpp.cas_retry import retry_sites
+        retries = retry_sites(L,m,td,blocks,self._pad_bids)
         m_returns = self._returns_value(m)
         self.phi_pre = {}
         L._phi_bytes = {}
@@ -219,6 +221,7 @@ class _AnalyzeMixin:
             L._setup_entry(m, td)
             L._parked_getter_values=set()
             L._terminal_actions=terminal_actions
+            L._cas_retry_sites = retries
             L._arg_nulls=arg_nulls
             L._decision_calls=decision_calls
             L._sample_call_sites = dict(mask_calls)
@@ -547,6 +550,12 @@ class _AnalyzeMixin:
                                 and nb.insns[0].near_branch_target == ins.near_branch_target:
                             jcc_fallthrough_flags[next_bid] = \
                                 ((lhs, rhs), getattr(L, '_flags_mn', None))
+                    retry = L._cas_retry_values.get(ins.ip)
+                    if (retry and retry[0] is lhs and retry[1] is rhs and L._flags_mn==Mnemonic.CMP and
+                            idx and b.insns[idx-1].ip==retry[2] and mn==Mnemonic.JNE):
+                        b.cond = '!(object.ReferenceEquals(%s, %s))' % (lhs.text,rhs.text)
+                        L.flags = None
+                        continue
                     lt = lhs.text if lhs else '?'
                     rt = rhs.text if rhs else '?'
                     if (idx and mn in (Mnemonic.JE,Mnemonic.JNE) and lhs in L._parked_getter_values and rt=='null' and
