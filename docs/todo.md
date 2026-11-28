@@ -67,6 +67,24 @@ Both complete emitted methods have typed gates in
 overrides. `tests/test_terminal_search.py` covers the edge copies, shared
 tails, lexical boundaries, and rejected terminal transfers.
 
+**Combined checkpoint `9b73fd2`: 454 tests passed in all 62 exact-build
+modules**, including the byte-mask and search gates. Run the bounded mask
+measurement with `python tools/scout_mask_branches.py --first 23600
+--stop 28729 --binary <dll> --metadata <dat>`. It counts unique real-pass
+sites per MethodDef, without writing any game tree.
+
+**Audio interpolation uses the pre-clock volume and source.** In
+`Car.FixedUpdate` (24337), `ChaseWhenNear.FixedUpdate` (24460), and
+`PetrolTank.FixedUpdate` (26646), the native caller saves the result of
+the instance `volume` getter in a nonvolatile scalar lane, then polls the
+clock. The setter uses the *same field load* as the getter. Car used to
+poll first and read/write the replacement source. Chase read volume twice;
+Petrol's pumping path reached the setter with an unassigned sample. The
+three complete callers now run against typed sources that replace the
+field during the getter and mutate the old volume during the clock read.
+The gate checks both branches, interpolation, null sources, throwing
+getters/clocks/setters, and no clock read on the inactive car path.
+
 The new gameplay survey found failures outside those tests. Two small
 programs compiled eight unchanged baseline caller bodies against typed
 collaborators. Of 20 input/trace cases, 15 disagreed with native behavior.

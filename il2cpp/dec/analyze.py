@@ -47,6 +47,10 @@ class _AnalyzeMixin:
         from il2cpp.array_member import checked_ref_elements
         checked_ref_loads=checked_ref_elements(L,m,blocks,self._pad_bids)
         scalar_fields,scalar_getters=scalar_sites(L,m,td,blocks,self._pad_bids)
+        from il2cpp.parked_scalar_pair import scalar_pairs
+        paired_fields, paired_calls = scalar_pairs(L, m, td, blocks, self._pad_bids)
+        scalar_fields.update(paired_fields)
+        scalar_getters.update(paired_calls)
         from il2cpp.accessor_chain import reacquired_accessors
         chain_fields,chain_getters=reacquired_accessors(L,m,td,blocks,self._pad_bids)
         scalar_fields.update(chain_fields);scalar_getters.update(chain_getters)
