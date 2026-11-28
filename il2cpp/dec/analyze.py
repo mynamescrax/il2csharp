@@ -206,6 +206,8 @@ class _AnalyzeMixin:
 
         from il2cpp.truth_element import checked_elements, park_element
         truth_fields, truth_reads = checked_elements(L,m,td,blocks,self._pad_bids)
+        from il2cpp.parked_array_loop import parked_arrays
+        truth_fields.update(parked_arrays(L,m,td,blocks,self._pad_bids))
         if any(ip in applications or ip in dispatch_reads or ip in scalar_fields or ip in owner_loads or
                ip in nested_fields or ip in self.skip_ips for ip in (*truth_fields,*truth_reads)):
             truth_reads = {}

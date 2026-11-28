@@ -259,6 +259,12 @@ the new list. A comparer that replaces the map distinguishes both epochs.
 The contiguous registration slice tests hits, misses, nulls, allocations
 and exceptions; the later child-component loops remain unverified.
 
+**Inventory jam effects.** `InventoryManager.GunJam` (25630) loads
+the effects array before setting the jammed flag. It walks that original
+array, but loads each next element live. The complete caller verifies a
+callback that replaces both the field and a later slot, and checks that
+the flag stays committed after a null array, null element or callback fault.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:
