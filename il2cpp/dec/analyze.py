@@ -146,6 +146,8 @@ class _AnalyzeMixin:
         terminal_actions = terminal_effects(L, m, td, blocks, self._pad_bids)
         from il2cpp.unsigned_field import field_bounds, sample_bound
         bounds = field_bounds(L, m, td, blocks, self._pad_bids)
+        from il2cpp.sampled_return import sampled_returns
+        output_samples = sampled_returns(L, m, td, blocks, self._pad_bids)
         m_returns = self._returns_value(m)
         self.phi_pre = {}
         L._phi_bytes = {}
@@ -191,6 +193,7 @@ class _AnalyzeMixin:
             L._sample_call_sites.update(ratio_calls)
             L._sample_call_values = {}
             L._module_reads.update(L._sample_call_sites)
+            L._module_reads.update(output_samples)
             L._module_reads.update(scalar_getters)
             L._module_reads.update(lookup_producers)
 

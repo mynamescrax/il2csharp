@@ -20,6 +20,16 @@ Final lifter commit `aa978aa`. The fixed 19-method sample went from
 21 shared-body markers at 6 addresses to 14 at 2, and 261 to 249
 `object objN` declarations. The 503-file census below is historical.
 
+**Independent draws for returned vectors.** `FVectorMethods.RandomVector`
+(28968) used to return three copies of one sample. Native calls the
+two-Single producer three times, parks the first two results in separate
+nonvolatile lanes, then writes X/Y/Z. The complete caller now returns
+the three samples in order and leaves the next RNG draw untouched. The
+gate compares lane bits (including NaN payloads), inputs and exception
+cutoffs. The proof checks the hidden return pointer, incoming argument
+positions, unique registered producers, unwind-matched saves/restores
+and one full dword per output field.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:
