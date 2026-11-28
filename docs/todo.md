@@ -239,6 +239,13 @@ complete methods retain the checked element when Unity truth replaces an
 array slot, read checked public sprite aliases, and preserve faults through
 the last UI callback. A shared native epilogue does not merge their effects.
 
+**Airborne movement.** `ObiCharacter.HandleAirborneMovement` (28795)
+uses its *first* gravity multiplier across all three lanes before the
+second gravity sample. After the force call it fetches the current body
+again. The native `JBE` includes NaN velocity Y in the short ground-check
+distance path. The complete emitted caller checks six velocity inputs,
+receiver replacement and synchronous failures through the final write.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:

@@ -180,6 +180,10 @@ class _AnalyzeMixin:
         parked_destinations=destination_reads(L,m,td,blocks,self._pad_bids)
         from il2cpp.guarded_ref_alias import compared_fields
         alias_reads=compared_fields(L,m,td,blocks,self._pad_bids)
+        from il2cpp.sampled_vector_math import vector_polls,unordered_component
+        vector_scales,component_bounds=vector_polls(L,m,td,blocks,self._pad_bids)
+        for ip,row in vector_scales.items():
+            if ip not in self.skip_ips and ip not in applications and ip not in dispatch_reads:scalar_fields.setdefault(ip,row)
         m_returns = self._returns_value(m)
         self.phi_pre = {}
         L._phi_bytes = {}
@@ -568,6 +572,10 @@ class _AnalyzeMixin:
                 if fc == FlowControl.CONDITIONAL_BRANCH and ins.op0_kind == OpKind.NEAR_BRANCH64:
                     lhs, rhs = (L.flags or (Expr('?', None, '?'), Expr('?', None, '?')))
                     L._jcc_flags = (L.flags, getattr(L, '_flags_mn', None))
+                    if ins.ip in component_bounds and L._flags_mn in (Mnemonic.COMISS,Mnemonic.UCOMISS):
+                        component=unordered_component(L,component_bounds[ins.ip],lhs,rhs)
+                        if component:
+                            b.cond=component;L.flags=None;continue
                     if (saved_compare and saved_compare[0]==ins.ip and saved_compare[1] is lhs and saved_compare[2] is rhs
                             and L._flags_mn in (Mnemonic.COMISS,Mnemonic.UCOMISS)):
                         b.cond=saved_compare[3]; L.flags=None; continue
