@@ -19,14 +19,15 @@ _GUARDED = re.compile(_LOAD + rb'\x83\xb8\xe4\x00\x00\x00\x00\x75\x0f\x48\x8b\xc
                       + _STATIC + rb'(?:\x00|\x40(.))' + _EPILOGUE,re.S)
 
 
-def _guarded_info(il,va,init):
+def _guarded_info(il,va,init,*,include_flag=False):
     ex=il.function_extent(va)
     if not init or not ex or ex[0]!=va or not il.bin.is_exec_va(va) or not 0<ex[1]-va<=128:return None
     m=_GUARDED.fullmatch(il.bin.read(va,ex[1]-va) or b'')
     if not m:return None
     flag,slot,call,store,load,cl,reload=(va+m.end(j)+(j in (1,4))+int.from_bytes(m[j],'little',signed=True) for j in range(1,8))
     if flag==store and not slot<=flag<slot+8 and slot==load==reload and call==init and il.bin.exports.get(cl)=='il2cpp_runtime_class_init':
-        return slot,int.from_bytes(m[8] or b'\0','little',signed=True)
+        pair=(slot,int.from_bytes(m[8] or b'\0','little',signed=True))
+        return (*pair,flag) if include_flag else pair
 
 
 def guarded_alias(il,va,init):
@@ -85,7 +86,7 @@ def _alias(il, va, init):
     return alias_for_slot(il, _slot(il, va, init), init)
 
 
-def alias_for_slot(il, slot, init, offset=0, *, guarded=False):
+def alias_for_slot(il, slot, init, offset=0, *, guarded=False, init_flags=None):
     """Public getter for the reference at the caller's exact static-field offset."""
     if not 0<=offset<128 or offset%8: return None
     usage = il.decode_slot(slot) if slot is not None else None
@@ -132,7 +133,15 @@ def alias_for_slot(il, slot, init, offset=0, *, guarded=False):
             il.types[m.return_type] != ty or not m.addr):
         return None
     if guarded:
-        if _guarded_info(il,m.addr,init)!=(slot,offset):return None
+        proof=_guarded_info(il,m.addr,init,include_flag=True)
+        if not proof or proof[:2]!=(slot,offset):return None
+        if init_flags is not None:
+            from il2cpp.equivalent_binary import _writable
+            flag=proof[2];sec=_writable(il.bin,flag,1)
+            if (not sec or flag<sec.addr+sec.rawsize and il.bin.read(flag,1)!=b'\0' or
+                    any(v<=flag<v+8 for slots in init_flags.values() for v in slots) or
+                    flag in init_flags and init_flags[flag]!={slot}):return None
+            init_flags[flag]={slot}
     elif _slot(il,m.addr,init,offset)!=slot:return None
     return il.type_name(ty) + '.' + safe_ident(name), ty
 

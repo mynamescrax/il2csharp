@@ -69,7 +69,7 @@ def singleton_factory(l,m,td,s,eh):
     # Avoid selecting a different overload for null, even if its return
     # type and the first three parameter names happened to agree.
     if any(il.meta.methods[n].name==md.name and n!=md.index for ti in il.base_chain_tds(md.declaring) for n in il.meta.type_methods(il.meta.typedefs[ti])):return None
-    prop=alias_for_slot(il,mg,l.rt_init_meta,ref.memory_displacement,guarded=True)
+    prop=alias_for_slot(il,mg,l.rt_init_meta,ref.memory_displacement,guarded=True,init_flags=flags)
     flag=cmp.ip_rel_memory_address;rotation=_slot(klass,R.RAX,M.MOV);slot=_slot(lea,R.RCX,M.LEA);depth=size+8*sum(x.mnemonic==M.PUSH for x in s[:k]);tmp=spill.memory_displacement
     if (not prop or cmp.mnemonic!=M.CMP or cmp.memory_base!=R.RIP or cmp.op1_kind!=K.IMMEDIATE8 or cmp.immediate8 or not _writable(il.bin,flag,1) or
             flag in flags or any(v<=flag<v+8 for vals in us.values() for v in vals) or not slot or slot!=rotation or any(slot<=p<slot+8 for p in (*flags,flag)) or
@@ -88,7 +88,7 @@ def singleton_factory(l,m,td,s,eh):
             not _rr(zero,M.XOR,R.EAX,R.EAX) or not _load(rot,R.R9,R.RSP,p1,M.LEA) or not _load(pos,R.R8,R.RSP,p0,M.LEA) or
             not _store(lo,R.RSP,p0,xy.op0_register,M.MOVSD) or not _store(hidden,R.RSP,40,R.RAX) or not _rr(component,M.MOV,R.RDX,park.op0_register) or
             not _rr(recv,M.MOV,R.RCX,ref.op0_register) or not _store(rotcopy,R.RSP,p1,quat.op0_register,M.MOVAPS) or not _store(hi,R.RSP,p0+8,z.op0_register) or
-            not _store(nullarg,R.RSP,32,R.RAX) or p1%16 or p0%4 or not 48<=p0<=size-12 or not 48<=p1<=size-16 or not depth+8<=tmp<=depth+32):return None
+            not _store(nullarg,R.RSP,32,R.RAX) or p1%16 or p0%16 or not 48<=p0<=size-12 or not 48<=p1<=size-16 or not depth+8<=tmp<=depth+32):return None
     spans_=sorted([*spans,(p0,12),(p1,16),(tmp,8),(32,16),(depth,8)])
     if any(a+n>b for (a,n),(b,_) in zip(spans_,spans_[1:])):return None
     cl=il.typedef_full(md.declaring);actual=il.type_name(a)

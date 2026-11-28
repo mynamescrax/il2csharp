@@ -272,7 +272,8 @@ the saved manager with the exact position, rotation and null callback.
 The complete caller checks class initialization, receiver replacement,
 the return-buffer lanes and exceptions, including a null manager paired
 with a throwing position source. The second outgoing zero is hidden
-MethodInfo, not another argument.
+MethodInfo, not another argument. Both by-value homes are 16-byte aligned;
+the public singleton getter cannot share a flag with a different slot set.
 
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60

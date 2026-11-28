@@ -8,6 +8,7 @@ pytestmark=pytest.mark.game
 
 def test_spawn_samples_manager_before_prefab_and_position(shift_runtime,tmp_path):
     meta,il=shift_runtime;m=meta.methods[25213];out=[];Emitter(il,str(tmp_path/'out')).emit_method(m,meta.typedefs[m.declaring],out,'    ')
+    code='\n'.join(out);assert code.index('RunClassConstructor(')<code.index('FusionNetworkManager.Instance')
     s='''using System;using System.Linq;using System.Collections.Generic;using System.Runtime.Loader;using UnityEngine;using Fusion;
 foreach(string m in new[]{"ok","cctor","manager","no object","component","null component","no transform","position","no manager","no manager and position throws","identity","spawn"}){var ctx=new AssemblyLoadContext("case",true);try{ctx.LoadFromAssemblyPath(typeof(Host).Assembly.Location).GetType("Host").GetMethod("Test").Invoke(null,new object[]{m});}finally{ctx.Unload();}}
 Console.WriteLine("whole spawn: saved manager and component, refreshed position source, explicit init and late null, identity/optional arguments and faults");
@@ -24,12 +25,24 @@ class EventManager{public Transform playerDoppelgangerSpawnpoint;public GameObje
     p=tmp_path/'r';p.mkdir();(p/'Program.cs').write_text(s,encoding='utf8');print(run_case(tmp_path,p))
 
 
-@pytest.mark.parametrize('bad',['spilled XY','wrong restore','other manager','other component','stale Z','overwrite optional','wrong methodref','early null'])
-def test_factory_witness_ties_every_value_to_its_acquisition(shift_runtime,bad):
+@pytest.mark.parametrize('bad',['spilled XY','wrong restore','other manager','other component','stale Z','overwrite optional','wrong methodref','early null','unaligned aggregate','conflicting getter flag'])
+def test_factory_witness_ties_every_value_to_its_acquisition(shift_runtime,monkeypatch,bad):
     from il2cpp import Lifter,Decompiler
     from il2cpp.singleton_factory import singleton_factory
     from iced_x86 import Register as R
     meta,il=shift_runtime;m=meta.methods[25213];td=meta.typedefs[m.declaring];d=Decompiler(Lifter(il));s,_=d._decode(m);il.eh_regions(m.addr);check=lambda:singleton_factory(d.L,m,td,s,None);assert check()
+    if bad=='unaligned aggregate':
+        # Make room without overlap, then move all position references by
+        # four bytes. Even matching read/write homes are not 16-byte aligned.
+        for n in (38,56,57,62):
+            i=s[n].copy();i.memory_displacement+=4;s[n]=i
+        assert check() is None;return
+    if bad=='conflicting getter flag':
+        from il2cpp import static_getter
+        md=next(meta.methods[n] for n in meta.type_methods(meta.typedefs[meta.methods[26437].declaring]) if meta.methods[n].name=='get_Instance');lo,hi=il.function_extent(md.addr);read=il.bin.read;raw=read(lo,hi-lo);m0=static_getter._GUARDED.fullmatch(raw);assert m0
+        patched=bytearray(raw);flag=s[3].ip_rel_memory_address
+        for group in (1,4):patched[m0.start(group):m0.end(group)]=(flag-(lo+m0.end(group)+1)).to_bytes(4,'little',signed=True)
+        monkeypatch.setattr(il.bin,'read',lambda a,n:bytes(patched) if (a,n)==(lo,hi-lo) else read(a,n));assert check() is None;return
     p={'spilled XY':0x1806da3ac,'wrong restore':0x1806da3c0,'other manager':0x1806da3fd,'other component':0x1806da3fa,'stale Z':0x1806da405,'overwrite optional':0x1806da3f5,'wrong methodref':0x1806da372,'early null':0x1806da3db}[bad]
     j=next(n for n,i in enumerate(s) if i.ip==p);i=s[j].copy()
     if bad in ('spilled XY','wrong restore'):i.memory_displacement+=8
