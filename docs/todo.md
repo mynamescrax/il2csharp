@@ -39,6 +39,16 @@ array. The old source plays the new clip from the old array. Empty arrays,
 null clips, invalid indices, null receivers and callback exceptions pin
 the selection and fault order.
 
+**Split XYZ transfers to existing fields.** `CameraShake.OnEnable` (24311)
+and `Recoil.Start` (27005) load XY and Z from one verified 12-byte sret
+and write them to a sequential three-Single field. The emitted XY write
+uses an eight-byte view of the actual destination and the Z write is a
+separate dword. The complete callers passed bitwise and fault tests. A
+compiled alias probe observes old destination Z immediately after XY, and
+the already-written new Z when the opposite store order is used. This
+field-layout proof does not identify the reused query stack homes in the
+two spill methods.
+
 **Second campaign baseline, 2026-11-27, `0b0b779`.** A fresh serial
 `python tools/check_shift_methods.py --fresh` passed **442 tests in all 60
 exact-build modules** with the fixture pair below. Local report:

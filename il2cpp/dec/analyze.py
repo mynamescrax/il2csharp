@@ -128,6 +128,9 @@ class _AnalyzeMixin:
         from il2cpp.echo_field import echo_stores, emit_copy
         echo_fields = echo_stores(L, m, td, blocks, self._pad_bids)
         L._snapshot_srets.update(plan[0] for plan in echo_fields.values())
+        from il2cpp.split_field import split_field_sites, split_step
+        split_fields=split_field_sites(L,m,td,blocks,self._pad_bids)
+        L._snapshot_srets.update(plan[1] for plan in split_fields.values() if plan[0]=='first')
         binary_reads,binary_stores,binary_uses=binary_sites(L,m,blocks,self._pad_bids)
         L._snapshot_srets.update(binary_reads.values());L._snapshot_srets.update(v[0] for v in binary_uses.values())
         binary_values={}
@@ -238,6 +241,7 @@ class _AnalyzeMixin:
 
         def exec_block(b, dry):
             division_values={}
+            split_values={}
             ratio_values={}
             element_plan=element_plans.get(b.bid);element_values={}
             L.out = _Sink(b)
@@ -284,6 +288,7 @@ class _AnalyzeMixin:
                 if ins.ip in boxed and apply_division(L, boxed[ins.ip]):
                     copied_until = idx + 6
                     continue
+                if ins.ip in split_fields and split_step(L,ins,split_fields[ins.ip],split_values):continue
                 if ins.ip in echo_fields and emit_copy(L, ins, echo_fields[ins.ip]):continue
                 if ins.ip in saved_reads:save_echo(L,saved_reads[ins.ip],saved_values)
                 if ins.ip in saved_calls and call_binary(L,ins,saved_calls[ins.ip],saved_values):continue
